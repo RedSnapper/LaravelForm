@@ -3,9 +3,13 @@
 namespace RS\Form;
 
 use Illuminate\Support\ServiceProvider;
+use RS\Form\Console\FormletMakeCommand;
 
 class FormServiceProvider extends ServiceProvider
 {
+
+
+
     /**
      * Bootstrap the application services.
      *
@@ -13,6 +17,13 @@ class FormServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+
+		if ($this->app->runningInConsole()) {
+			$this->commands([
+			  FormletMakeCommand::class
+			]);
+		}
+
 		$this->app->resolving(Formlet::class, function (Formlet $formlet, $app) {
 			$formlet->setSessionStore($app['session.store']);
 			$formlet->setUrlGenerator($app['url']);
@@ -28,13 +39,4 @@ class FormServiceProvider extends ServiceProvider
 
     }
 
-    /**
-     * Register the application services.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        //
-    }
 }

@@ -1,0 +1,20 @@
+<?php
+
+namespace DummyNamespace;
+
+use RS\Form\Formlet;
+
+class DummyClass extends Formlet{
+
+   public $formView = "";
+
+   /**
+    * Prepare the form with fields
+    *
+    * @return void
+    */
+   public function prepareForm() {
+
+   }
+
+}
