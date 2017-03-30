@@ -24,12 +24,6 @@ class FormServiceProvider extends ServiceProvider
 			]);
 		}
 
-		$this->app->resolving(Formlet::class, function (Formlet $formlet, $app) {
-			$formlet->setSessionStore($app['session.store']);
-			$formlet->setUrlGenerator($app['url']);
-			$formlet->setRequest($app['request']);
-		});
-
 		$this->loadViewsFrom(__DIR__.'/resources/views', 'form');
 
 		$this->publishes([
@@ -38,5 +32,13 @@ class FormServiceProvider extends ServiceProvider
 		],'form');
 
     }
+
+    public function register(){
+		$this->app->resolving(Formlet::class, function (Formlet $formlet, $app) {
+			$formlet->setSessionStore($app['session.store']);
+			$formlet->setUrlGenerator($app['url']);
+			$formlet->setRequest($app['request']);
+		});
+	}
 
 }
