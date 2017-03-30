@@ -1,0 +1,14 @@
+<?php
+
+namespace DummyNamespace;
+
+use RS\NView\Document;
+use RS\NView\ViewController;
+
+class DummyClass extends ViewController{
+
+   public function render(Document $view,array $data): Document {
+   		return $view;
+   }
+
+}

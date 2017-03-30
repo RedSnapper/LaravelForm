@@ -1,0 +1,28 @@
+{
+    "name": "rs/form-laravel",
+    "description": "Laravel Form",
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^7.0",
+        "illuminate/container": "5.4.*",
+        "illuminate/http": "5.4.*",
+        "illuminate/routing": "5.4.*",
+        "illuminate/session": "5.4.*",
+        "illuminate/contracts": "5.4.*",
+        "illuminate/support": "5.4.*",
+        "illuminate/console": "5.4.*",
+        "illuminate/validation": "5.4.*",
+        "illuminate/database": "5.4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "RS\\Form\\": "src"
+        }
+    },
+    "authors": [
+        {
+            "name": "Red Snapper Development Team",
+            "email": "contact@redsnapper.net"
+        }
+    ]
+}

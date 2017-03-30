@@ -1,0 +1,16 @@
+<!DOCTYPE div>
+<div xmlns="http://www.w3.org/1999/xhtml">
+
+    <strong class="control-label" data-v.child="label" data-v.xp="label" />
+
+    <div data-v.xp="radios">
+        <div class="radio" data-v.xp="radio">
+            <label>
+                <input type="radio"/>
+                <span data-v.xp="label"/>
+            </label>
+        </div>
+    </div>
+    <div data-v.errors="forms.fields.errors"/>
+</div>
+
