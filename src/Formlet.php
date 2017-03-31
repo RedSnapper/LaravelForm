@@ -742,7 +742,7 @@ abstract class Formlet {
 	}
 
 	//nested formlets need nested name.
-	protected function getModel($name = "") {
+	public function getModel($name = "") {
 		if (isset($this->formlets[$name])) {
 			return $this->formlets[$name]->getModel();
 		} else {

@@ -15,7 +15,7 @@ class Select extends Choice {
 	 */
 	public function setPlaceholder(string $string): AbstractField {
 
-		$this->options->prepend($this->option(null,$string,true));
+		$this->options->prepend($this->option('',$string));
 
 		return $this;
 	}

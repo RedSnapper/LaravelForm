@@ -5,7 +5,7 @@
             <input type="checkbox"/> <span data-v.replace="label"/>
         </label>
     </div>
-    <div data-v.errors="forms.fields.errors"/>
+    <div data-v.errors="form.fields.errors"/>
 </div>
 
 
