@@ -192,9 +192,9 @@ abstract class Formlet {
 	 * @param string $class
 	 * @param BelongsToMany $builder
 	 */
-	public function addSubscribers(string $name, string $class, BelongsToMany $builder) {
+	public function addSubscribers(string $name, string $class, BelongsToMany $builder, $items = null) {
 
-		$items = $builder->getRelated()->all();
+		$items = $items ?? $builder->getRelated()->all();
 		$models = $builder->get();
 
 		foreach ($items as $item) {
