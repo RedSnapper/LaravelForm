@@ -185,6 +185,15 @@ abstract class Formlet {
 		return $formlet;
 	}
 
+	public function addFormlets(string $name, string $class): Formlet {
+		$formlet = app()->make($class);
+		$formlet->name = $name;
+		$this->formlets[$name][] = $formlet;
+		$formlet->setMultiple();
+		return $formlet;
+	}
+
+
 	/**
 	 * Add subscribers to this formlet
 	 *
@@ -349,7 +358,20 @@ abstract class Formlet {
 			$this->model->fill($this->fields());
 			$this->model->save();
 		}
+		$this->editFormlets();
 		return $this->model;
+	}
+
+	private function editFormlets() {
+		foreach($this->formlets as $name => $formlet) {
+			if(is_array($formlet)) {
+				foreach($formlet as $formletInstance) {
+					$formletInstance->edit();
+				}
+			} else {
+				$formlet->edit();
+			}
+		}
 	}
 
 	public function update() {
@@ -455,7 +477,7 @@ abstract class Formlet {
 		  'attributes' => $this->attributes,
 		  'hidden'     => $this->getFieldData($this->hidden)
 		];
-
+//dd($data);
 		return view($this->formView, $data);
 	}
 
@@ -489,6 +511,7 @@ abstract class Formlet {
 
 		$data = [
 		  'fields' => $this->getFieldData($this->fields),
+			'model'  => $this->getModel()
 		];
 
 		$data = array_merge($data, $this->data);
