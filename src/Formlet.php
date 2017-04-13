@@ -358,21 +358,21 @@ abstract class Formlet {
 			$this->model->fill($this->fields());
 			$this->model->save();
 		}
-		$this->editFormlets();
+	//	$this->editFormlets();
 		return $this->model;
 	}
 
-	private function editFormlets() {
-		foreach($this->formlets as $name => $formlet) {
-			if(is_array($formlet)) {
-				foreach($formlet as $formletInstance) {
-					$formletInstance->edit();
-				}
-			} else {
-				$formlet->edit();
-			}
-		}
-	}
+	//private function editFormlets() {
+	//	foreach($this->formlets as $name => $formlet) {
+	//		if(is_array($formlet)) {
+	//			foreach($formlet as $formletInstance) {
+	//				$formletInstance->edit();
+	//			}
+	//		} else {
+	//			$formlet->edit();
+	//		}
+	//	}
+	//}
 
 	public function update() {
 		$this->prepare();
