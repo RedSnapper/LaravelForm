@@ -237,22 +237,25 @@ abstract class Formlet {
 	/**
 	 * Get the subscriber fields from the request for a given key
 	 *
-	 * @param string $field
+	 * @param string $key
 	 * @param string $subscriber
+	 * @param \Closure means of evaluating subscription
 	 * @return Collection
 	 */
-	public function getSubscriberFields(string $field , string $subscriber ="subscriber"){
+	public function getSubscriberFields(string $key , string $subscriber ="subscriber",\Closure $closure=null){
 
-		$collection = new Collection($this->fields($field));
+		$subtest = function($value) use($subscriber) {
+				return isset($value[$subscriber]);
+		};
 
-		$collection = $collection->filter(function ($value) use($subscriber) {
-			return isset($value[$subscriber]);
-		})->map(function ($item) use($subscriber) {
-			array_forget($item,$subscriber);
-			return $item;
-		});
+		$closure = $closure ?? function(Collection $collection) use($subscriber,$subtest) : Collection  {
+			return $collection->filter($subtest)->map(function ($item) use($subscriber) {
+				array_forget($item,$subscriber);
+				return $item;
+			});
+		};
 
-		return $collection;
+		return $closure(new Collection($this->fields($key)));
 	}
 
 	protected function isValid() {
