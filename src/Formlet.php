@@ -633,6 +633,7 @@ abstract class Formlet {
 
 	/**
 	 * Get the check state for a checkbox input.
+	 * TODO this fails for mixed/composite forms.
 	 *
 	 * @param  string $name
 	 * @param  mixed  $value
