@@ -179,14 +179,14 @@ abstract class Formlet {
 	 * @return Formlet
 	 */
 	public function addFormlet(string $name, string $class): Formlet {
-		$formlet = app()->make($class);
+		$formlet = app()->make($class)->with($this->data);
 		$formlet->name = $name;
 		$this->formlets[$name] = $formlet;
 		return $formlet;
 	}
 
 	public function addFormlets(string $name, string $class): Formlet {
-		$formlet = app()->make($class);
+		$formlet = app()->make($class)->with($this->data);
 		$formlet->name = $name;
 		$this->formlets[$name][] = $formlet;
 		$formlet->setMultiple();
