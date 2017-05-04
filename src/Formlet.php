@@ -338,8 +338,7 @@ abstract class Formlet {
 	}
 
 	public function store() {
-
-		$this->prepare();
+		if(!$this->prepare()) { return null; }
 		if ($this->isValid()) {
 			return $this->persist();
 		}
@@ -378,7 +377,7 @@ abstract class Formlet {
 	//}
 
 	public function update() {
-		$this->prepare();
+		if(!$this->prepare()) { return null; }
 		if ($this->isValid()) {
 			return $this->edit();
 		}
@@ -444,7 +443,23 @@ abstract class Formlet {
 		}
 	}
 
-	protected function prepare() {
+	protected function doFunction() : bool {
+		$parameters = $this->request->request; //Collection of posted parameters.
+		if($parameters->has("_fn")) {
+			$function = (string) $parameters->get("_fn");
+			if (!preg_match("/\A[a-z][A-Za-z\d]*\z/",$function)) { return false; }
+			if (is_callable([$this,$function])) {
+				return $this->$function();
+			}
+		}
+		return true;
+	}
+
+	protected function prepare() : bool {
+
+		if ($this->doFunction()) {
+
+		}
 		$this->prepareForm();
 
 		$this->prepareFormlets($this->formlets);
@@ -458,6 +473,7 @@ abstract class Formlet {
 		foreach ($this->fields as $field) {
 			$field->setFieldName($this->getFieldPrefix($field->getName()));
 		}
+		return true;
 	}
 
 	protected function prepareFormlets(array $formlets) {
@@ -472,7 +488,7 @@ abstract class Formlet {
 	}
 
 	public function render() {
-		$this->prepare();
+		if(!$this->prepare()) { return null; }
 		$this->populate();
 
 		$data = [
@@ -480,7 +496,7 @@ abstract class Formlet {
 		  'attributes' => $this->attributes,
 		  'hidden'     => $this->getFieldData($this->hidden)
 		];
-//dd($data);
+
 		return view($this->formView, $data);
 	}
 
@@ -633,7 +649,7 @@ abstract class Formlet {
 
 	/**
 	 * Get the check state for a checkbox input.
-	 * TODO this fails for mixed/composite forms.
+	 * TODO this fails completely, it seems, except for subscribers...
 	 *
 	 * @param  string $name
 	 * @param  mixed  $value
