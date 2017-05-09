@@ -377,7 +377,7 @@ abstract class Formlet {
 	//}
 
 	public function update() {
-		if(!$this->prepare()) { return null; }
+		if(!$this->prepare()) { return $this->model; }
 		if ($this->isValid()) {
 			return $this->edit();
 		}
