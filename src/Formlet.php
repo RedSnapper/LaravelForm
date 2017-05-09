@@ -443,6 +443,10 @@ abstract class Formlet {
 		}
 	}
 
+	/**
+	 * TODO: This uses a concrete input name: '_fn' - maybe that's okay, but maybe we should think about it more.
+	 * @return bool
+	 */
 	protected function doFunction() : bool {
 		$parameters = $this->request->request; //Collection of posted parameters.
 		if($parameters->has("_fn")) {
@@ -456,9 +460,8 @@ abstract class Formlet {
 	}
 
 	protected function prepare() : bool {
-
-		if ($this->doFunction()) {
-
+		if (!$this->doFunction()) {
+			return false;
 		}
 		$this->prepareForm();
 
