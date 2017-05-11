@@ -360,21 +360,8 @@ abstract class Formlet {
 			$this->model->fill($this->fields());
 			$this->model->save();
 		}
-	//	$this->editFormlets();
 		return $this->model;
 	}
-
-	//private function editFormlets() {
-	//	foreach($this->formlets as $name => $formlet) {
-	//		if(is_array($formlet)) {
-	//			foreach($formlet as $formletInstance) {
-	//				$formletInstance->edit();
-	//			}
-	//		} else {
-	//			$formlet->edit();
-	//		}
-	//	}
-	//}
 
 	public function update() {
 		if(!$this->prepare()) { return $this->model; }
@@ -459,7 +446,9 @@ abstract class Formlet {
 		return true;
 	}
 
-	protected function prepare() : bool {
+	protected function prepare(Formlet $parent = null) : bool {
+		$this->name = $this->name == "" ? (is_null($parent) ? "base" : "$parent->name.base") : $this->name;
+
 		if (!$this->doFunction()) {
 			return false;
 		}
@@ -468,9 +457,10 @@ abstract class Formlet {
 		$this->prepareFormlets($this->formlets);
 
 		if (count($this->formlets) && count($this->fields)) {
-			$this->setName('base');
-			$this->formlets['base'] = clone $this;
-			$this->formlets['base']->formlets = [];
+			$this->formlets[$this->name] = clone $this;
+			$this->formlets[$this->name]->formlets = [];
+		} elseif (is_null($parent)) {
+			$this->name = "";
 		}
 
 		foreach ($this->fields as $field) {
@@ -485,7 +475,7 @@ abstract class Formlet {
 			if (is_array($formlet)) {
 				$this->prepareFormlets($formlet);
 			} else {
-				$formlet->prepare();
+				$formlet->prepare($this);
 			}
 		}
 	}
