@@ -14,10 +14,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
+use RS\Form\Concerns\ManagesForm;
 
 abstract class Formlet {
 
-	use Concerns\ManagesForm;
+	use ManagesForm;
 
 	/**
 	 * @var UrlGenerator
@@ -659,14 +660,15 @@ abstract class Formlet {
 			return $checked;
 		}
 
-		$posted = $this->getValueAttribute("", $checked);
+		//$name ?
+		$posted = $this->getValueAttribute($name, $checked);
 
 		if (is_array($posted)) {
 			return in_array($value, $posted);
 		} elseif ($posted instanceof Collection) {
 			return $posted->contains('id', $value);
 		} else {
-			return (bool)$posted;
+			return $posted;
 		}
 	}
 
@@ -726,11 +728,14 @@ abstract class Formlet {
 		$value = $field->getValue();
 		$default = $field->getDefault();
 
+		//so we haven't yet touched the model here.
+		//..and I'm assuming that getCheckboxCheckedState will set the value.
+		//$field->setValue($value);
+
+		$value = $this->getCheckboxCheckedState($name, $value, $default);
 		$field->setValue($value);
 
-		$checked = $this->getCheckboxCheckedState($name, $value, $default);
-
-		if ($checked) {
+		if ($field->checked()) {
 			$field->setAttribute('checked');
 		}
 

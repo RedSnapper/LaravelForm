@@ -7,7 +7,7 @@ use Illuminate\View\FileViewFinder;
 use RS\NView\Console\NViewMakeCommand;
 use RS\NView\Console\NViewControllerMakeCommand;
 
-class NViewServiceProvider extends ServiceProvider {
+class NViewServiceProviderUnused extends ServiceProvider {
 
 	/**
 	 * Register the application services.

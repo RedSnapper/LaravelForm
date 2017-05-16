@@ -6,9 +6,8 @@
  * Time: 16:23
  */
 
-namespace App\View\Form\Fields;
+namespace RS\Form\View\Fields;
 
-use PhpParser\Comment\Doc;
 use RS\NView\Document;
 
 class Select extends Field {

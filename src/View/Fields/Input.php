@@ -1,9 +1,8 @@
 <?php
 
-namespace App\View\Form\Fields;
+namespace RS\Form\View\Fields;
 
 use RS\NView\Document;
-use RS\NView\ViewController;
 
 class Input extends Field {
 
