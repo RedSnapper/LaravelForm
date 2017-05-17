@@ -7,14 +7,14 @@ use Illuminate\Support\Collection;
 abstract class AbstractField {
 
 	/**
-	 * Name of the field
+	 * Name of the field.
 	 *
 	 * @var string
 	 */
 	protected $name;
 
 	/**
-	 * Fieldname of the field
+	 * Fieldname of the field.
 	 *
 	 * @var string
 	 */

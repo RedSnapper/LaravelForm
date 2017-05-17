@@ -2,7 +2,6 @@
 
 namespace RS\Form;
 
-use RS\Form\Fields\AbstractField;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Contracts\Support\MessageBag;
@@ -12,101 +11,89 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use RS\Form\Concerns\ManagesForm;
+use RS\Form\Fields\AbstractField;
+use RS\Form\Fields\Checkbox;
 
 abstract class Formlet {
-
 	use ManagesForm;
-
 	/**
 	 * @var UrlGenerator
 	 */
 	protected $url;
-
 	/**
 	 * Session storage.
 	 *
 	 * @var Session
 	 */
 	protected $session;
-
 	/**
 	 * @var Request
 	 */
 	public $request;
-
 	/**
 	 * View for formlet
 	 *
 	 * @var string
 	 */
 	public $formletView = "form.auto";
-
 	/**
 	 * View for composite formlets
 	 *
 	 * @var string
 	 */
 	public $compositeView;
-
 	/**
 	 * Main form view
 	 *
 	 * @var string
 	 */
 	public $formView;
-
 	/**
 	 * All fields that are added.
 	 *
 	 * @var AbstractField[]
 	 */
 	protected $fields = [];
-
 	/**
 	 * The current model instance for the form.
 	 *
 	 * @var mixed
 	 */
 	protected $model;
-
 	/**
 	 * Fields which will not populate
 	 *
 	 * @var array
 	 */
 	protected $guarded = [];
-
 	/**
 	 * Formlets attached to this form
 	 *
 	 * @var Formlet[]
 	 */
 	protected $formlets = [];
-
 	/**
 	 * Validator for this form
 	 *
 	 * @var Validator
 	 */
 	protected $validator;
-
 	/**
 	 * Formlet name.
 	 *
 	 * @var string
 	 */
 	protected $name = "";
-
 	/**
 	 * Formlet key.
 	 *
 	 * @var int|null
 	 */
 	protected $key;
-
 	/**
 	 * If there are multiple of this formlet we need to include
 	 * the key in the formlet
@@ -114,14 +101,12 @@ abstract class Formlet {
 	 * @var bool
 	 */
 	protected $multiple = false;
-
 	/**
 	 * Extra view data
 	 *
 	 * @var array
 	 */
 	protected $data = [];
-
 
 	abstract public function prepareForm();
 
@@ -145,7 +130,7 @@ abstract class Formlet {
 		return $this;
 	}
 
-	public function getData(string $name){
+	public function getData(string $name) {
 		return data_get($this->data, $name);
 	}
 
@@ -194,12 +179,11 @@ abstract class Formlet {
 		return $formlet;
 	}
 
-
 	/**
 	 * Add subscribers to this formlet
 	 *
-	 * @param string $name
-	 * @param string $class
+	 * @param string        $name
+	 * @param string        $class
 	 * @param BelongsToMany $builder
 	 */
 	public function addSubscribers(string $name, string $class, BelongsToMany $builder, $items = null) {
@@ -227,9 +211,9 @@ abstract class Formlet {
 	}
 
 	protected function addSubscriberFormlet(Formlet $formlet, string $name, Model $subscriber, Model $model = null) {
+		$formlet->setModel($model);
 		$formlet->setKey($subscriber->getKey());
 		$formlet->with($name, $subscriber);
-		$formlet->setModel($model);
 		$formlet->setName($name);
 		$formlet->setMultiple();
 		$this->formlets[$name][] = $formlet;
@@ -238,23 +222,23 @@ abstract class Formlet {
 	/**
 	 * Get the subscriber fields from the request for a given key
 	 *
-	 * @param string $key
-	 * @param string $subscriber
+	 * @param string   $key
+	 * @param string   $subscriber
 	 * @param \Closure means of evaluating subscription
 	 * @return Collection
 	 */
-	public function getSubscriberFields(string $key , string $subscriber ="subscriber",\Closure $closure=null){
+	public function getSubscriberFields(string $key, string $subscriber = "subscriber", \Closure $closure = null) {
 
-		$subtest = function($value) use($subscriber) {
-				return isset($value[$subscriber]);
+		$subtest = function ($value) use ($subscriber) {
+			return isset($value[$subscriber]);
 		};
 
-		$closure = $closure ?? function(Collection $collection) use($subscriber,$subtest) : Collection  {
-			return $collection->filter($subtest)->map(function ($item) use($subscriber) {
-				array_forget($item,$subscriber);
-				return $item;
-			});
-		};
+		$closure = $closure ?? function (Collection $collection) use ($subscriber, $subtest) : Collection {
+				return $collection->filter($subtest)->map(function ($item) use ($subscriber) {
+					array_forget($item, $subscriber);
+					return $item;
+				});
+			};
 
 		return $closure(new Collection($this->fields($key)));
 	}
@@ -288,7 +272,7 @@ abstract class Formlet {
 
 		if (count($errors)) {
 			throw new ValidationException($this->validator, $this->buildFailedValidationResponse(
-			  $errors
+				$errors
 			));
 		}
 
@@ -307,8 +291,8 @@ abstract class Formlet {
 		}
 
 		return redirect()->to($this->getRedirectUrl())
-		  ->withInput($this->request->input())
-		  ->withErrors($errors);
+			->withInput($this->request->input())
+			->withErrors($errors);
 	}
 
 	/**
@@ -339,7 +323,9 @@ abstract class Formlet {
 	}
 
 	public function store() {
-		if(!$this->prepare()) { return null; }
+		if (!$this->prepare()) {
+			return null;
+		}
 		if ($this->isValid()) {
 			return $this->persist();
 		}
@@ -358,14 +344,17 @@ abstract class Formlet {
 
 	public function edit(): Model {
 		if (isset($this->model)) {
-			$this->model->fill($this->fields());
+			$fieldsToSave = $this->fields();
+			$this->model->fill($fieldsToSave);
 			$this->model->save();
 		}
 		return $this->model;
 	}
 
 	public function update() {
-		if(!$this->prepare()) { return $this->model; }
+		if (!$this->prepare()) {
+			return $this->model;
+		}
 		if ($this->isValid()) {
 			return $this->edit();
 		}
@@ -419,35 +408,59 @@ abstract class Formlet {
 	 *
 	 * @return array
 	 */
-	public function fields($name = null) {
+	public function fields($name = null) : array {
 		if (is_null($name)) {
 			if ($this->name != "") {
-				return $this->request->input($this->name) ?? [];
+				$fields = $this->request->input($this->name) ?? [];
 			} else {
-				return $this->request->all();
+				$fields = $this->request->all();
 			}
 		} else {
-			return $this->request->input($name) ?? [];
+			$fields = $this->request->input($name) ?? [];
 		}
+		return $this->rationalise($fields);
+	}
+
+	/**
+	 * We are doing this to include Checkboxes/'checkable' which otherwise aren't being updated because they aren't being posted.
+	 * Be aware that if your checkbox field is not nullable, you will need to cast it or use a mutator.
+	 *
+	 * @param $postedFields array
+	 * @return array
+	 */
+	private function rationalise(array $postedFields) : array {
+		$result = $postedFields;
+		foreach($this->fields as $field) {
+				if(is_a($field,Checkbox::class)) {
+					$modelName = $field->getName();
+					if(!empty($modelName)) {
+						$result[$modelName] = @$postedFields[$modelName];
+					}
+				}
+		}
+		return $result;
 	}
 
 	/**
 	 * TODO: This uses a concrete input name: '_fn' - maybe that's okay, but maybe we should think about it more.
+	 *
 	 * @return bool
 	 */
-	protected function doFunction() : bool {
+	protected function doFunction(): bool {
 		$parameters = $this->request->request; //Collection of posted parameters.
-		if($parameters->has("_fn")) {
-			$function = (string) $parameters->get("_fn");
-			if (!preg_match("/\A[a-z][A-Za-z\d]*\z/",$function)) { return false; }
-			if (is_callable([$this,$function])) {
+		if ($parameters->has("_fn")) {
+			$function = (string)$parameters->get("_fn");
+			if (!preg_match("/\A[a-z][A-Za-z\d]*\z/", $function)) {
+				return false;
+			}
+			if (is_callable([$this, $function])) {
 				return $this->$function();
 			}
 		}
 		return true;
 	}
 
-	protected function prepare(Formlet $parent = null) : bool {
+	protected function prepare(Formlet $parent = null): bool {
 		$this->name = $this->name == "" ? (is_null($parent) ? "base" : "$parent->name.base") : $this->name;
 
 		if (!$this->doFunction()) {
@@ -457,6 +470,7 @@ abstract class Formlet {
 
 		$this->prepareFormlets($this->formlets);
 
+		//We only need a name if we have formlets and we have fields.
 		if (count($this->formlets) && count($this->fields)) {
 			$this->formlets[$this->name] = clone $this;
 			$this->formlets[$this->name]->formlets = [];
@@ -482,13 +496,15 @@ abstract class Formlet {
 	}
 
 	public function render() {
-		if(!$this->prepare()) { return null; }
+		if (!$this->prepare()) {
+			return null;
+		}
 		$this->populate();
 
 		$data = [
-		  'form'       => $this->renderFormlets(),
-		  'attributes' => $this->attributes,
-		  'hidden'     => $this->getFieldData($this->hidden)
+			'form'       => $this->renderFormlets(),
+			'attributes' => $this->attributes,
+			'hidden'     => $this->getFieldData($this->hidden)
 		];
 
 		return view($this->formView, $data);
@@ -523,7 +539,7 @@ abstract class Formlet {
 		$errors = $this->getErrors();
 
 		$data = [
-		  'fields' => $this->getFieldData($this->fields),
+			'fields' => $this->getFieldData($this->fields),
 			'model'  => $this->getModel()
 		];
 
@@ -553,23 +569,30 @@ abstract class Formlet {
 	 */
 	public function getValueAttribute($name, $value = null, $default = null) {
 
-		// Field should not ne populated from post or from the model
+		// Field should not be populated from post or from the model
 		if (in_array($name, $this->guarded)) {
 			return $value;
 		}
 
+		//If there is no name, then we may as well just use what value we have.
 		if (is_null($name)) {
 			return $value;
 		}
 
-		if (!is_null($this->old($name)) && $name != '_method') {
-			return $this->old($name);
+		//Let's NOT use the same method twice in a row [eg this->old()], if we can help it, but use a temporary variable instead..
+		//TODO: Find out exactly what _method is, and cf. it with _fn.
+		$oldValue = $this->old($name);
+		if (!is_null($oldValue) && $name != '_method') {
+			return $oldValue;
 		}
 
+		//So name has returned nothing meaningful so far. Let's pass back the value if it is set.
 		if (!is_null($value)) {
 			return $value;
 		}
 
+		//Nothing there either. Let's try the model.
+		//Except that the model is currently un-applied.
 		if (isset($this->model)) {
 			return $this->getModelValueAttribute($name) ?? $default;
 		}
@@ -585,8 +608,23 @@ abstract class Formlet {
 	 */
 	public function old($name) {
 		if (isset($this->session)) {
-			return $this->session->getOldInput($this->transformKey($this->getFieldPrefix($name)));
+			$prefix = $this->getFieldPrefix($name);
+			$transform = $this->transformKey($prefix);
+			$old = $this->session->getOldInput($transform);
+			return $old;
+			// If we like guard clauses and we want to avoid nested ifs, we should avoid nesting methods too,
+			// even though it may mean using temporary variables.
+			// PhpStorm's ability to trace through nested methods is not great.
+			// Likewise it sucks at tracing immediate return points.
+			// return $this->session->getOldInput(
+			//	$this->transformKey(
+			//		$this->getFieldPrefix($name)
+			//	)
+			//);
 		}
+		//one of the challenges of using Guard Clauses vs. Single-Entry Single-Exit (SESE)
+		// is that it is easy to forget to return stuff.
+		return null;
 	}
 
 	/**
@@ -611,7 +649,7 @@ abstract class Formlet {
 			return $this->model;
 		}
 
-		if($this->isMultiple()){
+		if ($this->isMultiple()) {
 			return data_get($this->model, "pivot.$name") ?? data_get($this->model, $name);
 		}
 
@@ -644,6 +682,7 @@ abstract class Formlet {
 	/**
 	 * Get the check state for a checkbox input.
 	 * TODO this fails completely, it seems, except for subscribers...
+	 * BG: AFAIK This is only called when dealing with gets/render.
 	 *
 	 * @param  string $name
 	 * @param  mixed  $value
@@ -651,25 +690,48 @@ abstract class Formlet {
 	 * @return bool
 	 */
 	protected function getCheckboxCheckedState($name, $value, $checked) {
+		//the name is the field's model name, not input-name-attribute.
 
-		if (isset($this->session) && !$this->oldInputIsEmpty() && is_null($this->old($name))) {
-			return false;
+		//This is sometimes redundant, but they are useful for some of the jiggery-pokery we will be doing.
+		$prefixedName = $this->getFieldPrefix($name);
+		$dataName = $this->transformKey($prefixedName);
+
+		//Was this checkbox unset in session?
+		//TODO: Find out what this is for.
+		$noOldValue = true;
+		if (isset($this->session)) {
+			$oldInput = $this->session->getOldInput();
+			if (count($oldInput) > 0) {
+				if (is_null($this->old($name))) {
+					return false;
+				}
+				$old = Arr::get($oldInput,$dataName);
+				$noOldValue = is_null($old);
+			}
 		}
 
-		if ($this->missingOldAndModel($name)) {
-			return $checked;
-		}
-
-		//$name ?
-		$posted = $this->getValueAttribute($name, $checked);
-
-		if (is_array($posted)) {
-			return in_array($value, $posted);
-		} elseif ($posted instanceof Collection) {
-			return $posted->contains('id', $value);
+		//so when loading, we need to find the data that matches the checkbox's value.
+		//This stuff below will either return the model which has the value, or the value itself.
+		if ($dataName == "") {
+			$model = $this->model;
 		} else {
-			return $posted;
+			if ($this->isMultiple()) {
+				$model = data_get($this->model, "pivot.$dataName") ?? data_get($this->model, $dataName);
+			} else {
+				$model = data_get($this->model, $dataName);
+			}
 		}
+
+		$checked = $noOldValue && is_null($model);
+
+		if (is_array($model)) {
+			$checked = in_array($value, $model);
+		} elseif ($model instanceof Collection) {
+			$checked = $model->contains('id', $value);
+		} elseif ($model == $value) {
+			$checked = true;
+		}
+		return $checked;
 	}
 
 	protected function populate() {
@@ -703,39 +765,35 @@ abstract class Formlet {
 		}, $this->guarded);
 	}
 
-	/**
-	 * Determine if old input or model input exists for a key.
-	 *
-	 * @param  string $name
-	 * @return bool
-	 */
-	protected function missingOldAndModel($name) {
-		return (is_null($this->old($name)) && is_null($this->getModelValueAttribute("")));
-	}
-
-	/**
-	 * Determine if the old input is empty.
-	 *
-	 * @return bool
-	 */
-	public function oldInputIsEmpty() {
-		return (isset($this->session) && count($this->session->getOldInput()) == 0);
-	}
-
 	protected function checkable(AbstractField $field) {
 
+		/**
+		 * So, 'checkable' fields (Checkbox) don't return anything in the post unless they are checked.
+		 * That means that the value we want to give them is if they are checked, regardless of their current state.
+		 * The current state should be reflected in their 'checked' attribute, NOT in their value.
+		 * For example, if there's a value 'foo' for a checkbox when checked, and the current model holds 'bar',
+		 * (or null) then we need to mark it as unchecked. However, if we are doing with a post/errors then we need
+		 * to handle that too.
+		 * AFAIK This method is reached during 'populate' (view rendering) only
+		 */
+
+		/**
+		 * AFAIK There are two types of name to a field: 'name' and 'fieldName'.
+		 * The fieldName is what will appear on the html, whereas the name is the model name for the field.
+		 */
 		$name = $field->getName();
-		$value = $field->getValue();
+
+		$value = $field->getValue(); //This should be the value it has if it is checked, and should be set in the formlet.
 		$default = $field->getDefault();
 
-		//so we haven't yet touched the model here.
-		//..and I'm assuming that getCheckboxCheckedState will set the value.
+		//So we haven't yet touched the model here.
+		//Not sure I know why we got the value and then immediately set it again.
+		//the field get/set are just accessors to the value attribute.
 		//$field->setValue($value);
 
-		$value = $this->getCheckboxCheckedState($name, $value, $default);
-		$field->setValue($value);
+		$checked = $this->getCheckboxCheckedState($name, $value, $default);
 
-		if ($field->checked()) {
+		if ($checked) {
 			$field->setAttribute('checked');
 		}
 
@@ -841,7 +899,13 @@ abstract class Formlet {
 		//the key in the formlet
 
 		if ($this->isMultiple()) {
-			return "[" . $this->getKey() . "]";
+			if (@$this->getKey()) {
+				return "[" . $this->getKey() . "]";
+			}
+			$modelKey = @$this->getModel()->getKey();
+			if ($modelKey) {
+				return "[" . $modelKey . "]";
+			}
 		}
 
 		return "";
@@ -855,5 +919,4 @@ abstract class Formlet {
 	protected function getRedirectUrl() {
 		return app(UrlGenerator::class)->previous();
 	}
-
 }
