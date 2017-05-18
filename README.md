@@ -13,9 +13,3 @@ Next, add your new provider to the providers array of config/app.php:
   ],
   
 ```
-
-Next publish related view files using artisan
-
-```bash
-php artisan vendor:publish --tag=form
-```
