@@ -158,21 +158,73 @@ abstract class Formlet {
 	}
 
 	/**
-	 * Add formlet to this formlet
+	 * Get the subscriber fields from the request for a given key
 	 *
-	 * @param string $name
-	 * @param string $class
-	 * @return Formlet
+	 * @param string   $key
+	 * @return Collection
 	 */
-	public function addFormlet(string $name, string $class): Formlet {
-		$formlet = app()->make($class)->with($this->data);
-		$formlet->name = $name;
-		$this->formlets[$name] = $formlet;
-		return $formlet;
+	public function getSubscriberFields(string $key) : Collection {
+		$fieldsToCollect = array_keys($this->fields($key));
+		return new Collection($fieldsToCollect);
 	}
 
-	public function addFormlets(string $name, string $class): Formlet {
-		$formlet = app()->make($class)->with($this->data);
+	/**
+	 * Add subscribers to this formlet.
+	 * We are going to construct an array of subscriber formlets using $class as a template.
+	 * using builder->related->all as the basic list of options, and builder as the selected list of options.
+	 *
+	 * @param string                $name
+	 *   name is an identifier used to compose the data / fieldnames.
+	 *   e.g. 'activities'. (from http://localhost/role/3/edit)
+	 * @param string                $formletClass
+	 *   class is the subscriber formlet to be used, eg App\Http\Formlets\RoleActivityFormlet::class
+	 * @param BelongsToMany         $builder
+	 *   builder is a BelongsToMany from the base model, eg.
+	 *   $this->model->activities() (where the model is eg /App/Models/Role)
+	 * @param Collection|array|null $subscribeOptions
+	 */
+	public function addSubscribers(string $name, string $formletClass, BelongsToMany $builder, $subscribeOptions = null) {
+
+		$subscribeOptions = $subscribeOptions ?? $builder->getRelated()->all();
+		$subscribedModels = $builder->get();
+
+		foreach ($subscribeOptions as $option) {
+			$formlet = app()->make($formletClass);
+			$subscribed = $this->getModelByKey($option->getKey(), $subscribedModels);
+			$this->addSubscriberFormlet($formlet, $name, $option, $subscribed);
+		}
+	}
+
+	/**
+	 * The point of this is to provide a means of setting up a formlet
+	 * that represents a ManyToMany 'sync'.
+	 * It's not necessary to use this method, but it's useful if the view is not trivial.
+	 * It's separated from the addSubscribers so that it may be overloaded by the concrete class.
+	 *
+	 * @param Formlet    $formlet
+	 * @param string     $name
+	 * @param Model      $option
+	 * @param Model|null $subscribed
+	 */
+	protected function addSubscriberFormlet(Formlet $formlet, string $name, Model $option, Model $subscribed = null) {
+		$dataName = $formlet->subscriber ?? $name;
+		$formlet->setKey($option->getKey());
+		$formlet->with($dataName, $subscribed);
+		$formlet->with('option', $option);
+		$formlet->setName($name);
+		$formlet->setMultiple();
+		$this->formlets[$name][] = $formlet;
+	}
+
+	/**
+	 * Add multiple formlets to this formlet.
+	 *
+	 * @param string $name
+	 * @param string $formletClass
+	 * @return Formlet
+	 */
+	public function addFormlets(string $name, string $formletClass): Formlet {
+		$formlet = app()->make($formletClass)->with($this->data);
 		$formlet->name = $name;
 		$this->formlets[$name][] = $formlet;
 		$formlet->setMultiple();
@@ -180,22 +232,17 @@ abstract class Formlet {
 	}
 
 	/**
-	 * Add subscribers to this formlet
+	 * Add formlet to this formlet
 	 *
-	 * @param string        $name
-	 * @param string        $class
-	 * @param BelongsToMany $builder
+	 * @param string $name
+	 * @param string $formletClass
+	 * @return Formlet
 	 */
-	public function addSubscribers(string $name, string $class, BelongsToMany $builder, $items = null) {
-
-		$items = $items ?? $builder->getRelated()->all();
-		$models = $builder->get();
-
-		foreach ($items as $item) {
-			$formlet = app()->make($class);
-			$model = $this->getModelByKey($item->getKey(), $models);
-			$this->addSubscriberFormlet($formlet, $name, $item, $model);
-		}
+	public function addFormlet(string $name, string $formletClass): Formlet {
+		$formlet = app()->make($formletClass)->with($this->data);
+		$formlet->name = $name;
+		$this->formlets[$name] = $formlet;
+		return $formlet;
 	}
 
 	/**
@@ -208,39 +255,6 @@ abstract class Formlet {
 	 */
 	protected function getModelByKey(int $key, Collection $models, $keyName = "id") {
 		return $models->where($keyName, $key)->first();
-	}
-
-	protected function addSubscriberFormlet(Formlet $formlet, string $name, Model $subscriber, Model $model = null) {
-		$formlet->setModel($model);
-		$formlet->setKey($subscriber->getKey());
-		$formlet->with($name, $subscriber);
-		$formlet->setName($name);
-		$formlet->setMultiple();
-		$this->formlets[$name][] = $formlet;
-	}
-
-	/**
-	 * Get the subscriber fields from the request for a given key
-	 *
-	 * @param string   $key
-	 * @param string   $subscriber
-	 * @param \Closure means of evaluating subscription
-	 * @return Collection
-	 */
-	public function getSubscriberFields(string $key, string $subscriber = "subscriber", \Closure $closure = null) {
-
-		$subtest = function ($value) use ($subscriber) {
-			return isset($value[$subscriber]);
-		};
-
-		$closure = $closure ?? function (Collection $collection) use ($subscriber, $subtest) : Collection {
-				return $collection->filter($subtest)->map(function ($item) use ($subscriber) {
-					array_forget($item, $subscriber);
-					return $item;
-				});
-			};
-
-		return $closure(new Collection($this->fields($key)));
 	}
 
 	protected function isValid() {
@@ -408,7 +422,7 @@ abstract class Formlet {
 	 *
 	 * @return array
 	 */
-	public function fields($name = null) : array {
+	public function fields($name = null): array {
 		if (is_null($name)) {
 			if ($this->name != "") {
 				$fields = $this->request->input($this->name) ?? [];
@@ -422,21 +436,21 @@ abstract class Formlet {
 	}
 
 	/**
-	 * We are doing this to include Checkboxes/'checkable' which otherwise aren't being updated because they aren't being posted.
-	 * Be aware that if your checkbox field is not nullable, you will need to cast it or use a mutator.
+	 * We are doing this to include Checkboxes/'checkable' which otherwise aren't being updated because they aren't being
+	 * posted. Be aware that if your checkbox field is not nullable, you will need to cast it or use a mutator.
 	 *
 	 * @param $postedFields array
 	 * @return array
 	 */
-	private function rationalise(array $postedFields) : array {
+	private function rationalise(array $postedFields): array {
 		$result = $postedFields;
-		foreach($this->fields as $field) {
-				if(is_a($field,Checkbox::class)) {
-					$modelName = $field->getName();
-					if(!empty($modelName)) {
-						$result[$modelName] = @$postedFields[$modelName];
-					}
+		foreach ($this->fields as $field) {
+			if (is_a($field, Checkbox::class)) {
+				$modelName = $field->getName();
+				if (!empty($modelName)) {
+					$result[$modelName] = @$postedFields[$modelName];
 				}
+			}
 		}
 		return $result;
 	}
@@ -679,60 +693,6 @@ abstract class Formlet {
 		return is_null($errors) ? [] : $errors->getBag('default');
 	}
 
-	/**
-	 * Get the check state for a checkbox input.
-	 * TODO this fails completely, it seems, except for subscribers...
-	 * BG: AFAIK This is only called when dealing with gets/render.
-	 *
-	 * @param  string $name
-	 * @param  mixed  $value
-	 * @param  bool   $checked
-	 * @return bool
-	 */
-	protected function getCheckboxCheckedState($name, $value, $checked) {
-		//the name is the field's model name, not input-name-attribute.
-
-		//This is sometimes redundant, but they are useful for some of the jiggery-pokery we will be doing.
-		$prefixedName = $this->getFieldPrefix($name);
-		$dataName = $this->transformKey($prefixedName);
-
-		//Was this checkbox unset in session?
-		//TODO: Find out what this is for.
-		$noOldValue = true;
-		if (isset($this->session)) {
-			$oldInput = $this->session->getOldInput();
-			if (count($oldInput) > 0) {
-				if (is_null($this->old($name))) {
-					return false;
-				}
-				$old = Arr::get($oldInput,$dataName);
-				$noOldValue = is_null($old);
-			}
-		}
-
-		//so when loading, we need to find the data that matches the checkbox's value.
-		//This stuff below will either return the model which has the value, or the value itself.
-		if ($dataName == "") {
-			$model = $this->model;
-		} else {
-			if ($this->isMultiple()) {
-				$model = data_get($this->model, "pivot.$dataName") ?? data_get($this->model, $dataName);
-			} else {
-				$model = data_get($this->model, $dataName);
-			}
-		}
-
-		$checked = $noOldValue && is_null($model);
-
-		if (is_array($model)) {
-			$checked = in_array($value, $model);
-		} elseif ($model instanceof Collection) {
-			$checked = $model->contains('id', $value);
-		} elseif ($model == $value) {
-			$checked = true;
-		}
-		return $checked;
-	}
 
 	protected function populate() {
 
@@ -782,14 +742,8 @@ abstract class Formlet {
 		 * The fieldName is what will appear on the html, whereas the name is the model name for the field.
 		 */
 		$name = $field->getName();
-
 		$value = $field->getValue(); //This should be the value it has if it is checked, and should be set in the formlet.
 		$default = $field->getDefault();
-
-		//So we haven't yet touched the model here.
-		//Not sure I know why we got the value and then immediately set it again.
-		//the field get/set are just accessors to the value attribute.
-		//$field->setValue($value);
 
 		$checked = $this->getCheckboxCheckedState($name, $value, $default);
 
@@ -799,6 +753,74 @@ abstract class Formlet {
 
 		return $field;
 	}
+
+	/**
+	 * Get the check state for a checkbox input.
+	 * TODO PD/BG need to review and clean this together.
+	 * The usage of checkboxes is varied and complex - sometimes the value is relevant.
+	 * whereas at other times the value is not relevant, but the existence is.
+	 * Also data is attached in different ways to each checkbox / model.
+	 * We probably need to determine/decide upon the LaravelRS 'way' for checkboxes,
+	 * bearing in mind that subscribers, subscribe types, and model-holding checkboxes
+	 * all have slightly different needs...
+	 *
+	 * Maybe we need to implement different Checkbox fields, then move the state Checker to the field itself?
+	 *
+	 *
+	 * @param  string $name
+	 * @param  mixed  $value
+	 * @param  $default -- no longer used for some reason.
+	 * @return bool
+	 */
+	protected function getCheckboxCheckedState($name, $value, $default) {
+		//the name is the field's model name, not input-name-attribute.
+		//This avoids the stuff below, probably not such a good idea.
+		if (isset($this->subscriber) && $name == $this->subscriber) {
+			return !is_null($this->getData($name));
+		}
+
+		//This is sometimes redundant, but they are useful for some of the jiggery-pokery we will be doing.
+		$prefixedName = $this->getFieldPrefix($name);
+		$dataName = $this->transformKey($prefixedName);
+
+		//Was this checkbox unset in session?
+		//TODO: Find out what this is for.
+		$noOldValue = true;
+		if (isset($this->session)) {
+			$oldInput = $this->session->getOldInput();
+			if (count($oldInput) > 0) {
+				if (is_null($this->old($name))) {
+					return false;
+				}
+				$old = Arr::get($oldInput, $dataName);
+				$noOldValue = is_null($old);
+			}
+		}
+
+		//so when loading, we need to find the data that matches the checkbox's value.
+		//This stuff below will either return the model which has the value, or the value itself.
+		if ($dataName == "") {
+			$model = $this->model;
+		} else {
+			if ($this->isMultiple()) {
+				$model = data_get($this->model, "pivot.$dataName") ?? data_get($this->model, $dataName) ?? $this->getData($dataName);
+			} else {
+				$model = data_get($this->model, $dataName);
+			}
+		}
+
+		$checked = $noOldValue && is_null($model);
+
+		if (is_array($model)) {
+			$checked = in_array($value, $model);
+		} elseif ($model instanceof Collection) {
+			$checked = $model->contains('id', $value);
+		} elseif ($model == $value) {
+			$checked = true;
+		}
+		return $checked;
+	}
+
 
 	/**
 	 * Set url generator

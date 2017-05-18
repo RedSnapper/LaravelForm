@@ -119,14 +119,14 @@ abstract class AbstractField {
 	 * @return string
 	 */
 	public function getName(): string {
-		return $this->name;
+		return $this->name ?? "";
 	}
 
 	/**
 	 * @param string $name
 	 * @return AbstractField
 	 */
-	public function setName(string $name): AbstractField {
+	public function setName(string $name = null): AbstractField {
 		$this->name = $name;
 		return $this;
 	}
