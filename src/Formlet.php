@@ -158,14 +158,30 @@ abstract class Formlet {
 	}
 
 	/**
-	 * Get the subscriber fields from the request for a given key
+	 * Get the subscriber fields from the request for a given key.
+	 * This will handle pivot fields as required. That's why each id has an array attached to it.
 	 *
 	 * @param string   $key
 	 * @return Collection
 	 */
 	public function getSubscriberFields(string $key) : Collection {
-		$fieldsToCollect = array_keys($this->fields($key));
-		return new Collection($fieldsToCollect);
+		$result = $this->fields($key);
+		foreach ($this->formlets[$key] as $formlet) {
+			$result = $formlet->subscribe($result);
+		}
+		return new Collection($result);
+	}
+
+	protected function subscribe(array $request) {
+		$myData = @$request[$this->key];
+		if (!is_null($myData)) {
+			if (isset($myData[$this->subscriber ?? 'subscriber'])) {
+				unset($request[$this->key][$this->subscriber ?? 'subscriber']);
+			} else {
+				unset($request[$this->key]);
+			}
+		}
+		return $request;
 	}
 
 	/**
@@ -184,7 +200,6 @@ abstract class Formlet {
 	 * @param Collection|array|null $subscribeOptions
 	 */
 	public function addSubscribers(string $name, string $formletClass, BelongsToMany $builder, $subscribeOptions = null) {
-
 		$subscribeOptions = $subscribeOptions ?? $builder->getRelated()->all();
 		$subscribedModels = $builder->get();
 
@@ -209,8 +224,10 @@ abstract class Formlet {
 	protected function addSubscriberFormlet(Formlet $formlet, string $name, Model $option, Model $subscribed = null) {
 		$dataName = $formlet->subscriber ?? $name;
 		$formlet->setKey($option->getKey());
+		$formlet->setModel($option);
 		$formlet->with($dataName, $subscribed);
 		$formlet->with('option', $option);
+		$formlet->with('master', $this->model);
 		$formlet->setName($name);
 		$formlet->setMultiple();
 		$this->formlets[$name][] = $formlet;
