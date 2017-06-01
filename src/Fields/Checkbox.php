@@ -8,9 +8,16 @@ class Checkbox extends AbstractField {
 
 	protected $type = "checkable";
 
-	public function __construct(string $name = '', $value = 1) {
+	private $unchecked;
+
+	public function unChecked() {
+		return $this->unchecked;
+	}
+
+	public function __construct(string $name = '', $checked = 1, $unchecked = 0) {
 		$this->name = $name;
-		$this->value = $value;
+		$this->value = $checked;
+		$this->unchecked = $unchecked;
 		$this->attributes = collect([]);
 	}
 

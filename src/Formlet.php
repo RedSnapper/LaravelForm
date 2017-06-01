@@ -466,6 +466,8 @@ abstract class Formlet {
 				$modelName = $field->getName();
 				if (!empty($modelName)) {
 					$result[$modelName] = @$postedFields[$modelName];
+				} else {
+					$result[$modelName] = $field->unChecked();
 				}
 			}
 		}
