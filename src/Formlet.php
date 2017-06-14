@@ -7,16 +7,21 @@ use Illuminate\Contracts\Session\Session;
 use Illuminate\Contracts\Support\MessageBag;
 use Illuminate\Contracts\Validation\Factory;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\MessageBag as IMessageBag;
 use Illuminate\Validation\ValidationException;
 use RS\Form\Concerns\ManagesForm;
 use RS\Form\Fields\AbstractField;
 use RS\Form\Fields\Checkbox;
+use RS\NView\View;
+use Symfony\Component\HttpFoundation\Response;
 
 abstract class Formlet {
 	use ManagesForm;
@@ -108,7 +113,7 @@ abstract class Formlet {
 	 */
 	protected $data = [];
 
-	abstract public function prepareForm();
+	abstract public function prepareForm(): void;
 
 	public function rules(): array {
 		return [];
@@ -119,9 +124,9 @@ abstract class Formlet {
 	 *
 	 * @param  string|array $key
 	 * @param  mixed        $value
-	 * @return $this
+	 * @return Formlet
 	 */
-	public function with($key, $value = null) {
+	public function with($key, $value = null): Formlet {
 		if (is_array($key)) {
 			$this->data = array_merge($this->data, $key);
 		} else {
@@ -130,6 +135,9 @@ abstract class Formlet {
 		return $this;
 	}
 
+	/*
+	 * @return mixed
+	 */
 	public function getData(string $name) {
 		return data_get($this->data, $name);
 	}
@@ -146,12 +154,14 @@ abstract class Formlet {
 	/**
 	 * @param bool $multiple
 	 */
-	public function setMultiple(bool $multiple = true) {
+	public function setMultiple(bool $multiple = true): void {
 		$this->multiple = $multiple;
 	}
 
 	/**
 	 * Get the key for the formlet
+	 *
+	 * @return mixed
 	 */
 	public function getKey() {
 		return $this->key;
@@ -161,10 +171,10 @@ abstract class Formlet {
 	 * Get the subscriber fields from the request for a given key.
 	 * This will handle pivot fields as required. That's why each id has an array attached to it.
 	 *
-	 * @param string   $key
+	 * @param string $key
 	 * @return Collection
 	 */
-	public function getSubscriberFields(string $key) : Collection {
+	public function getSubscriberFields(string $key): Collection {
 		$result = $this->fields($key);
 		foreach ($this->formlets[$key] as $formlet) {
 			$result = $formlet->subscribe($result);
@@ -172,22 +182,43 @@ abstract class Formlet {
 		return new Collection($result);
 	}
 
-	protected function subscribe(array $request) {
-		$myData = @$request[$this->key];
-		if (!is_null($myData)) {
-			if (isset($myData[$this->subscriber ?? 'subscriber'])) {
-				unset($request[$this->key][$this->subscriber ?? 'subscriber']);
-			} else {
-				unset($request[$this->key]);
+	public function getFieldFromName(string $key): array {
+		return $this->fields($key);
+	}
+
+	//called by a subscriber formlet owner.
+	protected function subs($data): array {
+		$result = [];
+		foreach ($data as $datum) {
+			$stuff = $datum->subscribe();
+			if (!is_null($stuff)) {
+				$result[$datum->getKey()] = $stuff;
 			}
 		}
-		return $request;
+		return $result;
+	}
+
+	//called within a subscriber formlet
+	protected function subscribe(): ?array {
+		$result = $this->fields($this->key);
+		if (!is_null($result)) {
+			$subscriberFieldName = $this->subscriber ?? 'subscriber';
+			$subscriberField = $this->fields[$subscriberFieldName]; //AbstractField. Probably a checkbox.
+			$value = $subscriberField->getValue();
+			if (isset($result[$subscriberFieldName]) && $result[$subscriberFieldName] == $value) {
+				unset($result[$subscriberFieldName]);
+			} else {
+				$result = null;
+			}
+		}
+		return $result;
 	}
 
 	/**
 	 * Add subscribers to this formlet.
 	 * We are going to construct an array of subscriber formlets using $class as a template.
-	 * using builder->related->all as the basic list of options, and builder as the selected list of options.
+	 * BelongsToMany will contain the builder query for our subscribed values.
+	 * We will derive the query for the options, by using getRelated from that and inheriting any joins that apply to it.
 	 *
 	 * @param string                $name
 	 *   name is an identifier used to compose the data / fieldnames.
@@ -199,9 +230,35 @@ abstract class Formlet {
 	 *   $this->model->activities() (where the model is eg /App/Models/Role)
 	 * @param Collection|array|null $subscribeOptions
 	 */
-	public function addSubscribers(string $name, string $formletClass, BelongsToMany $builder, $subscribeOptions = null) {
-		$subscribeOptions = $subscribeOptions ?? $builder->getRelated()->all();
-		$subscribedModels = $builder->get();
+	public function addSubscribers(string $name,
+																 string $formletClass,
+																 BelongsToMany $builder,
+																 $subscribeOptions = null
+																): void {
+
+		$subscribedModels  = $builder->get();
+		/**
+		 * The following $subscribeOptions code is all rather low-level...
+		 */
+		if(is_null($subscribeOptions)) {
+			$related = $builder->getRelated(); //the basic model.
+			$name = $related->getTable();
+			$rWheres = [];
+			$rBindings = [];
+			$oWheres = $builder->getBaseQuery()->wheres;
+			$oBindings = $builder->getBaseQuery()->bindings['where'];
+			for($i=0; $i < count($oWheres); $i++ ) {
+				$where = $oWheres[$i];
+				if(explode('.',$where['column'])[0] == $name) {
+					$rWheres[] = $where;
+					$rBindings[] = $oBindings[$i];
+				}
+			}
+			$options = $related->newQuery();
+			$options->getQuery()->wheres = $rWheres;
+			$options->getQuery()->bindings['where'] = $rBindings;
+			$subscribeOptions = $options->get();
+		}
 
 		foreach ($subscribeOptions as $option) {
 			$formlet = app()->make($formletClass);
@@ -219,18 +276,22 @@ abstract class Formlet {
 	 * @param Formlet    $formlet
 	 * @param string     $name
 	 * @param Model      $option
-	 * @param Model|null $subscribed
+	 * @param array $subscribed
 	 */
-	protected function addSubscriberFormlet(Formlet $formlet, string $name, Model $option, Model $subscribed = null) {
+	protected function addSubscriberFormlet(Formlet $formlet,
+																					string $name,
+																					Model $option,
+																					array $subscribed = []): void {
 		$dataName = $formlet->subscriber ?? $name;
-		$formlet->setKey($option->getKey());
+		$key = $option->getKey();
+		$formlet->setKey($key);
 		$formlet->setModel($option);
-		$formlet->with($dataName, $subscribed);
+		$formlet->with($dataName,count($subscribed) == 1 ? array_pop($subscribed): $subscribed);
 		$formlet->with('option', $option);
 		$formlet->with('master', $this->model);
 		$formlet->setName($name);
 		$formlet->setMultiple();
-		$this->formlets[$name][] = $formlet;
+		$this->formlets[$name][$key] = $formlet;
 	}
 
 	/**
@@ -268,13 +329,13 @@ abstract class Formlet {
 	 * @param int        $key
 	 * @param Collection $models
 	 * @param string     $keyName
-	 * @return Model|null
+	 * @return array
 	 */
-	protected function getModelByKey(int $key, Collection $models, $keyName = "id") {
-		return $models->where($keyName, $key)->first();
+	protected function getModelByKey(int $key, Collection $models, $keyName = "id"): array {
+		return $models->where($keyName, $key)->all();
 	}
 
-	protected function isValid() {
+	protected function isValid(): bool {
 
 		$errors = [];
 
@@ -299,7 +360,7 @@ abstract class Formlet {
 		return $this->redirectIfErrors($errors);
 	}
 
-	protected function redirectIfErrors(array $errors) {
+	protected function redirectIfErrors(array $errors): bool {
 
 		if (count($errors)) {
 			throw new ValidationException($this->validator, $this->buildFailedValidationResponse(
@@ -316,7 +377,7 @@ abstract class Formlet {
 	 * @param  array $errors
 	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
-	protected function buildFailedValidationResponse(array $errors) {
+	protected function buildFailedValidationResponse(array $errors): Response {
 		if ($this->request->expectsJson()) {
 			return new JsonResponse($errors, 422);
 		}
@@ -335,7 +396,7 @@ abstract class Formlet {
 	 * @param  array $customAttributes
 	 * @return array
 	 */
-	public function validate(array $request, array $rules, array $messages = [], array $customAttributes = []) {
+	public function validate(array $request, array $rules, array $messages = [], array $customAttributes = []): array {
 		$this->validator = $this->getValidationFactory()->make($request, $rules, $messages, $customAttributes);
 
 		$this->addCustomValidation($this->validator);
@@ -346,59 +407,62 @@ abstract class Formlet {
 		return [];
 	}
 
-	public function addCustomValidation(Validator $validator) {
+	public function addCustomValidation(Validator $validator): void {
 	}
 
-	public function renderWith($modes) {
+	public function renderWith($modes): View {
 		return $this->create($modes)->render();
 	}
 
-	public function store() {
+	public function store(): ?Model {
 		if (!$this->prepare()) {
 			return null;
 		}
 		if ($this->isValid()) {
 			return $this->persist();
 		}
+		return null;
 	}
 
-	public function persist(): Model {
+	public function persist(): ?Model {
 		if (isset($this->model)) {
 			$this->model = $this->model->create($this->fields());
 		}
 		return $this->model;
 	}
 
-	public function delete($key): Model {
+	public function delete($key): ?Model {
 		return $this->model->destroy($key);
 	}
 
-	public function edit(): Model {
-		if (isset($this->model)) {
-			$fieldsToSave = $this->fields();
+	public function edit(): ?Model {
+		$commit = true;
+		$fieldsToSave = $this->fields();
+		if ($commit && isset($this->model)) {
 			$this->model->fill($fieldsToSave);
 			$this->model->save();
 		}
-		return $this->model;
+		return @$this->model;
 	}
 
-	public function update() {
+	public function update(): ?Model {
 		if (!$this->prepare()) {
 			return $this->model;
 		}
 		if ($this->isValid()) {
 			return $this->edit();
 		}
+		return $this->model;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getName(): string {
+	public function getName(): ?string {
 		return $this->name;
 	}
 
-	public function setKey($key) {
+	public function setKey($key): Formlet {
 		$this->key = $key;
 		if (isset($this->model) && isset($this->key)) {
 			$this->model = $this->model->find($this->key);
@@ -409,7 +473,7 @@ abstract class Formlet {
 	/**
 	 * @param string $name
 	 */
-	public function setName(string $name) {
+	public function setName(string $name): void {
 		$this->name = $name;
 	}
 
@@ -419,37 +483,75 @@ abstract class Formlet {
 	 * @param  mixed $model
 	 * @return Formlet
 	 */
-	public function setModel($model) {
+	public function setModel($model): Formlet {
 		$this->model = $model;
 		return $this;
 	}
 
 	/**
 	 * Add a field to the formlet
+	 * We will name the field if we can.
 	 *
 	 * @param AbstractField $field
 	 */
-	public function add(AbstractField $field) {
-		$this->fields[] = $field;
+	public function add(AbstractField $field): void {
+		$name = $field->getName();
+		if (!is_null($name) && $name !== "") {
+			$this->fieldsNamed = true;
+
+			if (strlen($name) > 2 && substr($name, -2) == "[]") {
+				if (!isset($this->fields[$name])) {
+					$this->fields[$name] = [$field];
+				} else {
+					$this->fields[$name][] = $field;
+				}
+			} else {
+				$this->fields[$name] = $field;
+			}
+		} else {
+			$this->fieldsNamed = false;
+			$this->fields[] = $field;
+		}
 	}
 
 	/**
 	 * Fetch all fields from the form.
-	 * I want to change this so that we get stuff for 'this' formlet also, rather than all.
+	 * BG: I want to change this so that we get stuff for 'this' formlet also, rather than all.
 	 *
+	 * @param $name string
 	 * @return array
 	 */
-	public function fields($name = null): array {
-		if (is_null($name)) {
-			if ($this->name != "") {
-				$fields = $this->request->input($this->name) ?? [];
-			} else {
-				$fields = $this->request->all();
-			}
+	public function fields(string $name = null): array {
+		if ($this->multiple) {
+			$fields = $this->request->input($this->name); //
+			$fields = @$fields[$name] ?? [];
+			return $this->rationalise($fields);
 		} else {
-			$fields = $this->request->input($name) ?? [];
+			if (is_null($name)) {
+				if ($this->name != "") {
+					$fields = $this->request->input($this->name) ?? [];
+				} else {
+					$fields = $this->request->all();
+				}
+				return $this->rationalise($fields);
+			} else {
+				if (array_key_exists($name, $this->formlets)) {
+					$key = $this->getKey();
+					if (is_null($key)) {
+						foreach ($this->formlets[$name] as $formlet) {
+							$fields[] = $formlet->fields();
+						}
+					} else {
+						foreach ($this->formlets[$name] as $formlet) {
+							$fields[$key] = $formlet->fields();
+						}
+					}
+				} else {
+					$fields = $this->request->input($name) ?? [];
+				}
+				return $this->rationalise($fields);
+			}
 		}
-		return $this->rationalise($fields);
 	}
 
 	/**
@@ -459,18 +561,35 @@ abstract class Formlet {
 	 * @param $postedFields array
 	 * @return array
 	 */
-	private function rationalise(array $postedFields): array {
+	protected function rationalise(array $postedFields): array {
 		$result = $postedFields;
+		//if($this->multiple) {
+		//	$theResult = [];
+		//	foreach ($this->fields as $field) {
+		//		if (is_a($field, Checkbox::class)) {
+		//			$modelName = $field->getName();
+		//			foreach($result as $post) {
+		//				if (!empty($modelName)) {
+		//					$post[$modelName] = $post[$modelName] ?? $field->unChecked();
+		//				} else {
+		//					$post[$modelName] = $field->unChecked();
+		//				}
+		//				$theResult[] = $post;
+		//			}
+		//		}
+		//	}
+		//	$result = $theResult;
+		//} else {
 		foreach ($this->fields as $field) {
 			if (is_a($field, Checkbox::class)) {
 				$modelName = $field->getName();
-				if (!empty($modelName)) {
-					$result[$modelName] = @$postedFields[$modelName];
-				} else {
+				if (!empty($modelName) && !isset($result[$modelName])) {
 					$result[$modelName] = $field->unChecked();
+//					$post[$modelName] = $post[$modelName] ?? $field->unChecked();
 				}
 			}
 		}
+//		}
 		return $result;
 	}
 
@@ -493,6 +612,18 @@ abstract class Formlet {
 		return true;
 	}
 
+	protected function doFieldNames(array $fields): void {
+		foreach ($fields as $field) {
+			if (is_array($field)) {
+				$this->doFieldNames($field);
+			} else {
+				$name = $field->getName(); // ?? "";
+				$prefixedName = $this->getFieldPrefix($name);
+				$field->setFieldName($prefixedName);
+			}
+		}
+	}
+
 	protected function prepare(Formlet $parent = null): bool {
 		$this->name = $this->name == "" ? (is_null($parent) ? "base" : "$parent->name.base") : $this->name;
 
@@ -500,24 +631,20 @@ abstract class Formlet {
 			return false;
 		}
 		$this->prepareForm();
-
 		$this->prepareFormlets($this->formlets);
-
 		//We only need a name if we have formlets and we have fields.
 		if (count($this->formlets) && count($this->fields)) {
 			$this->formlets[$this->name] = clone $this;
 			$this->formlets[$this->name]->formlets = [];
 		} elseif (is_null($parent)) {
-			$this->name = "";
+			$this->name = null;
 		}
 
-		foreach ($this->fields as $field) {
-			$field->setFieldName($this->getFieldPrefix($field->getName()));
-		}
+		$this->doFieldNames($this->fields);
 		return true;
 	}
 
-	protected function prepareFormlets(array $formlets) {
+	protected function prepareFormlets(array $formlets): void {
 
 		foreach ($formlets as $name => $formlet) {
 			if (is_array($formlet)) {
@@ -528,7 +655,7 @@ abstract class Formlet {
 		}
 	}
 
-	public function render() {
+	public function render(): View {
 		if (!$this->prepare()) {
 			return null;
 		}
@@ -543,6 +670,11 @@ abstract class Formlet {
 		return view($this->formView, $data);
 	}
 
+	/**
+	 * This has mixed return types and needs to be split.
+	 *
+	 * @param array $formlets
+	 **/
 	protected function renderFormlets($formlets = []) {
 
 		if (count($this->formlets)) {
@@ -567,9 +699,9 @@ abstract class Formlet {
 		}
 	}
 
-	public function renderFormlet() {
+	public function renderFormlet(): ViewContract {
 
-		$errors = $this->getErrors();
+		$errors = $this->getErrors(); //		MessageBag
 
 		$data = [
 			'fields' => $this->getFieldData($this->fields),
@@ -578,19 +710,17 @@ abstract class Formlet {
 
 		$data = array_merge($data, $this->data);
 
-		return view($this->formletView, $data)->withErrors($errors);
+		return view($this->formletView, $data)->withErrorBag($errors);
 	}
 
 	protected function getFieldData(array $fields): array {
-		return array_map(function (AbstractField $field) {
-			return $field->getData();
+		return array_map(function ($field) {
+			if (is_array($field)) {
+				return $this->getFieldData($field);
+			} else { //$field is an AbstractField.
+				return $field->getData();
+			}
 		}, $fields);
-	}
-
-	protected function setFieldNames() {
-		foreach ($this->fields as $field) {
-			$field->setFieldName($this->getFieldPrefix($field->getName()));
-		}
 	}
 
 	/**
@@ -664,9 +794,9 @@ abstract class Formlet {
 	 * Transform key from array to dot syntax.
 	 *
 	 * @param  string $key
-	 * @return mixed
+	 * @return string
 	 */
-	protected function transformKey($key) {
+	protected function transformKey($key): string {
 		return str_replace(['.', '[]', '[', ']'], ['_', '', '.', ''], $key);
 	}
 
@@ -703,32 +833,37 @@ abstract class Formlet {
 
 	/**
 	 * Returns any errors from the session
+	 * Always returns a MessageBag.
 	 *
-	 * @return array|MessageBag
+	 * @return MessageBag
 	 */
-	protected function getErrors() {
+	protected function getErrors(): MessageBag {
 		$errors = $this->session->get('errors');
 
-		return is_null($errors) ? [] : $errors->getBag('default');
+		return is_null($errors) ? new IMessageBag : $errors->getBag('default');
 	}
 
-
-	protected function populate() {
-
-		$this->transformGuardedAttributes();
-
-		foreach ($this->fields as $field) {
-			if (is_null($type = $field->getType())) {
-				$this->setFieldValue($field);
+	protected function setValues(array $fields): void {
+		foreach ($fields as $field) {
+			if (is_array($field)) {
+				$this->setValues($field);
 			} else {
-				$this->$type($field);
+				if (is_null($type = $field->getType())) {
+					$this->setFieldValue($field);
+				} else {
+					$this->$type($field);
+				}
 			}
 		}
+	}
 
+	protected function populate(): void {
+		$this->transformGuardedAttributes();
+		$this->setValues($this->fields);
 		$this->populateFormlets($this->formlets);
 	}
 
-	protected function populateFormlets(array $formlets = []) {
+	protected function populateFormlets(array $formlets = []): void {
 		foreach ($formlets as $formlet) {
 			if (is_array($formlet)) {
 				$this->populateFormlets($formlet);
@@ -738,13 +873,13 @@ abstract class Formlet {
 		}
 	}
 
-	protected function transformGuardedAttributes() {
+	protected function transformGuardedAttributes(): void {
 		$this->guarded = array_map(function ($item) {
 			return $this->getFieldPrefix($item);
 		}, $this->guarded);
 	}
 
-	protected function checkable(AbstractField $field) {
+	protected function checkable(AbstractField $field): AbstractField {
 
 		/**
 		 * So, 'checkable' fields (Checkbox) don't return anything in the post unless they are checked.
@@ -764,7 +899,7 @@ abstract class Formlet {
 		$value = $field->getValue(); //This should be the value it has if it is checked, and should be set in the formlet.
 		$default = $field->getDefault();
 
-		$checked = $this->getCheckboxCheckedState($name, $value, $default);
+		$checked = $this->getCheckboxCheckedState($field,$name, $value, $default);
 
 		if ($checked) {
 			$field->setAttribute('checked');
@@ -782,23 +917,23 @@ abstract class Formlet {
 	 * We probably need to determine/decide upon the LaravelRS 'way' for checkboxes,
 	 * bearing in mind that subscribers, subscribe types, and model-holding checkboxes
 	 * all have slightly different needs...
-	 *
 	 * Maybe we need to implement different Checkbox fields, then move the state Checker to the field itself?
-	 *
 	 *
 	 * @param  string $name
 	 * @param  mixed  $value
-	 * @param  $default -- no longer used for some reason.
+	 * @param         $default -- no longer used for some reason.
 	 * @return bool
 	 */
-	protected function getCheckboxCheckedState($name, $value, $default) {
+	protected function getCheckboxCheckedState(AbstractField $field, $name, $value, $default): bool {
 		//the name is the field's model name, not input-name-attribute.
 		//This avoids the stuff below, probably not such a good idea.
 		if (isset($this->subscriber) && $name == $this->subscriber) {
 			return !is_null($this->getData($name));
 		}
 
-		//This is sometimes redundant, but they are useful for some of the jiggery-pokery we will be doing.
+		//This is sometimes redundant...
+		//They get access to the data structure, but NOT the model.
+		//Model attribute is via the $name above,  I think.
 		$prefixedName = $this->getFieldPrefix($name);
 		$dataName = $this->transformKey($prefixedName);
 
@@ -818,28 +953,28 @@ abstract class Formlet {
 
 		//so when loading, we need to find the data that matches the checkbox's value.
 		//This stuff below will either return the model which has the value, or the value itself.
-		if ($dataName == "") {
-			$model = $this->model;
-		} else {
+		if ($name != "") {
+			$value = null;
 			if ($this->isMultiple()) {
-				$model = data_get($this->model, "pivot.$dataName") ?? data_get($this->model, $dataName) ?? $this->getData($dataName);
+				$value = data_get($this->model, "pivot.$name") ?? data_get($this->model, $name) ?? $this->getData($dataName);
 			} else {
-				$model = data_get($this->model, $dataName);
+				$value = data_get($this->model, $name);
+			}
+			if(isset($value)) {
+				return $value != $field->unChecked();
 			}
 		}
-
-		$checked = $noOldValue && is_null($model);
-
-		if (is_array($model)) {
-			$checked = in_array($value, $model);
-		} elseif ($model instanceof Collection) {
-			$checked = $model->contains('id', $value);
-		} elseif ($model == $value) {
-			$checked = true;
-		}
+		$checked = $noOldValue && is_null($this->model);
+		//
+		//if (is_array($model)) {
+		//	$checked = in_array($value, $model);
+		//} elseif ($model instanceof Collection) {
+		//	$checked = $model->contains('id', $value);
+		//} elseif ($model == $value) {
+		//	$checked = true;
+		//}
 		return $checked;
 	}
-
 
 	/**
 	 * Set url generator
@@ -847,7 +982,7 @@ abstract class Formlet {
 	 * @param UrlGenerator $url
 	 * @return $this
 	 */
-	public function setUrlGenerator(UrlGenerator $url) {
+	public function setUrlGenerator(UrlGenerator $url): Formlet {
 		$this->url = $url;
 		return $this;
 	}
@@ -858,7 +993,7 @@ abstract class Formlet {
 	 * @param Request $request
 	 * @return $this
 	 */
-	public function setRequest(Request $request) {
+	public function setRequest(Request $request): Formlet {
 		$this->request = $request;
 		return $this;
 	}
@@ -868,7 +1003,7 @@ abstract class Formlet {
 	 *
 	 * @param Session $session
 	 */
-	public function setSessionStore(Session $session) {
+	public function setSessionStore(Session $session): void {
 		$this->session = $session;
 	}
 
@@ -877,12 +1012,12 @@ abstract class Formlet {
 	 *
 	 * @return \Illuminate\Contracts\Validation\Factory
 	 */
-	protected function getValidationFactory() {
+	protected function getValidationFactory(): Factory {
 		return app(Factory::class);
 	}
 
 	//nested formlets need nested name.
-	public function getModel($name = "") {
+	public function getModel($name = ""): ?Model {
 		if (isset($this->formlets[$name])) {
 			return $this->formlets[$name]->getModel();
 		} else {
@@ -891,7 +1026,12 @@ abstract class Formlet {
 	}
 
 	//nested formlets need nested name.
-	protected function getFormlet($name = "") {
+	protected function getFormlet($name = ""): ?Formlet {
+		return @$this->formlets[$name];
+	}
+
+	//nested formlets need nested name.
+	protected function getFormlets($name = ""): ?array {
 		return @$this->formlets[$name];
 	}
 
@@ -901,7 +1041,7 @@ abstract class Formlet {
 	 * @param  \Illuminate\Contracts\Validation\Validator $validator
 	 * @return array
 	 */
-	protected function formatValidationErrors(Validator $validator) {
+	protected function formatValidationErrors(Validator $validator): array {
 
 		$errors = collect($validator->errors()->getMessages());
 
@@ -912,11 +1052,11 @@ abstract class Formlet {
 		return $errors->all();
 	}
 
-	protected function getFieldPrefix($field) {
+	protected function getFieldPrefix(string $field=null): string {
 
 		$name = $this->getName();
 
-		if ($name == "") {
+		if (is_null($name) || $name == "") {
 			return $field;
 		}
 
@@ -955,9 +1095,9 @@ abstract class Formlet {
 	/**
 	 * Get the URL we should redirect to.
 	 *
-	 * @return string
+	 * @return URL
 	 */
-	protected function getRedirectUrl() {
-		return app(UrlGenerator::class)->previous();
+	protected function getRedirectUrl(): URL {
+		return url(app(UrlGenerator::class)->previous());
 	}
 }

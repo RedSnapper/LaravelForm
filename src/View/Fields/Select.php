@@ -30,7 +30,7 @@ class Select extends Field {
 		return $view;
 	}
 
-	public function renderOptions(Document $view, array $data) {
+	public function renderOptions(Document $view, array $data): void {
 
 		$items = $data['options'];
 		$selected = $data['value'];

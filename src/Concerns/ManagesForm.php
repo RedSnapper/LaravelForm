@@ -74,7 +74,7 @@ trait ManagesForm {
 	 * @param  array $options
 	 * @return string
 	 */
-	protected function getAction(array $options) {
+	protected function getAction(array $options): string {
 
 		// We will also check for a "route" or "action" parameter on the array so that
 		// developers can easily specify a route or controller action when creating
@@ -102,7 +102,7 @@ trait ManagesForm {
 	 * @param  array|string $options
 	 * @return string
 	 */
-	protected function getUrlAction($options) {
+	protected function getUrlAction($options): string {
 		if (is_array($options)) {
 			return $this->url->to($options[0], array_slice($options, 1));
 		}
@@ -115,7 +115,7 @@ trait ManagesForm {
 	 * @param  array|string $options
 	 * @return string
 	 */
-	protected function getRouteAction($options) {
+	protected function getRouteAction($options): string {
 		if (is_array($options)) {
 			return $this->url->route($options[0], array_slice($options, 1));
 		}
@@ -128,7 +128,7 @@ trait ManagesForm {
 	 * @param  array|string $options
 	 * @return string
 	 */
-	protected function getControllerAction($options) {
+	protected function getControllerAction($options): string {
 		if (is_array($options)) {
 			return $this->url->action($options[0], array_slice($options, 1));
 		}
@@ -140,7 +140,7 @@ trait ManagesForm {
 	 *
 	 * @param  string $method
 	 */
-	protected function getAppendage($method) {
+	protected function getAppendage($method): void {
 
 		$method = strtoupper($method);
 		// If the HTTP method is in this list of spoofed methods, we will attach the
@@ -158,7 +158,7 @@ trait ManagesForm {
 		}
 	}
 
-	protected function token() {
+	protected function token(): void {
 		$this->hidden[] = (new Hidden('_token'))->setValue($this->session->token());
 	}
 }

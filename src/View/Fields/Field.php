@@ -15,7 +15,7 @@ class Field extends ViewController {
 
 	protected $rootElement = "input";
 
-	protected function renderDefaults(Document $view, $data){
+	protected function renderDefaults(Document $view, $data) : void {
 		$this->renderName($view,$data);
 		$this->renderAttributes($view,$data);
 		$this->renderId($view,$data);
@@ -23,7 +23,7 @@ class Field extends ViewController {
 		$this->renderLabel($view,$data);
 	}
 
-	protected function renderLabel(Document $view,array $data) {
+	protected function renderLabel(Document $view,array $data): void {
 		if (!isset($data['label'])){
 			$view->set("//*[@data-v.xp='label']");
 		}else{
@@ -31,7 +31,7 @@ class Field extends ViewController {
 		}
 	}
 
-	protected function renderAttributes(Document $view, $data) {
+	protected function renderAttributes(Document $view, $data): void {
 
 		$element = $this->rootElement;
 
@@ -42,7 +42,7 @@ class Field extends ViewController {
 		}
 	}
 
-	protected function renderValue(Document $view, $data) {
+	protected function renderValue(Document $view, $data): void {
 
 		$element = $this->rootElement;
 
@@ -51,21 +51,21 @@ class Field extends ViewController {
 		}
 	}
 
-	protected function renderName(Document $view, $data) {
+	protected function renderName(Document $view, $data): void {
 
 		$element = $this->rootElement;
 
 		$view->set("//h:$element/@name",$data['name']);
 	}
 
-	protected function renderId(Document $view, $data){
+	protected function renderId(Document $view, $data): void {
 
 		$element = $this->rootElement;
 
 		$view->set("//h:$element/@id",$data['name']);
 	}
 
-	protected function renderError(Document $view, $data) {
+	protected function renderError(Document $view, $data): void {
 		$errors = $data['errors'];
 		if(count($errors)){
 			$view->set("/*/@class/child-gap()"," has-error");

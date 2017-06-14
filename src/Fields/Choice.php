@@ -51,7 +51,7 @@ class Choice extends AbstractField {
 		return $group;
 	}
 
-	public function getData() {
+	public function getData() : array {
 		$data = parent::getData();
 
 		$data['options'] = $this->options;

@@ -16,7 +16,7 @@ class TextArea extends Field {
 		return $view;
 	}
 
-	protected function renderValue(Document $view, $data) {
+	protected function renderValue(Document $view, $data): void {
 
 		$element = $this->rootElement;
 

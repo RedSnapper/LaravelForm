@@ -6,18 +6,33 @@ use RS\NView\Document;
 use RS\NView\ViewController;
 
 class Main extends ViewController {
-	public function render(Document $view,array $data): Document {
 
-		foreach ($data['fields'] as $fieldData) {
-			$name = $fieldData['name'];;
-			$fieldData['errors'] = $data['errors']->get($name);
-			$field = view($fieldData['view'],$fieldData);
-
-			$view->set("//*[@data-v.field='{$fieldData['field']}']",$field);
+	private function renderField(Document $view,$field,$fieldData,$fieldName,$useGap = false) {
+		$field['errors'] = $fieldData['errors']->get($field['name']);
+		$field = view($field['view'],$field);
+		if($useGap) {
+			$view->set("//*[@data-v.field='{$fieldName}']/child-gap()",$field);
+		} else {
+			$view->set("//*[@data-v.field='{$fieldName}']",$field);
 		}
-
-		return $view;
 	}
 
+	public function render(Document $view,array $data): Document {
+		if(!isset($data['fields'][0])) {
+			$data['fields'] = [$data['fields']];
+		}
+		foreach($data['fields'] as $fields ) {
+			foreach ($fields as $fieldName => $fieldData) {
+				if(isset($fieldData[0])) {
+					foreach($fieldData as $iFieldData) {
+						$this->renderField($view,$iFieldData,$data,$fieldName,true);
+					}
+				} else {
+					$this->renderField($view,$fieldData,$data,$fieldName,false);
+				}
+			}
+		}
+		return $view;
+	}
 
 }

@@ -27,6 +27,11 @@ abstract class AbstractField {
 	 */
 	protected $label;
 
+	///**
+	// * @var Route|null
+	// */
+	//protected $labelRoute;
+
 	/**
 	 * View for field
 	 *
@@ -74,7 +79,7 @@ abstract class AbstractField {
 	 *
 	 * @return null|string
 	 */
-	public function getType() {
+	public function getType() : ?string {
 		return $this->type;
 	}
 
@@ -110,17 +115,17 @@ abstract class AbstractField {
 	 * Set default value for a field
 	 * @return AbstractField
 	 */
-	public function setDefault($default) {
+	public function setDefault($default): AbstractField  {
 		$this->default = $default;
 		return $this;
 	}
 
 
 	/**
-	 * @return string
+	 * @return string or null(php 7.1 ?string)
 	 */
-	public function getName(): string {
-		return $this->name ?? "";
+	public function getName(): ?string {
+		return $this->name;
 	}
 
 	/**
@@ -149,7 +154,7 @@ abstract class AbstractField {
 	/**
 	 * @return string|null
 	 */
-	public function getLabel() {
+	public function getLabel(): ?string {
 		return $this->label;
 	}
 
@@ -162,10 +167,20 @@ abstract class AbstractField {
 		return $this;
 	}
 
+	///**
+	// * @param Route $route "user.index"
+	// * @return AbstractField
+	// */
+	//public function setLabelRoute(Route $route): AbstractField {
+	//	$this->labelRoute = $route;
+	//	return $this;
+	//}
+
+
 	/**
-	 * @return string
+	 * @return string|null
 	 */
-	public function getView(): string {
+	public function getView(): ?string {
 		return $this->view;
 	}
 
@@ -217,7 +232,7 @@ abstract class AbstractField {
 		return $this;
 	}
 
-	public function setAttribute(string $attribute, $value = null) {
+	public function setAttribute(string $attribute, $value = null): AbstractField {
 		$this->attributes->put($attribute, $value ?? $attribute);
 		return $this;
 	}
@@ -227,7 +242,7 @@ abstract class AbstractField {
 		return $this;
 	}
 
-	public function getData() {
+	public function getData(): array {
 		$attributes = $this->attributes;
 		$value = $this->getValue();
 		$label = $this->getLabel();
@@ -243,7 +258,7 @@ abstract class AbstractField {
 		return $this;
 	}
 
-	function __call($name, $arguments) {
+	function __call($name, $arguments): AbstractField {
 		$value = count($arguments) == 0 ? $name : $arguments[0];
 		$this->setAttribute(mb_strtolower($name), $value);
 		return $this;

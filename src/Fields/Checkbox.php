@@ -10,11 +10,14 @@ class Checkbox extends AbstractField {
 
 	private $unchecked;
 
+	/**
+	 * @return mixed
+	 */
 	public function unChecked() {
 		return $this->unchecked;
 	}
 
-	public function __construct(string $name = '', $checked = 1, $unchecked = 0) {
+	public function __construct(string $name = null, $checked = 1, $unchecked = 0) {
 		$this->name = $name;
 		$this->value = $checked;
 		$this->unchecked = $unchecked;
