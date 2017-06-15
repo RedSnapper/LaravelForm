@@ -234,6 +234,10 @@ abstract class AbstractField {
 		return $this;
 	}
 
+	public function getAttribute(string $attribute) {
+		return $this->attributes->get($attribute);
+	}
+
 	public function setAttribute(string $attribute, $value = null): AbstractField {
 		$this->attributes->put($attribute, $value ?? $attribute);
 		return $this;

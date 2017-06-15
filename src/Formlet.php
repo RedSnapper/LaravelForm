@@ -107,6 +107,11 @@ abstract class Formlet {
 	 */
 	protected $multiple = false;
 	/**
+	 * Used by some subscribers to manage multi-subscription
+	 * @var string
+	 */
+	protected $pivotKey = null;
+	/**
 	 * Extra view data
 	 *
 	 * @var array
@@ -188,28 +193,81 @@ abstract class Formlet {
 	}
 
 	//called by a subscriber formlet owner.
+
+	/**
+	 * @param $data
+	 * @return array
+	 */
 	protected function subs($data): array {
 		$result = [];
-		foreach ($data as $datum) {
-			$stuff = $datum->subscribe();
-			if (!is_null($stuff)) {
-				$result[$datum->getKey()] = $stuff;
+
+		foreach ($data as $key => $formlet) {
+			$subscriberField = $formlet->fields[$formlet->subscriber ?? 'subscriber'];
+			$multiSub = is_array($subscriberField);
+			if($multiSub) {
+				/**
+				 array(
+					related_id => array( 'pivot_field' => value ),
+					related_id => array( 'pivot_field' => value ),
+					related_id => array( 'pivot_field' => value ),
+				);
+				 */
+				foreach($formlet->subscribe() as $stuff) {
+					$result[$key] = $stuff;
+				}
+			} else {
+				$stuff =  $formlet->subscribe();
+				if (!is_null($stuff)) { //Now add the key into this. not sure it's really needed here.
+					if(count($stuff) === 0) {
+						$result[] = $key;
+					} else {
+						$result[$key] = $stuff;
+					}
+				}
 			}
 		}
 		return $result;
 	}
 
-	//called within a subscriber formlet
+	/**
+	 * Need to think carefully about what this does.
+	 * Essentially, the purpose of this function is to decide, based on the value of the subscriber, if
+	 * we are to sync the entire model or if we are going to discard it.
+	 * To date, the former is done by returning the data stored in the result for this record, while
+	 * the latter is done by returning null - representing that the record is to be discarded.
+	 * We don't really want to actually make the change yet, as we are composing the data transfer here.
+	 * TODO: Some way of indicating the value of the subscriber instead of making the decision here.
+	 * TODO: This could possibly involve refactoring out the entire method.
+	 * @return array|null
+	 */
 	protected function subscribe(): ?array {
-		$result = $this->fields($this->key);
-		if (!is_null($result)) {
-			$subscriberFieldName = $this->subscriber ?? 'subscriber';
-			$subscriberField = $this->fields[$subscriberFieldName]; //AbstractField. Probably a checkbox.
+		$subscriberFieldName = $this->subscriber ?? 'subscriber';
+		/** @var AbstractField|array $subscriberField */
+		$subscriberField = $this->fields[$subscriberFieldName]; //AbstractField. Probably a checkbox.
+		if(is_array($subscriberField)) {
+			$result = [];
+			/** @var AbstractField $subscriberFieldItem */
+			foreach($subscriberField as $subscriberFieldItem) {
+				$multiple = $subscriberFieldItem->getAttribute("multiple") ?? false;
+				if(!$multiple) {
+					throw new \Exception('Found unusual single in a multiple.');
+				}
+				$values = $subscriberFieldItem->getValue();
+				foreach($values as $value) {
+					$result[] = [$this->pivotKey => $value] ;
+				}
+			}
+		} else {
+			$result = $this->fields($subscriberFieldName); //currently NOT working for multiples..
+			$multiple = $subscriberField->getAttribute("multiple") ?? false;
+			if($multiple) {
+				throw new \Exception('Found unusual multiple.');
+			}
 			$value = $subscriberField->getValue();
 			if (isset($result[$subscriberFieldName]) && $result[$subscriberFieldName] == $value) {
-				unset($result[$subscriberFieldName]);
+				unset($result[$subscriberFieldName]); //don't want to store subscriber.
 			} else {
-				$result = null;
+				$result = null; 	//do not store.
 			}
 		}
 		return $result;
@@ -262,7 +320,9 @@ abstract class Formlet {
 		}
 
 		foreach ($subscribeOptions as $option) {
+			/** @var Formlet $formlet */
 			$formlet = app()->make($formletClass);
+			$formlet->setPivotKey('role_id'); //TODO: get this dynamically, of course.
 			$subscribed = $this->getModelByKey( $option->getKey(), $subscribedModels); //Collection
 			$this->addSubscriberFormlet($formlet, $name,$option,$subscribed);
 		}
@@ -294,6 +354,10 @@ abstract class Formlet {
 		$formlet->setName($name);
 		$formlet->setMultiple();
 		$this->formlets[$name][$key] = $formlet;
+	}
+
+	protected function setPivotKey(string $pivotKey) {
+		$this->pivotKey = $pivotKey;
 	}
 
 	/**
@@ -525,8 +589,9 @@ abstract class Formlet {
 	public function fields(string $name = null): array {
 		if ($this->multiple) {
 			$fields = $this->request->input($this->name); //
-			$fields = @$fields[$name] ?? [];
-			return $this->rationalise($fields);
+			$stuffs[$name] = @$fields[$this->getKey()][$name];
+//			$fields = @$fields[$name] ?? [];
+			return $this->rationalise($stuffs);
 		} else {
 			if (is_null($name)) {
 				if ($this->name != "") {
