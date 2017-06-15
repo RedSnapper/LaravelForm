@@ -121,6 +121,7 @@ abstract class Formlet {
 
 	/**
 	 * Add a piece of data to the view.
+	 * BG: seeing a model coming over as the 'value'..
 	 *
 	 * @param  string|array $key
 	 * @param  mixed        $value
@@ -257,13 +258,13 @@ abstract class Formlet {
 			$options = $related->newQuery();
 			$options->getQuery()->wheres = $rWheres;
 			$options->getQuery()->bindings['where'] = $rBindings;
-			$subscribeOptions = $options->get();
+			$subscribeOptions = $options->get(); //Should return a collection of models.
 		}
 
 		foreach ($subscribeOptions as $option) {
 			$formlet = app()->make($formletClass);
-			$subscribed = $this->getModelByKey($option->getKey(), $subscribedModels);
-			$this->addSubscriberFormlet($formlet, $name, $option, $subscribed);
+			$subscribed = $this->getModelByKey( $option->getKey(), $subscribedModels); //Collection
+			$this->addSubscriberFormlet($formlet, $name,$option,$subscribed);
 		}
 	}
 
@@ -276,17 +277,18 @@ abstract class Formlet {
 	 * @param Formlet    $formlet
 	 * @param string     $name
 	 * @param Model      $option
-	 * @param array $subscribed
+	 * @param Collection $subscribed
 	 */
 	protected function addSubscriberFormlet(Formlet $formlet,
 																					string $name,
 																					Model $option,
-																					array $subscribed = []): void {
+																					Collection $subscribed): void {
 		$dataName = $formlet->subscriber ?? $name;
+		$multiSub = substr($dataName,-2) === "[]"; //it may be that we are looking at a multi-field.
 		$key = $option->getKey();
 		$formlet->setKey($key);
 		$formlet->setModel($option);
-		$formlet->with($dataName,count($subscribed) == 1 ? array_pop($subscribed): $subscribed);
+		$formlet->with($dataName,$multiSub ? $subscribed : $subscribed->first());
 		$formlet->with('option', $option);
 		$formlet->with('master', $this->model);
 		$formlet->setName($name);
@@ -329,10 +331,10 @@ abstract class Formlet {
 	 * @param int        $key
 	 * @param Collection $models
 	 * @param string     $keyName
-	 * @return array
+	 * @return Collection
 	 */
-	protected function getModelByKey(int $key, Collection $models, $keyName = "id"): array {
-		return $models->where($keyName, $key)->all();
+	protected function getModelByKey(int $key, Collection $models, $keyName = "id"): Collection {
+		return $models->where($keyName, $key);
 	}
 
 	protected function isValid(): bool {
@@ -373,9 +375,8 @@ abstract class Formlet {
 
 	/**
 	 * Create the response for when a request fails validation.
-	 *
-	 * @param  array $errors
-	 * @return \Symfony\Component\HttpFoundation\Response
+	 * @param array $errors
+	 * @return Response
 	 */
 	protected function buildFailedValidationResponse(array $errors): Response {
 		if ($this->request->expectsJson()) {
@@ -674,6 +675,7 @@ abstract class Formlet {
 	 * This has mixed return types and needs to be split.
 	 *
 	 * @param array $formlets
+	 * @return mixed
 	 **/
 	protected function renderFormlets($formlets = []) {
 
@@ -727,7 +729,8 @@ abstract class Formlet {
 	 * Get the value that should be assigned to the field.
 	 *
 	 * @param  string $name
-	 * @param  string $value
+	 * @param  mixed $value
+	 * @param  mixed $default
 	 * @return mixed
 	 */
 	public function getValueAttribute($name, $value = null, $default = null) {
@@ -896,10 +899,7 @@ abstract class Formlet {
 		 * The fieldName is what will appear on the html, whereas the name is the model name for the field.
 		 */
 		$name = $field->getName();
-		$value = $field->getValue(); //This should be the value it has if it is checked, and should be set in the formlet.
-		$default = $field->getDefault();
-
-		$checked = $this->getCheckboxCheckedState($field,$name, $value, $default);
+		$checked = $this->getCheckboxCheckedState($field,$name);
 
 		if ($checked) {
 			$field->setAttribute('checked');
@@ -919,16 +919,21 @@ abstract class Formlet {
 	 * all have slightly different needs...
 	 * Maybe we need to implement different Checkbox fields, then move the state Checker to the field itself?
 	 *
+	 * @param  AbstractField $field
 	 * @param  string $name
-	 * @param  mixed  $value
-	 * @param         $default -- no longer used for some reason.
 	 * @return bool
 	 */
-	protected function getCheckboxCheckedState(AbstractField $field, $name, $value, $default): bool {
+	protected function getCheckboxCheckedState(AbstractField $field, $name): bool {
 		//the name is the field's model name, not input-name-attribute.
 		//This avoids the stuff below, probably not such a good idea.
 		if (isset($this->subscriber) && $name == $this->subscriber) {
-			return !is_null($this->getData($name));
+			$value = $this->getData($name); //we should rationalise this to always return a Collection.
+			$checked = (
+					  !is_null($value)
+				&& (!is_array($value) || count($value) != 0 )
+				&& (!$value instanceof Collection || !$value->isEmpty())
+			);
+			return $checked;
 		}
 
 		//This is sometimes redundant...
@@ -980,7 +985,7 @@ abstract class Formlet {
 	 * Set url generator
 	 *
 	 * @param UrlGenerator $url
-	 * @return $this
+	 * @return Formlet
 	 */
 	public function setUrlGenerator(UrlGenerator $url): Formlet {
 		$this->url = $url;
@@ -991,7 +996,7 @@ abstract class Formlet {
 	 * Set request on form.
 	 *
 	 * @param Request $request
-	 * @return $this
+	 * @return Formlet
 	 */
 	public function setRequest(Request $request): Formlet {
 		$this->request = $request;
@@ -1025,13 +1030,19 @@ abstract class Formlet {
 		}
 	}
 
-	//nested formlets need nested name.
-	protected function getFormlet($name = ""): ?Formlet {
+	/**
+	 * @param string $name
+	 * @return Formlet
+	 */
+	protected function getFormlet($name = "") {
 		return @$this->formlets[$name];
 	}
 
-	//nested formlets need nested name.
-	protected function getFormlets($name = ""): ?array {
+	/**
+	 * @param string $name
+	 * @return Formlet
+	 */
+	protected function getFormlets($name = "") {
 		return @$this->formlets[$name];
 	}
 

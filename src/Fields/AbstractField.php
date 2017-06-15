@@ -95,6 +95,7 @@ abstract class AbstractField {
 	/**
 	 * Set value for a field
 	 *
+	 * @param $value mixed
 	 * @return AbstractField
 	 */
 	public function setValue($value) {
@@ -113,6 +114,7 @@ abstract class AbstractField {
 
 	/**
 	 * Set default value for a field
+	 * @param $default mixed
 	 * @return AbstractField
 	 */
 	public function setDefault($default): AbstractField  {
