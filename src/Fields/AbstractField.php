@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace RS\Form\Fields;
 
@@ -27,11 +28,6 @@ abstract class AbstractField {
 	 */
 	protected $label;
 
-	///**
-	// * @var Route|null
-	// */
-	//protected $labelRoute;
-
 	/**
 	 * View for field
 	 *
@@ -52,6 +48,13 @@ abstract class AbstractField {
 	 * @var mixed
 	 */
 	protected $value;
+
+	/**
+	 * Whether the value of the field has been set.
+	 *
+	 * @var bool
+	 */
+	protected $valueIsSet = false;
 
 	/**
 	 * Whether we should populate the field
@@ -75,6 +78,61 @@ abstract class AbstractField {
 	protected $default;
 
 	/**
+	 * value that means field is not-wanted (unsubscribe)
+	 *
+	 * @var mixed
+	 */
+	protected $unchecked;
+
+	const TYPE_NULL 		= 0x0001;
+	const TYPE_INT 			= 0x0002;
+	const TYPE_FLOAT 		= 0x0004;
+	const TYPE_STRING 	= 0x0008;
+	const TYPE_BOOL 		= 0x0010;
+	const TYPE_ARRAY 		= 0x0020;
+	protected $valueType = AbstractField::TYPE_STRING | AbstractField::TYPE_NULL;
+
+	public function setValueType(int $type) : AbstractField {
+		$this->valueType = $type;
+		return $this;
+	}
+
+	public function castToType($value) {
+			$type = $this->valueType;
+			if((($type & AbstractField::TYPE_NULL) === AbstractField::TYPE_NULL) && is_null($value)) {
+				return $value;
+			}
+			//now remove the null option.
+			switch ($this->valueType & ~AbstractField::TYPE_NULL) {
+				case AbstractField::TYPE_INT: 		return (int) 		$value;
+				case AbstractField::TYPE_FLOAT: 	return (float) 	$value;
+				case AbstractField::TYPE_STRING:	return (string) $value;
+				case AbstractField::TYPE_BOOL:		return (bool) 	$value;
+				case AbstractField::TYPE_ARRAY:		return is_array($value) ? $value : [$value];
+				break;
+			}
+	}
+	/**
+	 * @return mixed
+	 */
+	public function unChecked() {
+		return $this->castToType($this->unchecked);
+	}
+
+	public function setUnChecked($value) : void {
+		$this->unchecked = $value;
+	}
+
+	/**
+	 * Return if this field is a checkable
+	 *
+	 * @return bool
+	 */
+	public function isCheckable() : bool {
+		return $this->type === "checkable";
+	}
+
+	/**
 	 * Return the type of field eg. checkable
 	 *
 	 * @return null|string
@@ -89,7 +147,11 @@ abstract class AbstractField {
 	 * @return mixed
 	 */
 	public function getValue() {
-		return $this->value;
+		return $this->castToType($this->value);
+	}
+
+	public function getValueIsSet() : bool {
+		return $this->valueIsSet;
 	}
 
 	/**
@@ -99,6 +161,7 @@ abstract class AbstractField {
 	 * @return AbstractField
 	 */
 	public function setValue($value) {
+		$this->valueIsSet = true;
 		$this->value = $value;
 		return $this;
 	}
@@ -109,7 +172,7 @@ abstract class AbstractField {
 	 * @return mixed
 	 */
 	public function getDefault() {
-		return $this->default;
+		return $this->castToType($this->default);
 	}
 
 	/**
@@ -168,16 +231,6 @@ abstract class AbstractField {
 		$this->label = $label;
 		return $this;
 	}
-
-	///**
-	// * @param Route $route "user.index"
-	// * @return AbstractField
-	// */
-	//public function setLabelRoute(Route $route): AbstractField {
-	//	$this->labelRoute = $route;
-	//	return $this;
-	//}
-
 
 	/**
 	 * @return string|null

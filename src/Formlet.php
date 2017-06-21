@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace RS\Form;
 
@@ -108,9 +109,16 @@ abstract class Formlet {
 	protected $multiple = false;
 	/**
 	 * Used by some subscribers to manage multi-subscription
+	 *
 	 * @var string
 	 */
-	protected $pivotKey = null;
+	protected $pivotColumns = null;
+	/**
+	 * Used by subscribers to manage subscription
+	 *
+	 * @var BelongsToMany
+	 */
+	protected $belongs = null;
 	/**
 	 * Extra view data
 	 *
@@ -182,8 +190,12 @@ abstract class Formlet {
 	 */
 	public function getSubscriberFields(string $key): Collection {
 		$result = $this->fields($key);
+		$something = $this->fields("subscriber");
 		foreach ($this->formlets[$key] as $formlet) {
-			$result = $formlet->subscribe($result);
+			$fields = $formlet->subscribe($result);
+			if (!is_null($fields)) {
+				$result[] = $fields;
+			}
 		}
 		return new Collection($result);
 	}
@@ -200,31 +212,54 @@ abstract class Formlet {
 	 */
 	protected function subs($data): array {
 		$result = [];
+		$fBase = null; //all formlets should be the same type here..
+		$multiSub = false;
 
+		//need to setParent of BelongsToMany..
+
+		/** @var Formlet $formlet */
 		foreach ($data as $key => $formlet) {
-			$subscriberField = $formlet->fields[$formlet->subscriber ?? 'subscriber'];
-			$multiSub = is_array($subscriberField);
-			if($multiSub) {
+			$this->setFormletParent($formlet,$this->model); //so we can use for persist..
+			if (is_null($fBase)) {
+				$fBase = $formlet;
+				$subscriberField = $formlet->subscriber ?? 'subscriber';
+				$multiSub = is_array($formlet->fields[$subscriberField]);
+			}
+			if ($multiSub) { //not just a many-many, but eg a many-many-many.
 				/**
-				 array(
-					related_id => array( 'pivot_field' => value ),
-					related_id => array( 'pivot_field' => value ),
-					related_id => array( 'pivot_field' => value ),
-				);
+				 * The following fails.. because the key '3' is duplicated.
+				 * array(
+				 * 3 => array( 'pivot_field' => 6 ),
+				 * 3 => array( 'pivot_field' => 7 ),
+				 * 4 => array( 'pivot_field' => 2 ),
+				 * );
 				 */
-				foreach($formlet->subscribe() as $stuff) {
-					$result[$key] = $stuff;
+				//so. this is userteamroles..
+				//we have user/team we are picking up roles (in stuff).
+				//team = key, user=context..
+				//subscribe --> X=>B (in X-B)
+
+				$stuff = $formlet->subscribe();
+				$pivot = $formlet->pivotColumns[0]; // if we need multiple values in the stuff, we will need to revisit this.
+				$formlet->belongs->detach($key);  // delete all.
+
+				foreach ($stuff as $bit) { //syncWithoutDetaching?
+					$formlet->belongs->attach([$key => [$pivot => $bit]]); //add without detach.
 				}
+				$result = [];
 			} else {
-				$stuff =  $formlet->subscribe();
-				if (!is_null($stuff)) { //Now add the key into this. not sure it's really needed here.
-					if(count($stuff) === 0) {
+				$stuff = $formlet->subscribe();
+				if (!is_null($stuff)) {
+					if (count($stuff) === 0) {
 						$result[] = $key;
 					} else {
 						$result[$key] = $stuff;
 					}
 				}
 			}
+		}
+		if (!$multiSub && !is_null($fBase)) {
+			$fBase->belongs->sync($result);
 		}
 		return $result;
 	}
@@ -238,36 +273,51 @@ abstract class Formlet {
 	 * We don't really want to actually make the change yet, as we are composing the data transfer here.
 	 * TODO: Some way of indicating the value of the subscriber instead of making the decision here.
 	 * TODO: This could possibly involve refactoring out the entire method.
+	 *
 	 * @return array|null
 	 */
 	protected function subscribe(): ?array {
 		$subscriberFieldName = $this->subscriber ?? 'subscriber';
 		/** @var AbstractField|array $subscriberField */
 		$subscriberField = $this->fields[$subscriberFieldName]; //AbstractField. Probably a checkbox.
-		if(is_array($subscriberField)) {
+		if (is_array($subscriberField)) {
 			$result = [];
 			/** @var AbstractField $subscriberFieldItem */
-			foreach($subscriberField as $subscriberFieldItem) {
+			foreach ($subscriberField as $subscriberFieldItem) {
 				$multiple = $subscriberFieldItem->getAttribute("multiple") ?? false;
-				if(!$multiple) {
+				if (!$multiple) {
 					throw new \Exception('Found unusual single in a multiple.');
 				}
-				$values = $subscriberFieldItem->getValue();
-				foreach($values as $value) {
-					$result[] = [$this->pivotKey => $value] ;
-				}
+				$fieldName = $subscriberFieldName; //$subscriberFieldItem->getFieldName();
+				$value = $this->fields($fieldName); //currently NOT working for multiples..
+				$result = array_merge($result, $value); //really not sure about this...
 			}
 		} else {
 			$result = $this->fields($subscriberFieldName); //currently NOT working for multiples..
 			$multiple = $subscriberField->getAttribute("multiple") ?? false;
-			if($multiple) {
+			if ($multiple) {
 				throw new \Exception('Found unusual multiple.');
 			}
-			$value = $subscriberField->getValue();
-			if (isset($result[$subscriberFieldName]) && $result[$subscriberFieldName] == $value) {
-				unset($result[$subscriberFieldName]); //don't want to store subscriber.
+			if (!isset($result[$subscriberFieldName])) {
+				return null;
+			}
+			$value = $subscriberField->castToType($result[$subscriberFieldName]);
+			if ($subscriberField->isCheckable()) {
+				if (($value === $subscriberField->getValue())) { //so this is the value if it is set..
+					if(!in_array($subscriberFieldName,$this->pivotColumns)) {
+						unset($result[$subscriberFieldName]); //don't want to store subscriber.
+					}
+				} else {
+					$result = null;
+				}
 			} else {
-				$result = null; 	//do not store.
+				if ($value !== $subscriberField->unChecked()) {
+					if(!in_array($subscriberFieldName,$this->pivotColumns)) {
+						unset($result[$subscriberFieldName]); //don't want to store subscriber.
+					}
+				} else {
+					$result = null;  //do not store.
+				}
 			}
 		}
 		return $result;
@@ -284,36 +334,37 @@ abstract class Formlet {
 	 *   e.g. 'activities'. (from http://localhost/role/3/edit)
 	 * @param string                $formletClass
 	 *   class is the subscriber formlet to be used, eg App\Http\Formlets\RoleActivityFormlet::class
-	 * @param BelongsToMany         $builder
-	 *   builder is a BelongsToMany from the base model, eg.
+	 * @param BelongsToMany         $belongs
+	 *   belongs is a BelongsToMany from the base model, eg.
 	 *   $this->model->activities() (where the model is eg /App/Models/Role)
 	 * @param Collection|array|null $subscribeOptions
 	 */
 	public function addSubscribers(string $name,
 																 string $formletClass,
-																 BelongsToMany $builder,
+																 BelongsToMany $belongs,
 																 $subscribeOptions = null
-																): void {
-
-		$subscribedModels  = $builder->get();
+	): void {
+		$subscribedModels = $belongs->get();
 		/**
 		 * The following $subscribeOptions code is all rather low-level...
 		 */
-		if(is_null($subscribeOptions)) {
-			$related = $builder->getRelated(); //the basic model.
+		if (is_null($subscribeOptions)) {
+			$related = $belongs->getRelated(); //the basic model.
 			$name = $related->getTable();
 			$rWheres = [];
 			$rBindings = [];
-			$oWheres = $builder->getBaseQuery()->wheres;
-			$oBindings = $builder->getBaseQuery()->bindings['where'];
-			for($i=0; $i < count($oWheres); $i++ ) {
+			$oWheres = $belongs->getBaseQuery()->wheres;
+			$oBindings = $belongs->getBaseQuery()->bindings['where'];
+			for ($i = 0; $i < count($oWheres); $i++) {
 				$where = $oWheres[$i];
-				if(explode('.',$where['column'])[0] == $name) {
+				if (explode('.', $where['column'])[0] == $name) {
 					$rWheres[] = $where;
 					$rBindings[] = $oBindings[$i];
 				}
 			}
+			$oOrders = $belongs->getBaseQuery()->orders;
 			$options = $related->newQuery();
+			$options->getQuery()->orders = $oOrders;
 			$options->getQuery()->wheres = $rWheres;
 			$options->getQuery()->bindings['where'] = $rBindings;
 			$subscribeOptions = $options->get(); //Should return a collection of models.
@@ -322,9 +373,10 @@ abstract class Formlet {
 		foreach ($subscribeOptions as $option) {
 			/** @var Formlet $formlet */
 			$formlet = app()->make($formletClass);
-			$formlet->setPivotKey('role_id'); //TODO: get this dynamically, of course.
-			$subscribed = $this->getModelByKey( $option->getKey(), $subscribedModels); //Collection
-			$this->addSubscriberFormlet($formlet, $name,$option,$subscribed);
+			$formlet->belongs = $belongs;
+			$formlet->setPivotColumns();
+			$subscribed = $this->getModelByKey($option->getKey(), $subscribedModels); //Collection
+			$this->addSubscriberFormlet($formlet, $name, $option, $subscribed);
 		}
 	}
 
@@ -344,20 +396,33 @@ abstract class Formlet {
 																					Model $option,
 																					Collection $subscribed): void {
 		$dataName = $formlet->subscriber ?? $name;
-		$multiSub = substr($dataName,-2) === "[]"; //it may be that we are looking at a multi-field.
+		$multiSub = substr($dataName, -2) === "[]"; //it may be that we are looking at a multi-field.
 		$key = $option->getKey();
 		$formlet->setKey($key);
 		$formlet->setModel($option);
-		$formlet->with($dataName,$multiSub ? $subscribed : $subscribed->first());
-		$formlet->with('option', $option);
+		$formlet->with("subscriber", $multiSub ? $subscribed : $subscribed->first());
+//		$formlet->with("subscriber",$dataName);
+//		$formlet->with('option', $option);  //Option is the model of a subscriber.
 		$formlet->with('master', $this->model);
 		$formlet->setName($name);
 		$formlet->setMultiple();
 		$this->formlets[$name][$key] = $formlet;
 	}
 
-	protected function setPivotKey(string $pivotKey) {
-		$this->pivotKey = $pivotKey;
+	//eg teamRoles (a user owned)- foreign/parent = User, related = Team,
+	//pivotColumns are a thing...
+	protected function setPivotColumns() {
+		$reflection = new \ReflectionClass($this->belongs);
+		$prop = $reflection->getProperty("pivotColumns"); //also could get foreignKey this way..
+		$prop->setAccessible(true);
+		$this->pivotColumns = $prop->getValue($this->belongs);
+	}
+
+	protected function setFormletParent(Formlet $formlet,Model $parent) : void {
+		$reflection = new \ReflectionClass($formlet->belongs);
+		$prop = $reflection->getProperty("parent"); //also could get foreignKey this way..
+		$prop->setAccessible(true);
+		$prop->setValue($formlet->belongs,$parent);
 	}
 
 	/**
@@ -439,6 +504,7 @@ abstract class Formlet {
 
 	/**
 	 * Create the response for when a request fails validation.
+	 *
 	 * @param array $errors
 	 * @return Response
 	 */
@@ -589,8 +655,12 @@ abstract class Formlet {
 	public function fields(string $name = null): array {
 		if ($this->multiple) {
 			$fields = $this->request->input($this->name); //
-			$stuffs[$name] = @$fields[$this->getKey()][$name];
-//			$fields = @$fields[$name] ?? [];
+			if (substr($name, -2) == "[]") { //multi-field also.
+				$key = substr($name, 0, -2);
+				$stuffs = @$fields[$key][$this->getKey()] ?? [];
+			} else {
+				$stuffs[$name] = @$fields[$this->getKey()][$this->subscriber] ?? [];
+			}
 			return $this->rationalise($stuffs);
 		} else {
 			if (is_null($name)) {
@@ -793,12 +863,16 @@ abstract class Formlet {
 	/**
 	 * Get the value that should be assigned to the field.
 	 *
-	 * @param  string $name
-	 * @param  mixed $value
-	 * @param  mixed $default
+	 * @param  AbstractField $field
 	 * @return mixed
 	 */
-	public function getValueAttribute($name, $value = null, $default = null) {
+	public function getValueAttribute($field) {
+
+		$name = $field->getName();
+		$value = $field->getValue();
+		$isSet = $field->getValueIsSet();
+		$default = $field->getDefault();
+		$multiField = substr($name,-2) === "[]";
 
 		// Field should not be populated from post or from the model
 		if (in_array($name, $this->guarded)) {
@@ -818,10 +892,19 @@ abstract class Formlet {
 		}
 
 		//So name has returned nothing meaningful so far. Let's pass back the value if it is set.
-		if (!is_null($value)) {
+		if (!is_null($value) && $isSet) {
 			return $value;
 		}
 
+		if(isset($this->subscriber) && $name === $this->subscriber) {
+			if($multiField) {
+				$accessName = substr($name,0,-2);
+				$sub = $this->getData("subscriber.*.pivot.$accessName");
+			} else {
+				$sub = $this->getData("subscriber.pivot.$name");
+			}
+			return $sub ??  $default;
+		}
 		//Nothing there either. Let's try the model.
 		//Except that the model is currently un-applied.
 		if (isset($this->model)) {
@@ -888,14 +971,8 @@ abstract class Formlet {
 	}
 
 	protected function setFieldValue(AbstractField $field): AbstractField {
-
-		$name = $field->getName();
-		$value = $field->getValue();
-		$default = $field->getDefault();
-
-		$value = $this->getValueAttribute($name, $value, $default);
+		$value = $this->getValueAttribute($field);
 		$field->setValue($value);
-
 		return $field;
 	}
 
@@ -964,7 +1041,7 @@ abstract class Formlet {
 		 * The fieldName is what will appear on the html, whereas the name is the model name for the field.
 		 */
 		$name = $field->getName();
-		$checked = $this->getCheckboxCheckedState($field,$name);
+		$checked = $this->getCheckboxCheckedState($field, $name);
 
 		if ($checked) {
 			$field->setAttribute('checked');
@@ -985,17 +1062,17 @@ abstract class Formlet {
 	 * Maybe we need to implement different Checkbox fields, then move the state Checker to the field itself?
 	 *
 	 * @param  AbstractField $field
-	 * @param  string $name
+	 * @param  string        $name
 	 * @return bool
 	 */
 	protected function getCheckboxCheckedState(AbstractField $field, $name): bool {
 		//the name is the field's model name, not input-name-attribute.
 		//This avoids the stuff below, probably not such a good idea.
 		if (isset($this->subscriber) && $name == $this->subscriber) {
-			$value = $this->getData($name); //we should rationalise this to always return a Collection.
+			$value = $this->getData("subscriber"); //we should rationalise this to always return a Collection.
 			$checked = (
-					  !is_null($value)
-				&& (!is_array($value) || count($value) != 0 )
+				!is_null($value)
+				&& (!is_array($value) || count($value) != 0)
 				&& (!$value instanceof Collection || !$value->isEmpty())
 			);
 			return $checked;
@@ -1030,7 +1107,7 @@ abstract class Formlet {
 			} else {
 				$value = data_get($this->model, $name);
 			}
-			if(isset($value)) {
+			if (isset($value)) {
 				return $value != $field->unChecked();
 			}
 		}
@@ -1128,7 +1205,7 @@ abstract class Formlet {
 		return $errors->all();
 	}
 
-	protected function getFieldPrefix(string $field=null): string {
+	protected function getFieldPrefix(string $field = null): string {
 
 		$name = $this->getName();
 
