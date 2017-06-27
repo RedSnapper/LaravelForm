@@ -1252,9 +1252,9 @@ abstract class Formlet {
 	/**
 	 * Get the URL we should redirect to.
 	 *
-	 * @return URL
+	 * @return string
 	 */
-	protected function getRedirectUrl(): URL {
+	protected function getRedirectUrl(): string {
 		return url(app(UrlGenerator::class)->previous());
 	}
 }
