@@ -293,7 +293,7 @@ abstract class Formlet {
 				$result = array_merge($result, $value); //really not sure about this...
 			}
 		} else {
-			$result = $this->fields($subscriberFieldName); //currently NOT working for multiples..
+			$result = $this->fields(); //We want all the fields for this subscription.
 			$multiple = $subscriberField->getAttribute("multiple") ?? false;
 			if ($multiple) {
 				throw new \Exception('Found unusual multiple.');
@@ -401,8 +401,6 @@ abstract class Formlet {
 		$formlet->setKey($key);
 		$formlet->setModel($option);
 		$formlet->with("subscriber", $multiSub ? $subscribed : $subscribed->first());
-//		$formlet->with("subscriber",$dataName);
-//		$formlet->with('option', $option);  //Option is the model of a subscriber.
 		$formlet->with('master', $this->model);
 		$formlet->setName($name);
 		$formlet->setMultiple();
@@ -654,12 +652,16 @@ abstract class Formlet {
 	 */
 	public function fields(string $name = null): array {
 		if ($this->multiple) {
-			$fields = $this->request->input($this->name); //
-			if (substr($name, -2) == "[]") { //multi-field also.
-				$key = substr($name, 0, -2);
-				$stuffs = @$fields[$key][$this->getKey()] ?? [];
+			$fields = $this->request->input($this->name);
+			if(is_null($name)) {
+				$stuffs = @$fields[$this->getKey()] ?? [];
 			} else {
-				$stuffs[$name] = @$fields[$this->getKey()][$this->subscriber] ?? [];
+				if (substr($name, -2) == "[]") { //multi-field also.
+					$key = substr($name, 0, -2);
+					$stuffs = @$fields[$key][$this->getKey()] ?? [];
+				} else {
+					$stuffs[$name] = @$fields[$this->getKey()][$this->subscriber] ?? [];
+				}
 			}
 			return $this->rationalise($stuffs);
 		} else {
@@ -896,14 +898,16 @@ abstract class Formlet {
 			return $value;
 		}
 
-		if(isset($this->subscriber) && $name === $this->subscriber) {
+		if(isset($this->subscriber))  {
 			if($multiField) {
 				$accessName = substr($name,0,-2);
 				$sub = $this->getData("subscriber.*.pivot.$accessName");
 			} else {
 				$sub = $this->getData("subscriber.pivot.$name");
 			}
-			return $sub ??  $default;
+			if(!is_null($sub)) {
+				return $sub;
+			}
 		}
 		//Nothing there either. Let's try the model.
 		//Except that the model is currently un-applied.

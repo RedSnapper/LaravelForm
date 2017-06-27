@@ -15,6 +15,9 @@ class Auto extends ViewController{
 		} else {
 			$name = $fields['name'];
 			$fields['errors'] = $data['errors']->get($name);
+			$fields['model'] = @$data['model'];
+			$fields['master'] = @$data['master'];
+			$fields['subscriber'] = @$data['subscriber'];
 			$fieldView = view($fields['view'],$fields);
 			$view->set("./child-gap()",$fieldView);
 		}
