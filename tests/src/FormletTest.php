@@ -1,14 +1,14 @@
 <?php
-/**
- * Part of form
- * User: ben ©2017 Red Snapper Ltd.
- * Date: 28/06/2017 08:01
- */
+
 use PHPUnit\Framework\TestCase;
 use RS\Form\Formlet;
 
 /** external requirements. */
 use Illuminate\Http\Request;
+use Illuminate\Session\Store;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\ConnectionResolver;
 
 
 class FormletTest extends TestCase
@@ -53,12 +53,26 @@ class FormletTest extends TestCase
 	}
 
 	public function testSetKey() {
-		/** @var Formlet $stub */
-		$stub = $this->getMockForAbstractClass(Formlet::class);
-		$stub->setKey(34); //can be an integer.
-		$this->assertEquals(34,$stub->getKey());
-		$stub->setKey([33,12]); //can be an array.
-		$this->assertEquals([33,12],$stub->getKey());
+
+		/** @var Formlet $formlet */
+		$formlet = $this->getMockForAbstractClass(Formlet::class);
+
+		$result = $formlet->setKey(34); //can be an integer.
+		$this->assertEquals($formlet, $result);
+		$this->assertEquals(34,$formlet->getKey());
+		$formlet->setKey([33,12]); //can be an array.
+		$this->assertEquals([33,12],$formlet->getKey());
+
+		/** @var Model $coll */
+		//$res = $this->getMockForAbstractClass(ConnectionResolver::class);
+		//Model::setConnectionResolver($res);
+		//$coll = $this->getMockForAbstractClass(Model::class);
+		//$coll->__set('id',34);
+		//$formlet->setModel($coll);
+		//$result = $formlet->setKey(34); //can be an integer.
+		//$this->assertSame($formlet, $result);
+
+
 	}
 
 	public function testGetName() {
@@ -89,5 +103,40 @@ class FormletTest extends TestCase
 		$response = $stub->setRequest($request);
 		$this->assertEquals($response,$stub); //defaults to [].
 	}
+
+	public function testSetSessionStore() {
+		/** @var Formlet $stub */
+		$key = "test";
+		$value = 543643;
+		$stub = $this->getMockForAbstractClass(Formlet::class);
+		$session = new Store("test",new SessionHandler());
+		$bag = [$key => $value];
+		$session->put("_old_input",$bag);
+		$stub->setSessionStore($session);
+		$session_value = $stub->old($key,false);
+		$this->assertEquals($value,$session_value);
+	}
+
+	public function testSetModel() {
+		/** @var Model $formlet */
+		$model = $this->getMockForAbstractClass(Model::class);
+		/** @var Formlet $formlet */
+		$formlet = $this->getMockForAbstractClass(Formlet::class);
+
+		$response = $formlet->setModel($model);
+		$this->assertEquals($response,$formlet);
+	}
+
+	public function testGetModel() {
+		/** @var Model $model */
+		$model = $this->getMockForAbstractClass(Model::class);
+		/** @var Formlet $formlet */
+		$formlet = $this->getMockForAbstractClass(Formlet::class);
+
+		$formlet->setModel($model);
+		$result = $formlet->getModel();
+		$this->assertEquals($result,$model);
+	}
+
 
 }

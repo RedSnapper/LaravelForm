@@ -753,33 +753,14 @@ abstract class Formlet {
 	 */
 	protected function rationalise(array $postedFields): array {
 		$result = $postedFields;
-		//if($this->multiple) {
-		//	$theResult = [];
-		//	foreach ($this->fields as $field) {
-		//		if (is_a($field, Checkbox::class)) {
-		//			$modelName = $field->getName();
-		//			foreach($result as $post) {
-		//				if (!empty($modelName)) {
-		//					$post[$modelName] = $post[$modelName] ?? $field->unChecked();
-		//				} else {
-		//					$post[$modelName] = $field->unChecked();
-		//				}
-		//				$theResult[] = $post;
-		//			}
-		//		}
-		//	}
-		//	$result = $theResult;
-		//} else {
 		foreach ($this->fields as $field) {
 			if (is_a($field, Checkbox::class)) {
 				$modelName = $field->getName();
 				if (!empty($modelName) && !isset($result[$modelName])) {
 					$result[$modelName] = $field->unChecked();
-//					$post[$modelName] = $post[$modelName] ?? $field->unChecked();
 				}
 			}
 		}
-//		}
 		return $result;
 	}
 
@@ -977,24 +958,13 @@ abstract class Formlet {
 	 * @param  string $name
 	 * @return mixed
 	 */
-	public function old($name) {
+	public function old($name, $transform = true) {
 		if (isset($this->session)) {
-			$prefix = $this->getFieldPrefix($name);
-			$transform = $this->transformKey($prefix);
-			$old = $this->session->getOldInput($transform);
-			return $old;
-			// If we like guard clauses and we want to avoid nested ifs, we should avoid nesting methods too,
-			// even though it may mean using temporary variables.
-			// PhpStorm's ability to trace through nested methods is not great.
-			// Likewise it sucks at tracing immediate return points.
-			// return $this->session->getOldInput(
-			//	$this->transformKey(
-			//		$this->getFieldPrefix($name)
-			//	)
-			//);
+			$key = $transform ? $this->transformKey($this->getFieldPrefix($name)) : $name;
+			$old = $this->session->get('_old_input',[]);
+			$value = Arr::get($old, $key);
+			return $value;
 		}
-		//one of the challenges of using Guard Clauses vs. Single-Entry Single-Exit (SESE)
-		// is that it is easy to forget to return stuff.
 		return null;
 	}
 
@@ -1141,20 +1111,6 @@ abstract class Formlet {
 		$prefixedName = $this->getFieldPrefix($name);
 		$dataName = $this->transformKey($prefixedName);
 
-		//Was this checkbox unset in session?
-		//TODO: Find out what this is for.
-		$noOldValue = true;
-		if (isset($this->session)) {
-			$oldInput = $this->session->getOldInput();
-			if (count($oldInput) > 0) {
-				if (is_null($this->old($name))) {
-					return false;
-				}
-				$old = Arr::get($oldInput, $dataName);
-				$noOldValue = is_null($old);
-			}
-		}
-
 		//so when loading, we need to find the data that matches the checkbox's value.
 		//This stuff below will either return the model which has the value, or the value itself.
 		if ($name != "") {
@@ -1168,15 +1124,11 @@ abstract class Formlet {
 				return $value != $field->unChecked();
 			}
 		}
+
+		//Was this checkbox unset in session?
+		$noOldValue = is_null($this->old($dataName,false));
 		$checked = $noOldValue && is_null($this->model);
-		//
-		//if (is_array($model)) {
-		//	$checked = in_array($value, $model);
-		//} elseif ($model instanceof Collection) {
-		//	$checked = $model->contains('id', $value);
-		//} elseif ($model == $value) {
-		//	$checked = true;
-		//}
+
 		return $checked;
 	}
 
