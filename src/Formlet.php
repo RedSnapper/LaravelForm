@@ -15,7 +15,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\MessageBag as IMessageBag;
 use Illuminate\Validation\ValidationException;
 use RS\Form\Concerns\ManagesForm;
@@ -39,7 +38,7 @@ abstract class Formlet {
 	/**
 	 * @var Request
 	 */
-	public $request;
+	public $request = null;
 	/**
 	 * View for formlet
 	 *
@@ -99,7 +98,7 @@ abstract class Formlet {
 	 *
 	 * @var int|null
 	 */
-	protected $key;
+	protected $key = null;
 	/**
 	 * If there are multiple of this formlet we need to include
 	 * the key in the formlet
@@ -182,6 +181,109 @@ abstract class Formlet {
 	}
 
 	/**
+	 * Set request on form.
+	 *
+	 * @param Request $request
+	 * @return Formlet
+	 */
+	public function setRequest(Request $request): Formlet {
+		$this->request = $request;
+		return $this;
+	}
+
+	/**
+	 * Set the session store for formlets
+	 *
+	 * @param Session $session
+	 */
+	public function setSessionStore(Session $session): void {
+		$this->session = $session;
+	}
+
+	/**
+	 * Get a validation factory instance.
+	 *
+	 * @return \Illuminate\Contracts\Validation\Factory
+	 */
+	protected function getValidationFactory(): Factory {
+		return app(Factory::class);
+	}
+
+	//nested formlets need nested name.
+	public function getModel($name = ""): ?Model {
+		if (isset($this->formlets[$name])) {
+			return $this->formlets[$name]->getModel();
+		} else {
+			return $this->model;
+		}
+	}
+
+	/**
+	 * @param string $name
+	 * @return Formlet
+	 */
+	protected function getFormlet($name = "") {
+		return @$this->formlets[$name];
+	}
+
+	/**
+	 * @param string $name
+	 * @return Formlet
+	 */
+	protected function getFormlets($name = "") {
+		return @$this->formlets[$name];
+	}
+
+	/**
+	 * Fetch all fields from the form.
+	 * BG: I want to change this so that we get stuff for 'this' formlet also, rather than all.
+	 *
+	 * @param $name string
+	 * @return array
+	 */
+	public function fields(string $name = null): array {
+		if ($this->multiple) {
+			$fields = $this->request->input($this->name);
+			if (is_null($name)) {
+				$stuffs = @$fields[$this->getKey()] ?? [];
+			} else {
+				if (substr($name, -2) == "[]") { //multi-field also.
+					$key = substr($name, 0, -2);
+					$stuffs = @$fields[$key][$this->getKey()] ?? [];
+				} else {
+					$stuffs[$name] = @$fields[$this->getKey()][$this->subscriber] ?? [];
+				}
+			}
+			return $this->rationalise($stuffs);
+		} else {
+			if (is_null($name)) {
+				if ($this->name != "") {
+					$fields = $this->request->input($this->name) ?? [];
+				} else {
+					$fields = $this->request->all();
+				}
+				return $this->rationalise($fields);
+			} else {
+				if (array_key_exists($name, $this->formlets)) {
+					$key = $this->getKey();
+					if (is_null($key)) {
+						foreach ($this->formlets[$name] as $formlet) {
+							$fields[] = $formlet->fields();
+						}
+					} else {
+						foreach ($this->formlets[$name] as $formlet) {
+							$fields[$key] = $formlet->fields();
+						}
+					}
+				} else {
+					$fields = $this->request->input($name) ?? [];
+				}
+				return $this->rationalise($fields);
+			}
+		}
+	}
+
+	/**
 	 * Get the subscriber fields from the request for a given key.
 	 * This will handle pivot fields as required. That's why each id has an array attached to it.
 	 *
@@ -190,7 +292,6 @@ abstract class Formlet {
 	 */
 	public function getSubscriberFields(string $key): Collection {
 		$result = $this->fields($key);
-		$something = $this->fields("subscriber");
 		foreach ($this->formlets[$key] as $formlet) {
 			$fields = $formlet->subscribe($result);
 			if (!is_null($fields)) {
@@ -219,7 +320,7 @@ abstract class Formlet {
 
 		/** @var Formlet $formlet */
 		foreach ($data as $key => $formlet) {
-			$this->setFormletParent($formlet,$this->model); //so we can use for persist..
+			$this->setFormletParent($formlet, $this->model); //so we can use for persist..
 			if (is_null($fBase)) {
 				$fBase = $formlet;
 				$subscriberField = $formlet->subscriber ?? 'subscriber';
@@ -304,7 +405,7 @@ abstract class Formlet {
 			$value = $subscriberField->castToType($result[$subscriberFieldName]);
 			if ($subscriberField->isCheckable()) {
 				if (($value === $subscriberField->getValue())) { //so this is the value if it is set..
-					if(!in_array($subscriberFieldName,$this->pivotColumns)) {
+					if (!in_array($subscriberFieldName, $this->pivotColumns)) {
 						unset($result[$subscriberFieldName]); //don't want to store subscriber.
 					}
 				} else {
@@ -312,7 +413,7 @@ abstract class Formlet {
 				}
 			} else {
 				if ($value !== $subscriberField->unChecked()) {
-					if(!in_array($subscriberFieldName,$this->pivotColumns)) {
+					if (!in_array($subscriberFieldName, $this->pivotColumns)) {
 						unset($result[$subscriberFieldName]); //don't want to store subscriber.
 					}
 				} else {
@@ -416,11 +517,11 @@ abstract class Formlet {
 		$this->pivotColumns = $prop->getValue($this->belongs);
 	}
 
-	protected function setFormletParent(Formlet $formlet,Model $parent) : void {
+	protected function setFormletParent(Formlet $formlet, Model $parent): void {
 		$reflection = new \ReflectionClass($formlet->belongs);
 		$prop = $reflection->getProperty("parent"); //also could get foreignKey this way..
 		$prop->setAccessible(true);
-		$prop->setValue($formlet->belongs,$parent);
+		$prop->setValue($formlet->belongs, $parent);
 	}
 
 	/**
@@ -644,55 +745,6 @@ abstract class Formlet {
 	}
 
 	/**
-	 * Fetch all fields from the form.
-	 * BG: I want to change this so that we get stuff for 'this' formlet also, rather than all.
-	 *
-	 * @param $name string
-	 * @return array
-	 */
-	public function fields(string $name = null): array {
-		if ($this->multiple) {
-			$fields = $this->request->input($this->name);
-			if(is_null($name)) {
-				$stuffs = @$fields[$this->getKey()] ?? [];
-			} else {
-				if (substr($name, -2) == "[]") { //multi-field also.
-					$key = substr($name, 0, -2);
-					$stuffs = @$fields[$key][$this->getKey()] ?? [];
-				} else {
-					$stuffs[$name] = @$fields[$this->getKey()][$this->subscriber] ?? [];
-				}
-			}
-			return $this->rationalise($stuffs);
-		} else {
-			if (is_null($name)) {
-				if ($this->name != "") {
-					$fields = $this->request->input($this->name) ?? [];
-				} else {
-					$fields = $this->request->all();
-				}
-				return $this->rationalise($fields);
-			} else {
-				if (array_key_exists($name, $this->formlets)) {
-					$key = $this->getKey();
-					if (is_null($key)) {
-						foreach ($this->formlets[$name] as $formlet) {
-							$fields[] = $formlet->fields();
-						}
-					} else {
-						foreach ($this->formlets[$name] as $formlet) {
-							$fields[$key] = $formlet->fields();
-						}
-					}
-				} else {
-					$fields = $this->request->input($name) ?? [];
-				}
-				return $this->rationalise($fields);
-			}
-		}
-	}
-
-	/**
 	 * We are doing this to include Checkboxes/'checkable' which otherwise aren't being updated because they aren't being
 	 * posted. Be aware that if your checkbox field is not nullable, you will need to cast it or use a mutator.
 	 *
@@ -872,9 +924,10 @@ abstract class Formlet {
 
 		$name = $field->getName();
 		$value = $field->getValue();
+		/** @var bool $isSet */
 		$isSet = $field->getValueIsSet();
 		$default = $field->getDefault();
-		$multiField = substr($name,-2) === "[]";
+		$multiField = substr($name, -2) === "[]";
 
 		// Field should not be populated from post or from the model
 		if (in_array($name, $this->guarded)) {
@@ -898,14 +951,14 @@ abstract class Formlet {
 			return $value;
 		}
 
-		if(isset($this->subscriber))  {
-			if($multiField) {
-				$accessName = substr($name,0,-2);
+		if (isset($this->subscriber)) {
+			if ($multiField) {
+				$accessName = substr($name, 0, -2);
 				$sub = $this->getData("subscriber.*.pivot.$accessName");
 			} else {
 				$sub = $this->getData("subscriber.pivot.$name");
 			}
-			if(!is_null($sub)) {
+			if (!is_null($sub)) {
 				return $sub;
 			}
 		}
@@ -1136,60 +1189,6 @@ abstract class Formlet {
 	public function setUrlGenerator(UrlGenerator $url): Formlet {
 		$this->url = $url;
 		return $this;
-	}
-
-	/**
-	 * Set request on form.
-	 *
-	 * @param Request $request
-	 * @return Formlet
-	 */
-	public function setRequest(Request $request): Formlet {
-		$this->request = $request;
-		return $this;
-	}
-
-	/**
-	 * Set the session store for formlets
-	 *
-	 * @param Session $session
-	 */
-	public function setSessionStore(Session $session): void {
-		$this->session = $session;
-	}
-
-	/**
-	 * Get a validation factory instance.
-	 *
-	 * @return \Illuminate\Contracts\Validation\Factory
-	 */
-	protected function getValidationFactory(): Factory {
-		return app(Factory::class);
-	}
-
-	//nested formlets need nested name.
-	public function getModel($name = ""): ?Model {
-		if (isset($this->formlets[$name])) {
-			return $this->formlets[$name]->getModel();
-		} else {
-			return $this->model;
-		}
-	}
-
-	/**
-	 * @param string $name
-	 * @return Formlet
-	 */
-	protected function getFormlet($name = "") {
-		return @$this->formlets[$name];
-	}
-
-	/**
-	 * @param string $name
-	 * @return Formlet
-	 */
-	protected function getFormlets($name = "") {
-		return @$this->formlets[$name];
 	}
 
 	/**
