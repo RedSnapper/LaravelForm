@@ -90,7 +90,7 @@ abstract class AbstractField {
 	const TYPE_STRING 	= 0x0008;
 	const TYPE_BOOL 		= 0x0010;
 	const TYPE_ARRAY 		= 0x0020;
-	protected $valueType = AbstractField::TYPE_STRING | AbstractField::TYPE_NULL;
+	protected $valueType;
 
 	public function setValueType(int $type) : AbstractField {
 		$this->valueType = $type;
@@ -98,8 +98,12 @@ abstract class AbstractField {
 	}
 
 	public function castToType($value) {
-			$type = $this->valueType;
-			if((($type & AbstractField::TYPE_NULL) === AbstractField::TYPE_NULL) && is_null($value)) {
+
+			if(!isset($this->valueType)){
+				return $value;
+			}
+
+			if((($this->valueType & AbstractField::TYPE_NULL) === AbstractField::TYPE_NULL) && is_null($value)) {
 				return $value;
 			}
 			//now remove the null option.
@@ -108,7 +112,7 @@ abstract class AbstractField {
 				case AbstractField::TYPE_FLOAT: 	return (float) 	$value;
 				case AbstractField::TYPE_STRING:	return (string) $value;
 				case AbstractField::TYPE_BOOL:		return (bool) 	$value;
-				case AbstractField::TYPE_ARRAY:		return is_array($value) ? $value : [$value];
+				case AbstractField::TYPE_ARRAY:		return is_array($value) ? $value : $value;
 				break;
 			}
 	}
@@ -210,6 +214,15 @@ abstract class AbstractField {
 	}
 
 	/**
+	 * Error name removes array string from the field name
+	 * @return string
+	 */
+	public function getErrorName(): string {
+		$fieldName = $this->getFieldName();
+		return ends_with($this->getFieldName(),'[]') ? substr($fieldName,0,-2) : $fieldName;
+	}
+
+	/**
 	 * @param string $fieldName
 	 */
 	public function setFieldName(string $fieldName) {
@@ -308,8 +321,9 @@ abstract class AbstractField {
 		$name = $this->getFieldName();
 		$field = $this->getName();
 		$view = $this->getView();
+		$errorName = $this->getErrorName();
 
-		return compact('attributes', 'value', 'label', 'name', 'view', 'field');
+		return compact('attributes', 'value', 'label', 'name', 'view', 'field','errorName');
 	}
 
 	protected function removeAttribute($key): AbstractField {

@@ -251,7 +251,13 @@ abstract class Formlet {
 					$key = substr($name, 0, -2);
 					$stuffs = @$fields[$key][$this->getKey()] ?? [];
 				} else {
-					$stuffs[$name] = @$fields[$this->getKey()][$this->subscriber] ?? [];
+
+					if(isset($this->subscriber)){
+						$stuffs[$name] = @$fields[$this->getKey()][$this->subscriber] ?? [];
+					}else{
+						$stuffs = @$fields[$this->getKey()][$name] ?? [];
+					}
+
 				}
 			}
 			return $this->rationalise($stuffs);
@@ -1179,7 +1185,7 @@ abstract class Formlet {
 		$field = array_pull($parts, 0);
 		$extra = implode('[', $parts);
 
-		return "{$name}[$field]{$instance}[$extra";
+		return "{$name}{$instance}[$field][$extra";
 	}
 
 	protected function getFieldInstance(): string {

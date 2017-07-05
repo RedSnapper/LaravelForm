@@ -8,6 +8,7 @@
 
 namespace RS\Form\View\Fields;
 
+use Illuminate\Support\Collection;
 use RS\NView\Document;
 
 class Select extends Field {
@@ -87,6 +88,8 @@ class Select extends Field {
 	protected function isSelected($value, $selected): bool {
 		if (is_array($selected)) {
 			return in_array($value, $selected);
+		}elseif ($selected instanceof Collection) {
+			return $selected->contains($value);
 		}
 		return ((string)$value == (string)$selected);
 	}

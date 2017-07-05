@@ -8,7 +8,7 @@ use RS\NView\ViewController;
 class Main extends ViewController {
 
 	private function renderField(Document $view,$field,$fieldData,$fieldName,$useGap = false) {
-		$field['errors'] = $fieldData['errors']->get($field['name']);
+		$field['errors'] = $fieldData['errors']->get($field['errorName']);
 		$field = view($field['view'],$field);
 		if($useGap) {
 			$view->set("//*[@data-v.field='{$fieldName}']/child-gap()",$field);
@@ -34,5 +34,6 @@ class Main extends ViewController {
 		}
 		return $view;
 	}
+
 
 }
