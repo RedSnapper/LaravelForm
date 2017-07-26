@@ -26,10 +26,10 @@ class FormServiceProvider extends ServiceProvider
 
 		$this->loadViewsFrom(__DIR__.'/resources/views', 'form');
 
-		//$this->publishes([
-		//  __DIR__.'/resources/views' => resource_path('views/form'),
-		//  __DIR__.'/View' => app_path('View')
-		//],'form');
+		$this->publishes([
+		  __DIR__.'/resources/views' => resource_path('views/form'),
+		  //__DIR__.'/View' => app_path('View')
+		],'form');
 
     }
 
