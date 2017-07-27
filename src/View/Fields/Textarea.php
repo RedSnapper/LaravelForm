@@ -4,7 +4,7 @@ namespace RS\Form\View\Fields;
 
 use RS\NView\Document;
 
-class TextArea extends Field {
+class Textarea extends Field {
 
 	protected $rootElement = "textarea";
 
