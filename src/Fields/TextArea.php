@@ -2,7 +2,7 @@
 
 namespace RS\Form\Fields;
 
-class TextArea extends AbstractField {
+class Textarea extends AbstractField {
 
 	protected $view = "form.fields.textarea";
 
