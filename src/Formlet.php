@@ -844,6 +844,8 @@ abstract class Formlet {
 			'hidden'     => $this->getFieldData($this->hidden)
 		];
 
+		$data = array_merge($data, $this->data);
+
 		return view($this->formView, $data);
 	}
 
