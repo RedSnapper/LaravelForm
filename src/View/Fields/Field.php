@@ -47,7 +47,7 @@ class Field extends ViewController {
 		$element = $this->rootElement;
 
 		if(!is_null(@$data['value'])){
-			$view->set("//h:$element/@value",e($data['value']));
+			$view->set("//h:$element/@value",$data['value']);
 		}
 	}
 

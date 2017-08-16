@@ -66,7 +66,7 @@ class Select extends Field {
 	protected function renderOption($item, $selected): Document {
 		$view = new Document($this->optionTemplate);
 		$view->set("//h:option/@value", $item->value);
-		$view->set("//h:option/child-gap()", $item->display);
+		$view->set("//h:option/child-gap()", e($item->display));
 		if($item->disabled) {
 			$view->set("//h:option/@disabled","disabled");
 		}
