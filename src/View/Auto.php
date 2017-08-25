@@ -13,8 +13,7 @@ class Auto extends ViewController{
 				$this->doRender($data,$field,$view);
 			}
 		} else {
-			$name = $fields['name'];
-			$fields['errors'] = $data['errors']->get($name);
+			$fields['errors'] = $data['errors']->get($field['errorName']);
 			$fields['model'] = @$data['model'];
 			$fields['master'] = @$data['master'];
 			$fields['subscriber'] = @$data['subscriber'];
