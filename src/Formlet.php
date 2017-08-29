@@ -131,6 +131,16 @@ abstract class Formlet {
 		return [];
 	}
 
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array
+     */
+    public function messages()
+    {
+        return [];
+    }
+
 	/**
 	 * Add a piece of data to the view.
 	 * BG: seeing a model coming over as the 'value'..
@@ -576,7 +586,7 @@ abstract class Formlet {
 		$errors = [];
 
 		if (count($this->formlets) == 0) {
-			$errors = $this->validate($this->request->all(), $this->rules());
+			$errors = $this->validate($this->request->all(), $this->rules(),$this->messages());
 		}
 
 		foreach ($this->formlets as $formlet) {
@@ -585,11 +595,11 @@ abstract class Formlet {
 
 				foreach ($formlet as $f) {
 					$request = $this->request->input($f->getName() . "." . $f->getKey()) ?? [];
-					$errors = array_merge($errors, $f->validate($request, $f->rules()));
+					$errors = array_merge($errors, $f->validate($request, $f->rules(),$f->messages()));
 				}
 			} else {
 				$request = $this->request->get($formlet->getName()) ?? [];
-				$errors = array_merge($errors, $formlet->validate($request, $formlet->rules()));
+				$errors = array_merge($errors, $formlet->validate($request, $formlet->rules(),$formlet->messages()));
 			}
 		}
 
