@@ -997,10 +997,17 @@ abstract class Formlet
             return $oldValue;
         }
 
+        $request = $this->request($name);
+        if (!is_null($request)) {
+            return $request;
+        }
+
         //So name has returned nothing meaningful so far. Let's pass back the value if it is set.
         if (!is_null($value) && $isSet) {
             return $value;
         }
+
+
 
         if (isset($this->subscriber)) {
             if ($multiField) {
