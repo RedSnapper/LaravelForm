@@ -1020,13 +1020,8 @@ abstract class Formlet
                 return $sub;
             }
         }
-        //Nothing there either. Let's try the model.
-        //Except that the model is currently un-applied.
-        if (isset($this->model)) {
-            return $this->getModelValueAttribute($name) ?? $default;
-        }
 
-        return $default;
+        return $this->getModelValueAttribute($name) ?? $default;
     }
 
     /**
@@ -1062,12 +1057,13 @@ abstract class Formlet
     protected function getModelValueAttribute($name)
     {
         $name = $this->transformKey($name);
-        if ($name == "") {
-            return $this->model;
+
+        if(!isset($this->model) || !$this->model->exists){
+            return null;
         }
 
-        if(!$this->model->exists){
-            return null;
+        if ($name == "") {
+            return $this->model;
         }
 
         if ($this->isMultiple()) {
