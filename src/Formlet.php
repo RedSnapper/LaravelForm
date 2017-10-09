@@ -941,7 +941,7 @@ abstract class Formlet
     public function renderFormlet(): ViewContract
     {
 
-        $errors = $this->getErrors(); //		MessageBag
+        $errors = $this->getErrors(); //        MessageBag
 
         $data = [
           'fields' => $this->getFieldData($this->fields),
@@ -1064,6 +1064,10 @@ abstract class Formlet
         $name = $this->transformKey($name);
         if ($name == "") {
             return $this->model;
+        }
+
+        if(!$this->model->exists){
+            return null;
         }
 
         if ($this->isMultiple()) {
