@@ -889,7 +889,7 @@ abstract class Formlet
         }
     }
 
-    public function render(): View
+    public function render(): ViewContract
     {
         if (!$this->prepare()) {
             return null;
