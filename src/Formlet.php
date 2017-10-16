@@ -687,7 +687,7 @@ abstract class Formlet
     {
     }
 
-    public function renderWith($modes): View
+    public function renderWith($modes): ViewContract
     {
         return $this->create($modes)->render();
     }
