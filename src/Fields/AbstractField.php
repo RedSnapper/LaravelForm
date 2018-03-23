@@ -50,13 +50,6 @@ abstract class AbstractField {
 	protected $value;
 
 	/**
-	 * Whether the value of the field has been set.
-	 *
-	 * @var bool
-	 */
-	protected $valueIsSet = false;
-
-	/**
 	 * Whether we should populate the field
 	 *
 	 * @var bool
@@ -77,64 +70,15 @@ abstract class AbstractField {
 	 */
 	protected $default;
 
-	/**
-	 * value that means field is not-wanted (unsubscribe)
-	 *
-	 * @var mixed
-	 */
-	protected $unchecked;
-
-	const TYPE_NULL 		= 0x0001;
-	const TYPE_INT 			= 0x0002;
-	const TYPE_FLOAT 		= 0x0004;
-	const TYPE_STRING 	= 0x0008;
-	const TYPE_BOOL 		= 0x0010;
-	const TYPE_ARRAY 		= 0x0020;
-	protected $valueType;
-
-	public function setValueType(int $type) : AbstractField {
-		$this->valueType = $type;
-		return $this;
-	}
-
-	public function castToType($value) {
-
-			if(!isset($this->valueType)){
-				return $value;
-			}
-
-			if((($this->valueType & AbstractField::TYPE_NULL) === AbstractField::TYPE_NULL) && is_null($value)) {
-				return $value;
-			}
-			//now remove the null option.
-			switch ($this->valueType & ~AbstractField::TYPE_NULL) {
-				case AbstractField::TYPE_INT: 		return (int) 		$value;
-				case AbstractField::TYPE_FLOAT: 	return (float) 	$value;
-				case AbstractField::TYPE_STRING:	return (string) $value;
-				case AbstractField::TYPE_BOOL:		return (bool) 	$value;
-				case AbstractField::TYPE_ARRAY:		return is_array($value) ? $value : $value;
-				break;
-			}
-	}
-	/**
-	 * @return mixed
-	 */
-	public function unChecked() {
-		return $this->castToType($this->unchecked);
-	}
-
-	public function setUnChecked($value) : void {
-		$this->unchecked = $value;
-	}
-
-	/**
-	 * Return if this field is a checkable
-	 *
-	 * @return bool
-	 */
-	public function isCheckable() : bool {
-		return $this->type === "checkable";
-	}
+    /**
+     * @param string $type
+     * @return AbstractField
+     */
+    public function setType(string $type):AbstractField
+    {
+        $this->type = $type;
+        return $this;
+    }
 
 	/**
 	 * Return the type of field eg. checkable
@@ -145,17 +89,23 @@ abstract class AbstractField {
 		return $this->type;
 	}
 
+    /**
+     * TODO What does this mean??
+     * Return if this field is a checkable
+     *
+     * @return bool
+     */
+    public function isCheckable() : bool {
+        return $this->type === "checkable";
+    }
+
 	/**
 	 * Get value of a field
 	 *
 	 * @return mixed
 	 */
 	public function getValue() {
-		return $this->castToType($this->value);
-	}
-
-	public function getValueIsSet() : bool {
-		return $this->valueIsSet;
+		return $this->value;
 	}
 
 	/**
@@ -165,7 +115,6 @@ abstract class AbstractField {
 	 * @return AbstractField
 	 */
 	public function setValue($value) {
-		$this->valueIsSet = true;
 		$this->value = $value;
 		return $this;
 	}
@@ -176,7 +125,7 @@ abstract class AbstractField {
 	 * @return mixed
 	 */
 	public function getDefault() {
-		return $this->castToType($this->default);
+		return $this->default;
 	}
 
 	/**
@@ -184,16 +133,16 @@ abstract class AbstractField {
 	 * @param $default mixed
 	 * @return AbstractField
 	 */
-	public function setDefault($default): AbstractField  {
+	public function default($default): AbstractField  {
 		$this->default = $default;
 		return $this;
 	}
 
-
-	/**
-	 * @return string or null(php 7.1 ?string)
-	 */
-	public function getName(): ?string {
+    /**
+     * Get form name
+     * @return null|string
+     */
+    public function getName(): ?string {
 		return $this->name;
 	}
 
@@ -206,10 +155,10 @@ abstract class AbstractField {
 		return $this;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getFieldName(): string {
+    /**
+     * @return null|string
+     */
+    public function getFieldName(): ?string {
 		return $this->fieldName ?? $this->getName();
 	}
 
@@ -240,7 +189,7 @@ abstract class AbstractField {
 	 * @param string $label
 	 * @return AbstractField
 	 */
-	public function setLabel(string $label): AbstractField {
+	public function label(string $label): AbstractField {
 		$this->label = $label;
 		return $this;
 	}
@@ -256,7 +205,7 @@ abstract class AbstractField {
 	 * @param string $view
 	 * @return AbstractField
 	 */
-	public function setView(string $view): AbstractField {
+	public function view(string $view): AbstractField {
 		$this->view = $view;
 		return $this;
 	}
@@ -267,7 +216,7 @@ abstract class AbstractField {
 	 * @param boolean $disabled
 	 * @return AbstractField
 	 */
-	public function setDisabled($disabled = true): AbstractField {
+	public function disabled($disabled = true): AbstractField {
 
 		$disabled ? $this->setAttribute('disabled')
 		  : $this->removeAttribute("disabled");
@@ -281,7 +230,7 @@ abstract class AbstractField {
 	 * @param boolean $required
 	 * @return AbstractField
 	 */
-	public function setRequired($required = true): AbstractField {
+	public function required($required = true): AbstractField {
 
 		$required ? $this->setAttribute('required')
 		  : $this->removeAttribute("required");
@@ -295,7 +244,7 @@ abstract class AbstractField {
 	 * @param string $string
 	 * @return AbstractField
 	 */
-	public function setPlaceholder(string $string): AbstractField {
+	public function placeholder(string $string): AbstractField {
 		$this->setAttribute('placeholder', $string);
 		return $this;
 	}
@@ -309,13 +258,17 @@ abstract class AbstractField {
 		return $this;
 	}
 
+    public function attributes(): Collection {
+        return $this->attributes;
+    }
+
 	public function setAttributes(array $attributes): AbstractField {
-		$this->attributes->merge($attributes);
+		$this->attributes = $this->attributes->merge($attributes);
 		return $this;
 	}
 
-	public function getData(): array {
-		$attributes = $this->attributes;
+	public function data(): array {
+		$attributes = $this->attributes();
 		$value = $this->getValue();
 		$label = $this->getLabel();
 		$name = $this->getFieldName();
