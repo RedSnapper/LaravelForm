@@ -7,8 +7,8 @@ class TextArea extends AbstractField {
 	protected $view = "form.fields.textarea";
 
 	public function __construct(string $name) {
-		$this->name = $name;
-		$this->attributes = collect([]);
+        $this->attributes = collect([]);
+	    $this->setName($name);
 	}
 
 
@@ -18,7 +18,7 @@ class TextArea extends AbstractField {
 	 * @param int $rows
 	 * @return AbstractField
 	 */
-	public function setRows(int $rows): AbstractField {
+	public function rows(int $rows): AbstractField {
 		$this->setAttribute('rows',$rows);
 		return $this;
 	}
@@ -29,7 +29,7 @@ class TextArea extends AbstractField {
 	 * @param int $cols
 	 * @return AbstractField
 	 */
-	public function setCols(int $cols): AbstractField {
+	public function cols(int $cols): AbstractField {
 		$this->setAttribute('cols',$cols);
 		return $this;
 	}

@@ -8,12 +8,12 @@ class Select extends Choice {
 	protected $view = "form.fields.select";
 
 	/**
-	 * Set placeholder. This option needs to be disabled.
+	 * Set placeholder.
 	 *
 	 * @param string $string
 	 * @return AbstractField
 	 */
-	public function setPlaceholder(string $string): AbstractField {
+	public function placeholder(string $string): AbstractField {
 
 		$this->options->prepend($this->option('',$string));
 
@@ -26,7 +26,7 @@ class Select extends Choice {
 	 * @param boolean $multiple
 	 * @return AbstractField
 	 */
-	public function setMultiple($multiple = true): AbstractField {
+	public function multiple($multiple = true): AbstractField {
 
 		$multiple ? $this->setAttribute('multiple')
 		  : $this->removeAttribute("multiple");

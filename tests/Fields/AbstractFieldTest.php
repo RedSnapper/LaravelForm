@@ -7,19 +7,30 @@ use Tests\TestCase;
 class AbstractFieldTest extends TestCase
 {
     
-    protected function getTestField(){
-        return new TestField();
+    protected function getTestField($name="foo"){
+        return new TestField($name);
     }
     
+
     /** @test */
-    public function can_set_a_name_for_a_field()
+    public function a_field_has_a__name()
     {
-        $field = $this->getTestField();
-        $this->assertNull($field->getName());
-        $field->setName("foo");
+        $field = $this->getTestField("foo");
         $this->assertEquals("foo",$field->getName());
+        $this->assertEquals("foo",$field->getAttribute("name"));
         $field->setName("bar");
         $this->assertEquals("bar",$field->getName());
+    }
+
+    /** @test */
+    public function can_set_an_instance_name_for_a_field()
+    {
+        $field = $this->getTestField("foo");
+        $this->assertEquals("foo",$field->getInstanceName());
+        $field->setInstanceName("bar");
+        $this->assertEquals("bar",$field->getInstanceName());
+        $this->assertEquals("foo",$field->getName());
+        $this->assertEquals("bar",$field->getAttribute('name'));
     }
 
     /** @test */
@@ -59,7 +70,6 @@ class AbstractFieldTest extends TestCase
     public function can_check_if_a_field_is_checkable()
     {
         $field = $this->getTestField();
-        $this->assertNull($field->getType());
         $field->setType("foo");
         $this->assertEquals("foo",$field->getType());
         $this->assertFalse($field->isCheckable());
@@ -69,26 +79,14 @@ class AbstractFieldTest extends TestCase
     }
 
     /** @test */
-    public function can_set_a_fieldname_for_a_field()
-    {
-        $field = $this->getTestField();
-        $this->assertNull($field->getFieldName());
-        $field->setName("foo");
-        $this->assertEquals("foo",$field->getFieldName());
-        $field->setFieldName("bar");
-        $this->assertEquals("bar",$field->getFieldName());
-        $this->assertEquals("foo",$field->getName());
-    }
-
-    /** @test */
     public function a_field_can_have_an_error_name()
     {
         $field = $this->getTestField();
         $field->setName("foo");
         $this->assertEquals("foo",$field->getErrorName());
-        $field->setFieldName("bar");
+        $field->setInstanceName("bar");
         $this->assertEquals("bar",$field->getErrorName());
-        $field->setFieldName("bim[]");
+        $field->setInstanceName("bim[]");
         $this->assertEquals("bim",$field->getErrorName());
     }
 
@@ -145,25 +143,17 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals('foo',$field->getAttribute('foo'));
         $this->assertEquals('bar',$field->getAttribute('bar'));
     }
+
     /** @test */
     public function can_retrieve_all_data_about_a_field()
     {
         $field = $this->getTestField();
-        $field->setName('email');
-        $field->label('Email Address');
-        $field->setFieldName('bim[]');
-        $field->view('home');
-        $field->setValue('john@example.com');
-        $field->setAttribute('foo','bar');
+        $keys = $field->data()->keys();
 
-        $this->assertEquals('bar',$field->data()['attributes']->get('foo'));
-        $this->assertEquals('john@example.com',$field->data()['value']);
-        $this->assertEquals('Email Address',$field->data()['label']);
-        $this->assertEquals('bim[]',$field->data()['name']);
-        $this->assertEquals('home',$field->data()['view']);
-        $this->assertEquals('email',$field->data()['field']);
-        $this->assertEquals('bim',$field->data()['errorName']);
-
+        $this->assertContains('attributes',$keys);
+        $this->assertContains('value',$keys);
+        $this->assertContains('label',$keys);
+        $this->assertContains('errorName',$keys);
     }
 
     /** @test */
@@ -177,8 +167,9 @@ class AbstractFieldTest extends TestCase
 }
 
 class TestField extends AbstractField{
-    public function __construct()
+    public function __construct($name)
     {
         $this->attributes = collect();
+        $this->setName($name);
     }
 }

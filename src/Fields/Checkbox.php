@@ -7,11 +7,13 @@ class Checkbox extends AbstractField {
 	protected $view = "form.fields.checkbox";
 	protected $type = "checkable";
 
-	public function __construct(string $name = null, $checked = 1, $unchecked = 0) {
-		$this->name = $name;
-		$this->value = $checked;
+	public function __construct(string $name = null, $checked = true, $unchecked = false) {
+        $this->attributes = collect([]);
+	    $this->setName($name);
+		$this->checked = $checked;
 		$this->unchecked = $unchecked;
-		$this->attributes = collect([]);
 	}
+
+
 
 }

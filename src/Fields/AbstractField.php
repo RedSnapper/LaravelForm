@@ -15,11 +15,12 @@ abstract class AbstractField {
 	protected $name;
 
 	/**
-	 * Fieldname of the field.
+	 * Instance name of a field.
+     * User in formlets
 	 *
 	 * @var string
 	 */
-	protected $fieldName;
+	protected $instanceName;
 
 	/**
 	 * Label value
@@ -71,6 +72,16 @@ abstract class AbstractField {
 	protected $default;
 
     /**
+     * The value of the checkbox when checked
+     */
+    protected $checked;
+
+    /**
+     * The value of the checkbox when not checked
+     */
+    protected $unchecked;
+
+    /**
      * @param string $type
      * @return AbstractField
      */
@@ -90,7 +101,6 @@ abstract class AbstractField {
 	}
 
     /**
-     * TODO What does this mean??
      * Return if this field is a checkable
      *
      * @return bool
@@ -105,6 +115,11 @@ abstract class AbstractField {
 	 * @return mixed
 	 */
 	public function getValue() {
+
+	    if($this->isCheckable()){
+	        return $this->getCheckedValue();
+        }
+
 		return $this->value;
 	}
 
@@ -139,7 +154,7 @@ abstract class AbstractField {
 	}
 
     /**
-     * Get form name
+     * Get the original field name
      * @return null|string
      */
     public function getName(): ?string {
@@ -152,31 +167,41 @@ abstract class AbstractField {
 	 */
 	public function setName(string $name = null): AbstractField {
 		$this->name = $name;
+		$this->setAttribute("name",$name);
 		return $this;
 	}
 
     /**
+     * Set the instance name for a field (used in a formlet)
+     * @param string $fieldName
+     */
+    public function setInstanceName(string $name) {
+        $this->instanceName = $name;
+        $this->setAttribute("name",$name);
+    }
+
+    /**
+     * Get the instance name for a field
      * @return null|string
      */
-    public function getFieldName(): ?string {
-		return $this->fieldName ?? $this->getName();
+    public function getInstanceName(): ?string {
+		return $this->instanceName ?? $this->getName();
 	}
 
 	/**
 	 * Error name removes array string from the field name
 	 * @return string
 	 */
-	public function getErrorName(): string {
-		$fieldName = $this->getFieldName();
-		return ends_with($this->getFieldName(),'[]') ? substr($fieldName,0,-2) : $fieldName;
+	public function getErrorName(): ?string {
+		$instanceName = $this->getInstanceName();
+
+		if(is_null($instanceName)){
+		    return null;
+        }
+
+		return ends_with($this->getInstanceName(),'[]') ? substr($instanceName,0,-2) : $instanceName;
 	}
 
-	/**
-	 * @param string $fieldName
-	 */
-	public function setFieldName(string $fieldName) {
-		$this->fieldName = $fieldName;
-	}
 
 	/**
 	 * @return string|null
@@ -193,6 +218,14 @@ abstract class AbstractField {
 		$this->label = $label;
 		return $this;
 	}
+
+    public function getUnCheckedValue(){
+        return $this->unchecked;
+    }
+
+    public function getCheckedValue(){
+        return $this->checked;
+    }
 
 	/**
 	 * @return string|null
@@ -267,16 +300,14 @@ abstract class AbstractField {
 		return $this;
 	}
 
-	public function data(): array {
-		$attributes = $this->attributes();
-		$value = $this->getValue();
-		$label = $this->getLabel();
-		$name = $this->getFieldName();
-		$field = $this->getName();
-		$view = $this->getView();
-		$errorName = $this->getErrorName();
+	public function data(): Collection {
 
-		return compact('attributes', 'value', 'label', 'name', 'view', 'field','errorName');
+	    return collect([
+	      'attributes'=> $this->attributes(),
+          'value'=> $this->getValue(),
+          'label'=> $this->getLabel(),
+          'errorName'=> $this->getErrorName()
+        ]);
 	}
 
 	protected function removeAttribute($key): AbstractField {
