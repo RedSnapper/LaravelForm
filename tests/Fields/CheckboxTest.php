@@ -5,9 +5,27 @@ use RS\Form\Fields\Checkbox;
 
 class CheckboxTest extends AbstractFieldTest
 {
-    
+    use RendersErrors;
+
     protected function getTestField($name="foo"){
         return new Checkbox($name);
+    }
+
+    /** @test */
+    public function the_default_value_is_returned_when_no_value_is_set()
+    {
+        $field = new Checkbox('foo','bim','baz');
+        $this->assertEquals('baz',$field->getValue());
+        $this->assertFalse($field->isChecked());
+
+        $field->default('bim');
+        $this->assertEquals('bim',$field->getValue());
+        $this->assertTrue($field->isChecked());
+
+        $field->setValue('wibble');
+        $this->assertEquals('baz',$field->getValue());
+        $this->assertFalse($field->isChecked());
+
     }
 
     /** @test */
@@ -19,17 +37,10 @@ class CheckboxTest extends AbstractFieldTest
     }
 
     /** @test */
-    public function a_checkbox_type_will_be_checkable()
+    public function an_input_will_have_a_type_attribute_set()
     {
-        $field = new Checkbox('foo');
-        $this->assertTrue($field->isCheckable());
-    }
-
-    /** @test */
-    public function a_checkbox_will_have_a_view_set()
-    {
-        $field = new Checkbox('foo');
-        $this->assertEquals('form.fields.checkbox',$field->getView());
+        $field = new Checkbox('bim');
+        $this->assertEquals('checkbox',$field->getAttribute('type'));
     }
 
     /** @test */
@@ -49,11 +60,44 @@ class CheckboxTest extends AbstractFieldTest
     }
 
     /** @test */
-    public function a_checkbox_value_is_always_the_same_as_the_checked_value(){
+    public function a_checkbox_value_depends_on_whether_the_checkbox_is_set(){
+
         $field = new Checkbox('foo','bar','bim');
-        $this->assertEquals('bar',$field->getValue());
+        $this->assertEquals('bim',$field->getValue());
+        $this->assertFalse($field->isChecked());
+
         $field->setValue('foo');
+        $this->assertEquals('bim',$field->getValue());
+        $this->assertFalse($field->isChecked());
+
+        $field->setValue('bar');
         $this->assertEquals('bar',$field->getValue());
+        $this->assertTrue($field->isChecked());
+
+    }
+
+    /** @test */
+    public function can_render(){
+        $field = new Checkbox('bim',true);
+        $rendered = $field->render()->render();
+        $this->assertContains('<input class="form_control" id="bim" name="bim" type="checkbox" value="1"/>',$rendered);
+
+        $field->setValue(true);
+        $rendered = $field->render()->render();
+        $this->assertContains('<input class="form_control" checked="checked" id="bim" name="bim" type="checkbox" value="1"/>',$rendered);
+
+        $field->setValue(null);
+        $rendered = $field->render()->render();
+        $this->assertContains('<input class="form_control" id="bim" name="bim" type="checkbox" value="1"/>',$rendered);
+    }
+
+    /** @test */
+    public function can_render_a_label()
+    {
+        $field = new Checkbox('bim',true);
+        $field->label('My Label');
+        $rendered = $field->render()->render();
+        $this->assertContains('My Label',$rendered);
     }
 
 

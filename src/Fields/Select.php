@@ -5,7 +5,7 @@ namespace RS\Form\Fields;
 
 class Select extends Choice {
 
-	protected $view = "form.fields.select";
+	protected $view = "form::fields.select";
 
 	/**
 	 * Set placeholder.

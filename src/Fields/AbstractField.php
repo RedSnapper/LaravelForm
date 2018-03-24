@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RS\Form\Fields;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 
 abstract class AbstractField {
@@ -43,19 +44,19 @@ abstract class AbstractField {
 	 */
 	protected $attributes;
 
+    /**
+     * Attributes for field
+     *
+     * @var Collection
+     */
+    protected $errors;
+
 	/**
 	 * Value of field
 	 *
 	 * @var mixed
 	 */
 	protected $value;
-
-	/**
-	 * Whether we should populate the field
-	 *
-	 * @var bool
-	 */
-	protected $populate = true;
 
 	/**
 	 * What type of field this
@@ -70,16 +71,6 @@ abstract class AbstractField {
 	 * @var mixed
 	 */
 	protected $default;
-
-    /**
-     * The value of the checkbox when checked
-     */
-    protected $checked;
-
-    /**
-     * The value of the checkbox when not checked
-     */
-    protected $unchecked;
 
     /**
      * @param string $type
@@ -100,28 +91,22 @@ abstract class AbstractField {
 		return $this->type;
 	}
 
-    /**
-     * Return if this field is a checkable
-     *
-     * @return bool
-     */
-    public function isCheckable() : bool {
-        return $this->type === "checkable";
-    }
-
 	/**
-	 * Get value of a field
+	 * Get value for a field
 	 *
 	 * @return mixed
 	 */
 	public function getValue() {
-
-	    if($this->isCheckable()){
-	        return $this->getCheckedValue();
-        }
-
-		return $this->value;
+		return is_null($this->value) ? $this->default : $this->value;
 	}
+
+    /**
+     * Get html value (used for rendering)
+     * @return mixed
+     */
+	protected function getHTMLValue(){
+        return $this->value;
+    }
 
 	/**
 	 * Set value for a field
@@ -129,7 +114,7 @@ abstract class AbstractField {
 	 * @param $value mixed
 	 * @return AbstractField
 	 */
-	public function setValue($value) {
+	public function setValue($value):AbstractField {
 		$this->value = $value;
 		return $this;
 	}
@@ -167,7 +152,8 @@ abstract class AbstractField {
 	 */
 	public function setName(string $name = null): AbstractField {
 		$this->name = $name;
-		$this->setAttribute("name",$name);
+        $this->setAttribute("name",$name);
+        $this->setAttribute("id",$name);
 		return $this;
 	}
 
@@ -178,6 +164,7 @@ abstract class AbstractField {
     public function setInstanceName(string $name) {
         $this->instanceName = $name;
         $this->setAttribute("name",$name);
+        $this->setAttribute("id",$name);
     }
 
     /**
@@ -201,6 +188,18 @@ abstract class AbstractField {
 
 		return ends_with($this->getInstanceName(),'[]') ? substr($instanceName,0,-2) : $instanceName;
 	}
+
+	public function getErrors():Collection{
+	    if(!isset($this->errors)){
+	        return collect();
+        }
+        return $this->errors;
+    }
+
+    public function setErrors(Collection $errors):AbstractField{
+	    $this->errors = $errors;
+	    return $this;
+    }
 
 
 	/**
@@ -300,17 +299,23 @@ abstract class AbstractField {
 		return $this;
 	}
 
-	public function data(): Collection {
 
-	    return collect([
-	      'attributes'=> $this->attributes(),
-          'value'=> $this->getValue(),
-          'label'=> $this->getLabel(),
-          'errorName'=> $this->getErrorName()
+	public function render():View{
+	    return view($this->getView(),$this->data());
+    }
+
+    protected function data(): Collection {
+
+        return collect([
+            'attributes'=> $this->attributes()->sortKeys(),
+            'value'=> $this->getHTMLValue(),
+            'label'=> $this->getLabel(),
+            'errors'=> $this->getErrors()
         ]);
-	}
+    }
 
-	protected function removeAttribute($key): AbstractField {
+
+    protected function removeAttribute($key): AbstractField {
 		$this->attributes->forget($key);
 		return $this;
 	}
@@ -320,5 +325,7 @@ abstract class AbstractField {
 		$this->setAttribute(mb_strtolower($name), $value);
 		return $this;
 	}
+
+
 
 }

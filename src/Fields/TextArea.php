@@ -4,7 +4,7 @@ namespace RS\Form\Fields;
 
 class TextArea extends AbstractField {
 
-	protected $view = "form.fields.textarea";
+	protected $view = "form::fields.textarea";
 
 	public function __construct(string $name) {
         $this->attributes = collect([]);

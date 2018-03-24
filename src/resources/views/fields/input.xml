@@ -1,6 +1,0 @@
-<!DOCTYPE div>
-<div class="form-group" xmlns="http://www.w3.org/1999/xhtml">
-    <label class="control-label" data-v.child="label" data-v.xp="label" />
-    <input type="text" class="form-control"/>
-    <div data-v.errors="form.fields.errors"/>
-</div>

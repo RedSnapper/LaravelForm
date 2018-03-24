@@ -2,18 +2,63 @@
 
 namespace RS\Form\Fields;
 
-class Checkbox extends AbstractField {
+use Illuminate\Support\Collection;
 
-	protected $view = "form.fields.checkbox";
-	protected $type = "checkable";
+class Checkbox extends AbstractField
+{
 
-	public function __construct(string $name = null, $checked = true, $unchecked = false) {
-        $this->attributes = collect([]);
-	    $this->setName($name);
-		$this->checked = $checked;
-		$this->unchecked = $unchecked;
-	}
+    /**
+     * The value of the checkbox when checked
+     */
+    protected $checked;
 
+    /**
+     * The value of the checkbox when not checked
+     */
+    protected $unchecked;
 
+    protected $view = "form::fields.checkbox";
+    protected $type = "checkable";
+
+    public function __construct(string $name = null, $checked = true, $unchecked = false)
+    {
+        $this->attributes = collect(['type' => 'checkbox']);
+        $this->setName($name);
+        $this->checked = $checked;
+        $this->unchecked = $unchecked;
+    }
+
+    public function getValue()
+    {
+        if ($this->isChecked()) {
+            return $this->checked;
+        }
+        return $this->unchecked;
+    }
+
+    protected function getHTMLValue()
+    {
+        return $this->checked;
+    }
+
+    /*
+     * Is this checkbox checked
+     * @return bool
+     */
+    public function isChecked():bool{
+
+        $value = is_null($this->value) ? $this->default : $this->value;
+
+        return (string)$value === (string)$this->checked;
+    }
+
+    public function setValue($value):AbstractField
+    {
+        parent::setValue($value);
+
+        $this->isChecked() ? $this->setAttribute('checked','checked') : $this->removeAttribute('checked');
+
+        return $this;
+    }
 
 }

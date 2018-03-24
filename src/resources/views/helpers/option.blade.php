@@ -1,0 +1,1 @@
+<option value="{{$option->value}}" @include('form::helpers.attributes',['attributes'=>$option->attributes])>{{$option->label}}</option>

@@ -25,19 +25,18 @@ class ChoiceTest extends AbstractFieldTest
     public function a_choice_can_have_options_and_opt_groups()
     {
         $field = new Choice('bim', [
-          'foo' => 'bar',
-          'bim' => [
-            'baz' => 'wibble'
-          ]
+            'foo' => 'bar',
+            'bim' => [
+                'baz' => 'wibble'
+            ]
         ]);
 
         $options = $field->getOptions();
 
-        $this->assertCount(2, $field->data()->get('options'));
         $this->assertCount(2, $options);
         $this->assertEquals('foo', $options->first()->value);
         $this->assertEquals('bar', $options->first()->label);
-        $this->assertFalse($options->first()->disabled);
+        $this->assertNull($options->first()->attributes->get('disabled'));
 
         $optGroupOptions = $options->last()->options;
 
@@ -52,24 +51,24 @@ class ChoiceTest extends AbstractFieldTest
     public function a_choice_can_have_disabled_options()
     {
         $field = new Choice('name', [
-          [
-            'label'    => "foo",
-            'value'    => "bar",
-            'disabled' => true,
-          ],
-          'baz'=>'wibble'
+            [
+                'label' => "foo",
+                'value' => "bar",
+                'attributes' => ['disabled', ['data-foo' => 'bar']],
+            ],
+            'baz' => 'wibble'
         ]);
 
         $option = $field->getOptions()->first();
 
         $this->assertEquals('bar', $option->value);
         $this->assertEquals('foo', $option->label);
-        $this->assertTrue($option->disabled);
+        $this->assertEquals('disabled', $option->attributes->get('disabled'));
+        $this->assertEquals('bar', $option->attributes->get('data-foo'));
 
         $option = $field->getOptions()->last();
         $this->assertEquals('baz', $option->value);
         $this->assertEquals('wibble', $option->label);
-
 
     }
 
@@ -77,12 +76,12 @@ class ChoiceTest extends AbstractFieldTest
     public function choice_can_define_optgroups_using_minimal_syntax()
     {
         $field = new Choice('bim', [
-          [
-            'label'    => "bim",
-            'value'    => [
-              'baz'=> 'wibble'
-            ],
-          ]
+            [
+                'label' => "bim",
+                'value' => [
+                    'baz' => 'wibble'
+                ],
+            ]
         ]);
 
         $option = $field->getOptions()->first();
@@ -99,16 +98,16 @@ class ChoiceTest extends AbstractFieldTest
     public function choice_can_define_optgroups_using_explicit_syntax()
     {
         $field = new Choice('bim', [
-         [
-            'label'    => "bar",
-            'value'    => [
-              [
-                'label'    => "foo",
-                'value'    => "bar",
-                'disabled' => true
-              ]
-            ],
-          ]
+            [
+                'label' => "bar",
+                'value' => [
+                    [
+                        'label' => "foo",
+                        'value' => "bar",
+                        'attributes' => ['disabled', ['data-foo' => 'bar']],
+                    ]
+                ],
+            ]
         ]);
 
         $option = $field->getOptions()->first();
@@ -117,10 +116,34 @@ class ChoiceTest extends AbstractFieldTest
         $this->assertEquals('bar', $option->label);
         $this->assertInstanceOf(Collection::class, $optGroupOptions);
 
-        $this->assertEquals('foo', $optGroupOptions->first()->label);
-        $this->assertEquals('bar', $optGroupOptions->first()->value);
-        $this->assertTrue($optGroupOptions->first()->disabled);
+        $option = $optGroupOptions->first();
+        $this->assertEquals('foo', $option->label);
+        $this->assertEquals('bar', $option->value);
+        $this->assertEquals('disabled', $option->attributes->get('disabled'));
+        $this->assertEquals('bar', $option->attributes->get('data-foo'));
 
+    }
+
+    /** @test */
+    public function a_choice_option_can_be_selected()
+    {
+        $field = new Choice('bim', [
+            'foo' => 'bar',
+            3 => 'baz',
+            'bim'=>['wibble'=>'foo']
+        ]);
+
+        $field->setValue('foo');
+        $options = $field->getOptionsWithValues();
+        $this->assertEquals("selected", $options->first()->attributes->get('selected'));
+        $this->assertNull($options->get(1)->attributes->get('selected'));
+        $this->assertNull($options->get(2)->options->first()->attributes->get('selected'));
+
+        $field->setValue(['foo','3','wibble']);
+        $options = $field->getOptionsWithValues();
+        $this->assertEquals("selected", $options->first()->attributes->get('selected'));
+        $this->assertEquals("selected", $options->get(1)->attributes->get('selected'));
+        $this->assertEquals("selected", $options->get(2)->options->first()->attributes->get('selected'));
     }
 
 }

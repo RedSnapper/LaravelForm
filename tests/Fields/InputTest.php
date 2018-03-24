@@ -5,9 +5,10 @@ use RS\Form\Fields\Input;
 
 class InputTest extends AbstractFieldTest
 {
+    use RendersErrors,RendersLabels;
     
     protected function getTestField($name="foo"){
-        return new Input($name,'foo');
+        return new Input('text',$name);
     }
 
     /** @test */
@@ -26,10 +27,18 @@ class InputTest extends AbstractFieldTest
     }
 
     /** @test */
-    public function an_input_will_have_a_view_set()
-    {
+    public function can_render_attributes(){
         $field = new Input('text','bim');
-        $this->assertEquals('form.fields.input',$field->getView());
+        $rendered = $field->render()->render();
+        $this->assertContains('<input class="form_control" id="bim" name="bim" type="text" />',$rendered);
+    }
+
+    /** @test */
+    public function can_render_a_value(){
+        $field = new Input('text','bim');
+        $field->setValue('baz');
+        $rendered = $field->render()->render();
+        $this->assertContains('<input class="form_control" id="bim" name="bim" type="text" value="baz"/>',$rendered);
     }
 
 }

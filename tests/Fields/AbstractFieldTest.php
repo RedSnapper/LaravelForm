@@ -34,6 +34,15 @@ class AbstractFieldTest extends TestCase
     }
 
     /** @test */
+    public function will_set_an_id_value_for_a_field()
+    {
+        $field = $this->getTestField("foo");
+        $this->assertEquals("foo",$field->getAttribute('id'));
+        $field->setInstanceName("bar");
+        $this->assertEquals("bar",$field->getAttribute('id'));
+    }
+
+    /** @test */
     public function can_set_a_label_for_a_field()
     {
         $field = $this->getTestField();
@@ -67,16 +76,21 @@ class AbstractFieldTest extends TestCase
     }
 
     /** @test */
-    public function can_check_if_a_field_is_checkable()
+    public function the_default_value_is_returned_when_no_value_is_set()
     {
         $field = $this->getTestField();
-        $field->setType("foo");
-        $this->assertEquals("foo",$field->getType());
-        $this->assertFalse($field->isCheckable());
-        $field->setType("checkable");
-        $this->assertEquals("checkable",$field->getType());
-        $this->assertTrue($field->isCheckable());
+        $this->assertNull($field->getValue());
+
+        $field->default('foo');
+        $this->assertEquals('foo',$field->getValue());
+
+        $field->setValue('bar');
+        $this->assertEquals('bar',$field->getValue());
+
+        $field->default('bim');
+        $this->assertEquals('bar',$field->getValue());
     }
+
 
     /** @test */
     public function a_field_can_have_an_error_name()
@@ -132,6 +146,18 @@ class AbstractFieldTest extends TestCase
     }
 
     /** @test */
+    public function can_set_errors_for_a_field()
+    {
+        $field = $this->getTestField();
+        $this->assertCount(0,$field->getErrors());
+        $field->setErrors(collect(['error1','error2']));
+        $this->assertCount(2,$field->getErrors());
+        $this->assertEquals('error1',$field->getErrors()->first());
+        $this->assertEquals('error2',$field->getErrors()->last());
+
+    }
+
+    /** @test */
     public function can_set_multiple_attributes_at_once()
     {
         $field = $this->getTestField();
@@ -144,17 +170,6 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals('bar',$field->getAttribute('bar'));
     }
 
-    /** @test */
-    public function can_retrieve_all_data_about_a_field()
-    {
-        $field = $this->getTestField();
-        $keys = $field->data()->keys();
-
-        $this->assertContains('attributes',$keys);
-        $this->assertContains('value',$keys);
-        $this->assertContains('label',$keys);
-        $this->assertContains('errorName',$keys);
-    }
 
     /** @test */
     public function can_dynamically_add_attributes_to_a_field()
@@ -164,9 +179,12 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals('bar',$field->getAttribute('foo'));
     }
 
+
+
 }
 
 class TestField extends AbstractField{
+
     public function __construct($name)
     {
         $this->attributes = collect();
