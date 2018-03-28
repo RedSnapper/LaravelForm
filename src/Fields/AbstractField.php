@@ -80,6 +80,12 @@ abstract class AbstractField {
     protected $multiple = false;
 
     /**
+     * Should this field be populated
+     * @var bool
+     */
+    protected $guarded = false;
+
+    /**
      * @param string $type
      * @return AbstractField
      */
@@ -111,8 +117,11 @@ abstract class AbstractField {
      * Get html value (used for rendering)
      * @return mixed
      */
-	protected function getHTMLValue(){
-        return $this->value;
+	public function getHTMLValue(){
+	    if($this->isGuarded()){
+	        return $this->default;
+        }
+        return $this->getValue();
     }
 
 	/**
@@ -313,6 +322,19 @@ abstract class AbstractField {
 
 	public function render():View{
 	    return view($this->getView(),$this->data());
+    }
+
+    public function guarded(bool $value = true){
+	    $this->guarded = $value;
+	    return $this;
+	}
+
+    /**
+     * Should this field be populated
+     * @return bool
+     */
+    public function isGuarded():bool{
+	    return $this->guarded;
     }
 
     protected function data(): Collection {

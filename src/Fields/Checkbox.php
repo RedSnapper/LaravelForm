@@ -35,7 +35,7 @@ class Checkbox extends AbstractField
         return $this->unchecked;
     }
 
-    protected function getHTMLValue()
+    public function getHTMLValue()
     {
         return $this->checked;
     }

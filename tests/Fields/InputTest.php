@@ -27,6 +27,19 @@ class InputTest extends AbstractFieldTest
     }
 
     /** @test */
+    public function do_not_populate_input_of_type_password_or_file(){
+        $field = new Input('password','foo');
+        $field->setValue("bar");
+        $this->assertEquals(null,$field->getHTMLValue());
+        $this->assertEquals("bar",$field->getValue());
+
+        $field = new Input('file','foo');
+        $field->setValue("bar");
+        $this->assertEquals(null,$field->getHTMLValue());
+        $this->assertEquals("bar",$field->getValue());
+    }
+
+    /** @test */
     public function can_render_attributes(){
         $field = new Input('text','bim');
         $rendered = $field->render()->render();
@@ -40,5 +53,7 @@ class InputTest extends AbstractFieldTest
         $rendered = $field->render()->render();
         $this->assertContains('<input class="form_control" id="bim" name="bim" type="text" value="baz"/>',$rendered);
     }
+
+
 
 }

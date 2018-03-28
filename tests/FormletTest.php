@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use RS\Form\Fields\Checkbox;
+use RS\Form\Fields\CheckboxGroup;
 use RS\Form\Fields\Hidden;
 use RS\Form\Fields\Input;
 use RS\Form\Fields\Radio;
@@ -145,19 +146,26 @@ class FormletTest extends TestCase
         $this->request->merge([
           'name'=> 'foo',
           'person'=>['name'=>'John'],
-          'agree' => 1,
-          'radio'=> 'foo'
+          'agree' => 'Yes',
+          'radio'=> 'foo',
+          'cb'=>[1,2]
         ]);
 
         $form = $this->formlet(function ($form) {
             $form->add(new Input('text', 'name'));
             $form->add(new Input('text', 'person[name]'));
-            $form->add(new Checkbox('agree'));
-            $form->add(new Checkbox('novalue'));
+            $form->add(new Checkbox('agree','Yes','No'));
+            $form->add(new Checkbox('novalue','Yes','No'));
             $form->add(new Radio('radio',[
               'foo'=> 'bar',
               'bim'=> 'baz'
             ]));
+            $form->add(new CheckboxGroup('cb'),[
+              1=> '1',
+              2=> '2',
+              4=> '3'
+            ]);
+
         });
 
         $form->build();
@@ -165,12 +173,14 @@ class FormletTest extends TestCase
 
         $this->assertEquals('foo', $fields->get('name')->getValue());
         $this->assertEquals('John', $fields->get('person[name]')->getValue());
-        $this->assertTrue($fields->get('agree')->getValue());
-        $this->assertFalse($fields->get('novalue')->getValue());
+        $this->assertEquals('Yes',$fields->get('agree')->getValue());
+        $this->assertEquals('No',$fields->get('novalue')->getValue());
         $this->assertEquals('foo',$fields->get('radio')->getValue());
+        $this->assertEquals([1,2],$fields->get('cb')->getValue());
 
     }
 
+    
     private function formlet(\Closure $closure = null): TestFormlet
     {
         return $this->app->makeWith(TestFormlet::class, ['closure' => $closure]);

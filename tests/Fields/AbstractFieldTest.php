@@ -88,16 +88,18 @@ class AbstractFieldTest extends TestCase
     public function the_default_value_is_returned_when_no_value_is_set()
     {
         $field = $this->getTestField();
-        $this->assertNull($field->getValue());
 
         $field->default('foo');
         $this->assertEquals('foo',$field->getValue());
+        $this->assertEquals('foo',$field->getHTMLValue());
 
         $field->setValue('bar');
         $this->assertEquals('bar',$field->getValue());
+        $this->assertEquals('bar',$field->getHTMLValue());
 
         $field->default('bim');
         $this->assertEquals('bar',$field->getValue());
+        $this->assertEquals('bar',$field->getHTMLValue());
     }
 
 
@@ -142,6 +144,26 @@ class AbstractFieldTest extends TestCase
         $this->assertNull($field->getAttribute('placeholder'));
         $field->placeholder('foo');
         $this->assertEquals('foo',$field->getAttribute('placeholder'));
+    }
+
+    /** @test */
+    public function a_field_can_be_guarded()
+    {
+        $field = $this->getTestField();
+
+        $field->setValue("foo");
+
+        $field->guarded(true);
+        $this->assertNull($field->getHTMLValue());
+        $this->assertEquals("foo",$field->getValue());
+
+        $field->default("bar");
+        $this->assertEquals("bar",$field->getHTMLValue());
+        $this->assertEquals("foo",$field->getValue());
+
+        $field->guarded(false);
+        $this->assertEquals("foo",$field->getHTMLValue());
+        $this->assertEquals("foo",$field->getValue());
     }
 
     /** @test */

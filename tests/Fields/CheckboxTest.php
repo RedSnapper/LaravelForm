@@ -12,7 +12,7 @@ class CheckboxTest extends AbstractFieldTest
     }
 
     /** @test */
-    public function the_default_value_is_returned_when_no_value_is_set()
+    public function the_unchecked_value_is_returned_when_no_value_is_set()
     {
         $field = new Checkbox('foo','bim','baz');
         $this->assertEquals('baz',$field->getValue());
@@ -26,6 +26,36 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertEquals('baz',$field->getValue());
         $this->assertFalse($field->isChecked());
 
+    }
+
+    /** @test */
+    public function the_default_value_is_returned_when_no_value_is_set()
+    {
+        $field = new Checkbox('foo','bim','baz');
+
+        $this->assertEquals('baz',$field->getValue());
+        $this->assertEquals('bim',$field->getHTMLValue());
+
+        $field->default('bim');
+        $this->assertEquals('bim',$field->getValue());
+        $this->assertEquals('bim',$field->getHTMLValue());
+
+        $field->setValue('wibble');
+        $this->assertEquals('baz',$field->getValue());
+        $this->assertEquals('bim',$field->getHTMLValue());
+
+
+    }
+
+
+    /** @test */
+    public function a_field_can_be_guarded()
+    {
+        $field = new Checkbox('foo','bim','baz');
+        $field->guarded(true);
+        $this->assertEquals('bim',$field->getHTMLValue());
+        $field->guarded(false);
+        $this->assertEquals('bim',$field->getHTMLValue());
     }
 
     /** @test */
