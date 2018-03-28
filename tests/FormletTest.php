@@ -153,17 +153,11 @@ class FormletTest extends TestCase
             $form->add(new Input('text', 'name'));
             $form->add(new Input('text', 'person[name]'));
             $form->add(new Checkbox('agree'));
-            $form->add(new Checkbox('novalue'))->multiple([
-
-
-
-            ]);
+            $form->add(new Checkbox('novalue'));
             $form->add(new Radio('radio',[
               'foo'=> 'bar',
               'bim'=> 'baz'
             ]));
-
-            (new Select('foo'))->multiple();
         });
 
         $form->build();

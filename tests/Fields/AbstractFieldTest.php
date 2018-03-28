@@ -34,6 +34,15 @@ class AbstractFieldTest extends TestCase
     }
 
     /** @test */
+    public function can_be_set_to_be_a_multi_field()
+    {
+        $field = $this->getTestField("foo");
+        $field->multiple(true);
+        $this->assertEquals("foo[]",$field->getAttribute('name'));
+        $this->assertEquals("foo",$field->getName());
+    }
+
+    /** @test */
     public function will_set_an_id_value_for_a_field()
     {
         $field = $this->getTestField("foo");

@@ -73,6 +73,13 @@ abstract class AbstractField {
 	protected $default;
 
     /**
+     * Is this a multi field
+     * Array of values for this field
+     * @var bool
+     */
+    protected $multiple = false;
+
+    /**
      * @param string $type
      * @return AbstractField
      */
@@ -152,8 +159,7 @@ abstract class AbstractField {
 	 */
 	public function setName(string $name = null): AbstractField {
 		$this->name = $name;
-        $this->setAttribute("name",$name);
-        $this->setAttribute("id",$name);
+        $this->setAttributeName();
 		return $this;
 	}
 
@@ -163,8 +169,7 @@ abstract class AbstractField {
      */
     public function setInstanceName(string $name) {
         $this->instanceName = $name;
-        $this->setAttribute("name",$name);
-        $this->setAttribute("id",$name);
+        $this->setAttributeName();
     }
 
     /**
@@ -218,14 +223,6 @@ abstract class AbstractField {
 		return $this;
 	}
 
-    public function getUnCheckedValue(){
-        return $this->unchecked;
-    }
-
-    public function getCheckedValue(){
-        return $this->checked;
-    }
-
 	/**
 	 * @return string|null
 	 */
@@ -241,6 +238,20 @@ abstract class AbstractField {
 		$this->view = $view;
 		return $this;
 	}
+
+    /**
+     * Set the field to be multi field
+     *
+     * @param boolean $multiple
+     * @return AbstractField
+     */
+    public function multiple($multiple = true): AbstractField {
+
+        $this->multiple = $multiple;
+        $this->setAttributeName();
+
+        return $this;
+    }
 
 	/**
 	 * Set the field to be disabled
@@ -326,6 +337,15 @@ abstract class AbstractField {
 		return $this;
 	}
 
+    private function setAttributeName()
+    {
+        $name = $this->getInstanceName();
 
+        if($this->multiple){
+            $name = $name . "[]";
+        }
+        $this->setAttribute("name",$name);
+        $this->setAttribute("id",$name);
+    }
 
 }

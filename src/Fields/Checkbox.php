@@ -2,7 +2,6 @@
 
 namespace RS\Form\Fields;
 
-use Illuminate\Support\Collection;
 
 class Checkbox extends AbstractField
 {
@@ -38,6 +37,14 @@ class Checkbox extends AbstractField
 
     protected function getHTMLValue()
     {
+        return $this->checked;
+    }
+
+    public function getUnCheckedValue(){
+        return $this->unchecked;
+    }
+
+    public function getCheckedValue(){
         return $this->checked;
     }
 
