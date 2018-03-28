@@ -2,163 +2,100 @@
 
 namespace RS\Form\Concerns;
 
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
+use RS\Form\Fields\AbstractField;
 use RS\Form\Fields\Hidden;
+use RS\Form\Formlet;
 
-trait ManagesForm {
+trait ManagesForm
+{
 
+    /**
+     * Form attributes
+     *
+     * @var Collection
+     */
+    protected $attributes = [
+      'method' => 'POST',
+      'accept-charset' => 'UTF-8',
+      'enctype' => 'multipart/form-data'
+    ];
 
-	/**
-	 * Form attributes
-	 *
-	 * @var array
-	 */
-	protected $attributes = [];
-
-	/**
-	 * Hidden fields to be rendered by the form
-	 *
-	 * @var array
-	 */
-
-	protected $hidden = [];
-
-	/**
-	 * The reserved form open attributes.
-	 *
-	 * @var array
-	 */
-	protected $reserved = ['method', 'url', 'route', 'action', 'files'];
-
-	/**
-	 * The form methods that should be spoofed, in uppercase.
-	 *
-	 * @var array
-	 */
-	protected $spoofedMethods = ['DELETE', 'PATCH', 'PUT'];
+    /**
+     * The form methods that should be spoofed, in uppercase.
+     *
+     * @var array
+     */
+    protected $spoofedMethods = ['DELETE', 'PATCH', 'PUT'];
 
 
-	public function create(array $options = []) {
+    public function getAttribute(string $name)
+    {
+        return $this->attributes->get($name);
+    }
 
-		$method = array_get($options, 'method', 'post');
+    public function setAttribute(string $attribute, $value = null): Formlet
+    {
+        $this->attributes->put($attribute, $value ?? $attribute);
+        return $this;
+    }
 
-		$attributes['method'] = $this->getMethod($method);
+    public function method(string $name): Formlet
+    {
+        $this->setAttribute('method', strtoupper($name));
+        return $this;
+    }
 
-		$attributes['action'] = $this->getAction($options);
+    /**
+     * Set the route for the form
+     * @param string $name
+     * @param array  $parameters
+     * @param bool   $absolute
+     * @return Formlet
+     */
+    public function route(string $name, array $parameters = [], $absolute = true): Formlet
+    {
+        $this->setAttribute('action', $this->url->route($name, $parameters, $absolute));
 
-		// If the method is PUT, PATCH or DELETE we will need to add a spoofer hidden
-		// field that will instruct the Symfony request to pretend the method is a
-		// different method than it actually is, for convenience from the forms.
-		$this->getAppendage($method);
+        $routes = Route::getRoutes();
 
-		$this->attributes = array_merge(
-		  $attributes, array_except($options, $this->reserved)
-		);
+        $route = $routes->getByName($name);
 
-		return $this;
-	}
+        $this->method($route->methods()[0]);
 
-	/**
-	 * Parse the form action method.
-	 *
-	 * @param  string $method
-	 * @return string
-	 */
-	protected function getMethod(string $method): string {
-		$method = strtolower($method);
-		return $method != 'get' ? 'post' : $method;
-	}
+        return $this;
+    }
 
-	/**
-	 * Get the form action from the options.
-	 *
-	 * @param  array $options
-	 * @return string
-	 */
-	protected function getAction(array $options): string {
+    /**
+     * Returns the hidden fields for the form
+     * @return Collection
+     */
+    protected function getHiddenFields(): Collection
+    {
+        $hidden = collect([
+          'token' => $this->token()
+        ]);
 
-		// We will also check for a "route" or "action" parameter on the array so that
-		// developers can easily specify a route or controller action when creating
-		// a form providing a convenient interface for creating the form actions.
-		if (isset($options['url'])) {
-			return $this->getUrlAction($options['url']);
-		}
+        $method = $this->getAttribute('method');
 
-		if (isset($options['route'])) {
-			return $this->getRouteAction($options['route']);
-		}
+        // If the HTTP method is in this list of spoofed methods, we will attach the
+        // method spoofer hidden input to the form. This allows us to use regular
+        // form to initiate PUT and DELETE requests in addition to the typical.
+        if (in_array($this->getAttribute('method'), $this->spoofedMethods)) {
+            $hidden->put('method', (new Hidden('_method'))->setValue($method));
+        }
 
-		// If an action is available, we are attempting to open a form to a controller
-		// action route. So, we will use the URL generator to get the path to these
-		// actions and return them from the method. Otherwise, we'll use current.
-		elseif (isset($options['action'])) {
-			return $this->getControllerAction($options['action']);
-		}
-		return $this->url->current();
-	}
+        return $hidden;
+    }
 
-	/**
-	 * Get the action for a "url" option.
-	 *
-	 * @param  array|string $options
-	 * @return string
-	 */
-	protected function getUrlAction($options): string {
-		if (is_array($options)) {
-			return $this->url->to($options[0], array_slice($options, 1));
-		}
-		return $this->url->to($options);
-	}
+    /**
+     * CSRF field
+     * @return AbstractField
+     */
+    protected function token(): AbstractField
+    {
+        return (new Hidden('_token'))->setValue($this->session->token());
+    }
 
-	/**
-	 * Get the action for a "route" option.
-	 *
-	 * @param  array|string $options
-	 * @return string
-	 */
-	protected function getRouteAction($options): string {
-		if (is_array($options)) {
-			return $this->url->route($options[0], array_slice($options, 1));
-		}
-		return $this->url->route($options);
-	}
-
-	/**
-	 * Get the action for an "action" option.
-	 *
-	 * @param  array|string $options
-	 * @return string
-	 */
-	protected function getControllerAction($options): string {
-		if (is_array($options)) {
-			return $this->url->action($options[0], array_slice($options, 1));
-		}
-		return $this->url->action($options);
-	}
-
-	/**
-	 * Get the form appendage for the given method.
-	 *
-	 * @param  string $method
-	 */
-	protected function getAppendage($method): void {
-
-		$method = strtoupper($method);
-		// If the HTTP method is in this list of spoofed methods, we will attach the
-		// method spoofer hidden input to the form. This allows us to use regular
-		// form to initiate PUT and DELETE requests in addition to the typical.
-		if (in_array($method, $this->spoofedMethods)) {
-			$this->hidden [] = (new Hidden('_method'))->setValue($method);
-		}
-
-		// If the method is something other than GET we will go ahead and attach the
-		// CSRF token to the form, as this can't hurt and is convenient to simply
-		// always have available on every form the developers creates for them.
-		if ($method != 'GET') {
-			$this->token();
-		}
-	}
-
-	protected function token(): void {
-		$this->hidden[] = (new Hidden('_token'))->setValue($this->session->token());
-	}
 }

@@ -8,8 +8,6 @@ use RS\Form\Console\FormletMakeCommand;
 class FormServiceProvider extends ServiceProvider
 {
 
-
-
     /**
      * Bootstrap the application services.
      *
@@ -38,6 +36,7 @@ class FormServiceProvider extends ServiceProvider
 			$formlet->setSessionStore($app['session.store']);
 			$formlet->setUrlGenerator($app['url']);
 			$formlet->setRequest($app['request']);
+            $formlet->initialize();
 		});
 	}
 

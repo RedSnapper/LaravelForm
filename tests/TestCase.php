@@ -17,4 +17,10 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
           FormServiceProvider::class,
         ];
     }
+
+    protected function getEnvironmentSetUp($app)
+    {
+        $app->make('Illuminate\Contracts\Http\Kernel')->pushMiddleware('Illuminate\Session\Middleware\StartSession');
+    }
+
 }
