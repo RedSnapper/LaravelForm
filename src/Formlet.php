@@ -7,12 +7,12 @@ use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use RS\Form\Concerns\ManagesForm;
+use RS\Form\Concerns\{ManagesForm,ValidatesForm};
 use RS\Form\Fields\AbstractField;
 
 abstract class Formlet
 {
-    use ManagesForm;
+    use ManagesForm,ValidatesForm;
 
     /**
      * @var UrlGenerator
@@ -55,6 +55,7 @@ abstract class Formlet
         $this->attributes = collect($this->attributes);
         $this->attributes->put('action', $this->url->current());
         $this->fields = collect();
+        $this->errors = $this->session->get('errors') ?? collect();
 
         $this->prepare();
     }
@@ -110,6 +111,16 @@ abstract class Formlet
     }
 
     /**
+     * Validation rules that apply to the form.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [];
+    }
+
+    /**
      * @param AbstractField $field
      * @return Formlet
      */
@@ -125,7 +136,7 @@ abstract class Formlet
      * @param  mixed $model
      * @return Formlet
      */
-    public function setModel($model): Formlet
+    public function model($model): Formlet
     {
         $this->model = $model;
         return $this;
@@ -226,6 +237,5 @@ abstract class Formlet
         return data_get($this->model, $this->transformKey($name));
     }
 
-    //TODO Model relations
 
 }

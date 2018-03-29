@@ -202,7 +202,7 @@ class FormletTest extends TestCase
         $form = $this->formlet(function ($form) {
             $form->add(new Input('text', 'relation[key]'));
         });
-        $form->setModel(['relation' => ['key' => 'attribute']])->build();
+        $form->model(['relation' => ['key' => 'attribute']])->build();
         $fields = $form->fields();
 
         $this->assertEquals('attribute', $fields->get('relation[key]')->getValue());
@@ -217,7 +217,7 @@ class FormletTest extends TestCase
         $form = $this->formlet(function ($form) {
             $form->add(new Input('text', 'foo'));
         });
-        $form->setModel(['foo' => ['bar']])->build();
+        $form->model(['foo' => ['bar']])->build();
         $fields = $form->fields();
 
         $this->assertEquals('bim', $fields->get('foo')->getValue());
@@ -229,7 +229,7 @@ class FormletTest extends TestCase
         $form = $this->formlet(function ($form) {
             $form->add(new Input('text', 'user[password]'));
         });
-        $form->setModel(['user' => (object)['password' => 'apple']])->build();
+        $form->model(['user' => (object)['password' => 'apple']])->build();
         $fields = $form->fields();
 
         $this->assertEquals('apple', $fields->get('user[password]')->getValue());
@@ -238,7 +238,7 @@ class FormletTest extends TestCase
             $form->add(new Input('text', 'letters[1]'));
         });
 
-        $form->setModel((object)['letters' => ['a', 'b', 'c']])->build();
+        $form->model((object)['letters' => ['a', 'b', 'c']])->build();
         $fields = $form->fields();
 
         $this->assertEquals('b', $fields->get('letters[1]')->getValue());
@@ -260,7 +260,7 @@ class FormletTest extends TestCase
             $form->add((new Select('size[key]', $list))->multiple());
         });
 
-        $form->setModel($model)->build();
+        $form->model($model)->build();
         $fields = $form->fields();
 
         $this->assertEquals('M', $fields->get('size')->getValue());
@@ -349,7 +349,7 @@ class FormletTest extends TestCase
             ]));
         });
 
-        $form->setModel($model)->build();
+        $form->model($model)->build();
         $fields = $form->fields();
 
         $this->assertObjectHasAttribute('id',$fields->get('items')->getValue()->first());
