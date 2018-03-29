@@ -40,6 +40,13 @@ abstract class Formlet
      */
     protected $fields;
 
+    /**
+     * The current model instance for the form.
+     *
+     * @var mixed
+     */
+    protected $model;
+
     abstract public function prepare(): void;
 
     public function initialize()
@@ -50,8 +57,6 @@ abstract class Formlet
         $this->fields = collect();
 
         $this->prepare();
-
-        $this->populate();
     }
 
     /**
@@ -97,6 +102,7 @@ abstract class Formlet
      */
     public function build(): Collection
     {
+        $this->populate();
 
         return collect([
           '_hidden' => $this->getHiddenFields()
@@ -110,6 +116,18 @@ abstract class Formlet
     public function add(AbstractField $field): Formlet
     {
         $this->fields->put($field->getName(), $field);
+        return $this;
+    }
+
+    /**
+     * Set the model instance on the form builder.
+     *
+     * @param  mixed $model
+     * @return Formlet
+     */
+    public function setModel($model): Formlet
+    {
+        $this->model = $model;
         return $this;
     }
 
@@ -133,9 +151,8 @@ abstract class Formlet
     protected function populate(): void
     {
         $this->fields->each(function ($field, $key) {
-
-            if ($request =  $this->request($key)) {
-                $field->setValue($request);
+            if ($value = $this->getValueAttribute($key)) {
+                $field->setValue($value);
             }
         });
     }
@@ -161,5 +178,54 @@ abstract class Formlet
     {
         return str_replace(['.', '[]', '[', ']'], ['_', '', '.', ''], $key);
     }
+
+    /**
+     * Get the value that should be assigned to the field.
+     *
+     * @param  string $name
+     * @return mixed
+     */
+    public function getValueAttribute($name)
+    {
+
+        $old = $this->old($name);
+        if (!is_null($old)) {
+            return $old;
+        }
+
+        if ($request = $this->request($name)) {
+            return $request;
+        }
+
+        if (isset($this->model)) {
+            return $this->getModelValueAttribute($name);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get a value from the session's old input.
+     *
+     * @param  string $name
+     * @return mixed
+     */
+    public function old($name)
+    {
+        return $this->session->getOldInput($this->transformKey($name));
+    }
+
+    /**
+     * Get the model value that should be assigned to the field.
+     *
+     * @param  string $name
+     * @return mixed
+     */
+    protected function getModelValueAttribute($name)
+    {
+        return data_get($this->model, $this->transformKey($name));
+    }
+
+    //TODO Model relations
 
 }

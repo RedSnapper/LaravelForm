@@ -140,7 +140,7 @@ class Choice extends AbstractField {
         if (is_array($value)) {
             return in_array($option,$value);
         }elseif ($value instanceof Collection) {
-            return $value->contains($option);
+            return $value->contains('id',$option);
         }
         return ((string)$option == (string)$value);
     }
