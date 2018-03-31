@@ -365,6 +365,7 @@ class FormletTest extends TestCase
 
     }
 
+
     private function formlet(\Closure $closure = null): TestFormlet
     {
         return $this->app->makeWith(TestFormlet::class, ['closure' => $closure]);
@@ -398,6 +399,10 @@ class TestFormlet extends Formlet
         if (!is_null($closure)) {
             $closure($this);
         }
+    }
+
+    public function persist(){
+        return $this->post()->toArray();
     }
 
 }

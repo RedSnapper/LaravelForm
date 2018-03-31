@@ -8,13 +8,13 @@ use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use RS\Form\Concerns\{
-    ManagesForm, ValidatesForm
+    ManagesForm, ManagesPosts, ValidatesForm
 };
 use RS\Form\Fields\AbstractField;
 
 abstract class Formlet
 {
-    use ManagesForm, ValidatesForm;
+    use ManagesForm, ValidatesForm, ManagesPosts;
 
     /**
      * @var UrlGenerator
@@ -108,12 +108,12 @@ abstract class Formlet
         $this->populate();
 
         return collect([
-            'form'=>collect([
+            'form' => collect([
                 'hidden' => $this->getHiddenFields(),
-                'attributes'=> $this->attributes->sortKeys()
+                'attributes' => $this->attributes->sortKeys()
             ]),
-            'formlets'=>[
-                'main'=> ['fields'=>$this->fields()]
+            'formlets' => [
+                'main' => ['fields' => $this->fields()]
             ]
         ]);
     }
