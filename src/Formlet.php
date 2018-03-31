@@ -110,15 +110,7 @@ abstract class Formlet
         ]);
     }
 
-    /**
-     * Validation rules that apply to the form.
-     *
-     * @return array
-     */
-    public function rules(): array
-    {
-        return [];
-    }
+
 
     /**
      * @param AbstractField $field
@@ -161,10 +153,11 @@ abstract class Formlet
      */
     protected function populate(): void
     {
-        $this->fields->each(function ($field, $key) {
+        $this->fields->each(function (AbstractField $field, $key) {
             if ($value = $this->getValueAttribute($key)) {
                 $field->setValue($value);
             }
+            $this->populateErrors($field,$key);
         });
     }
 
@@ -236,6 +229,7 @@ abstract class Formlet
     {
         return data_get($this->model, $this->transformKey($name));
     }
+
 
 
 }

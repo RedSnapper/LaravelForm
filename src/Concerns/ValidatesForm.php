@@ -5,6 +5,7 @@ namespace RS\Form\Concerns;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
+use RS\Form\Fields\AbstractField;
 
 trait ValidatesForm
 {
@@ -23,6 +24,23 @@ trait ValidatesForm
     protected $validator;
 
     /**
+     * The route to redirect to if validation fails.
+     *
+     * @var string
+     */
+    protected $redirectRoute;
+
+    /**
+     * Validation rules that apply to the form.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [];
+    }
+
+    /**
      * Validate this form
      *
      * @param bool $redirect
@@ -33,7 +51,8 @@ trait ValidatesForm
         $this->errors = $this->_validateRequest();
 
         if (!$this->isValid() && $redirect) {
-            throw new ValidationException($this->validator);
+            throw (new ValidationException($this->validator))
+                    ->redirectTo($this->getRedirectUrl());
         }
     }
 
@@ -100,6 +119,36 @@ trait ValidatesForm
     protected function getValidationFactory(): \Illuminate\Contracts\Validation\Factory
     {
         return app(\Illuminate\Contracts\Validation\Factory::class);
+    }
+
+    /**
+     * Get the URL to redirect to on a validation error.
+     *
+     * @return string
+     */
+    protected function getRedirectUrl()
+    {
+
+        if ($this->redirectRoute) {
+            return $this->url->to($this->redirectRoute);
+        }
+
+        return $this->url->previous();
+    }
+
+    /**
+     * Populate field with errors
+     *
+     * @param AbstractField $field
+     * @param $key
+     * @return void
+     */
+    protected function populateErrors(AbstractField $field, $key): void
+    {
+        $errors = $this->getErrors();
+        if($error = $errors->get($key)){
+            $field->setErrors(collect($error));
+        }
     }
 
 }

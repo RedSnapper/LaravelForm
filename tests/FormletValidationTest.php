@@ -29,7 +29,7 @@ class FormletValidationTest extends TestCase
     /** @test */
     public function it_passes_validation()
     {
-        $this->request->merge(['name' => 'John','email'=>'john@example.com']);
+        $this->request->merge(['name' => 'John', 'email' => 'john@example.com']);
         $form = $this->form();
 
         $form->validate(false);
@@ -64,9 +64,10 @@ class FormletValidationTest extends TestCase
             $form->validate();
         });
 
-        $this->post('/test', ['name' => ''])
-          ->assertRedirect('/')
-          ->assertSessionHasErrors(['name']);
+        $this->from('/test')
+            ->post('/test', ['name' => ''])
+            ->assertRedirect('/test')
+            ->assertSessionHasErrors(['name']);
     }
 
     /** @test */
@@ -74,15 +75,15 @@ class FormletValidationTest extends TestCase
     {
         $form = $this->form();
 
-        $this->request->merge(['name' => 'John','email'=>'john@example.com']);
+        $this->request->merge(['name' => 'John', 'email' => 'john@example.com']);
 
         Route::post('/test', function () use ($form) {
             $form->validate();
         });
 
         $this->post('/test', ['name' => ''])
-          ->assertStatus(200)
-          ->assertSessionMissing('errors');
+            ->assertStatus(200)
+            ->assertSessionMissing('errors');
     }
 
     /** @test */
@@ -99,9 +100,11 @@ class FormletValidationTest extends TestCase
     /** @test */
     public function can_retrieve_errors_from_session()
     {
-        $this->session(['errors'=>[
-          'name'=> ['Session error']
-        ]]);
+        $this->session([
+            'errors' => [
+                'name' => ['Session error']
+            ]
+        ]);
 
         $form = $this->form();
         $form->build();
@@ -110,19 +113,51 @@ class FormletValidationTest extends TestCase
         $fields = $form->fields();
 
         $this->assertEquals(["Session error"], $errors->get('name'));
-        //$this->assertEquals(["Session error"],$fields->get('name')->getErrors()->toArray());
-
+        $this->assertEquals(["Session error"], $fields->get('name')->getErrors()->toArray());
 
     }
 
-    protected function form():Formlet{
-        return app(ValidationFormlet::class);
+    /** @test */
+    public function can_set_a_redirect_route_on_validation_failure()
+    {
+
+        $form = $this->form(function(Formlet $form){
+            $form->redirectRoute = "redirect";
+        });
+
+        Route::post('/test', function () use ($form) {
+            $form->validate();
+        });
+
+        Route::get('/redirect',function(){})->name('redirect');
+
+        $this->from('/test')
+            ->post('/test', ['name' => ''])
+            ->assertRedirect('/redirect')
+            ->assertSessionHasErrors(['name']);
+
+    }
+
+    private function form(\Closure $closure = null): Formlet
+    {
+        return $this->app->makeWith(ValidationFormlet::class, ['closure' => $closure]);
     }
 
 }
 
 class ValidationFormlet extends Formlet
 {
+
+    public $redirectRoute;
+
+    protected $closure;
+
+    public function __construct(\Closure $closure = null)
+    {
+        if (!is_null($closure)) {
+            $closure($this);
+        }
+    }
 
     public function prepare(): void
     {
@@ -132,25 +167,23 @@ class ValidationFormlet extends Formlet
     public function rules(): array
     {
         return [
-          'name'  => 'required',
-          'email' => 'required'
+            'name' => 'required',
+            'email' => 'required'
         ];
     }
 
     public function messages(): array
     {
         return [
-          'email.required' => 'An :attribute is needed.',
+            'email.required' => 'An :attribute is needed.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-          'email'=> 'Email Address'
+            'email' => 'Email Address'
         ];
     }
-
-
 
 }
