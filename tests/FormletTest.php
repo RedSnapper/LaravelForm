@@ -28,11 +28,11 @@ class FormletTest extends TestCase
         $this->request = $this->app['request'];
 
         $this->request->merge([
-          'name'   => 'foo',
-          'person' => ['name' => 'John'],
-          'agree'  => 'Yes',
-          'radio'  => 'foo',
-          'cb'     => [1, 2]
+            'name' => 'foo',
+            'person' => ['name' => 'John'],
+            'agree' => 'Yes',
+            'radio' => 'foo',
+            'cb' => [1, 2]
         ]);
     }
 
@@ -50,10 +50,17 @@ class FormletTest extends TestCase
     {
         $form = $this->formlet();
         $this->assertEquals('POST', $form->getAttribute('method'));
+        $this->assertEquals('POST', $form->getMethod());
         $form->method('put');
-        $this->assertEquals('PUT', $form->getAttribute('method'));
+        $this->assertEquals('PUT', $form->getMethod());
+        $this->assertEquals('POST', $form->getAttribute('method'));
         $form->method('DELETE');
-        $this->assertEquals('DELETE', $form->getAttribute('method'));
+        $this->assertEquals('DELETE', $form->getMethod());
+        $this->assertEquals('POST', $form->getAttribute('method'));
+        $form->method('get');
+        $this->assertEquals('GET', $form->getMethod());
+        $this->assertEquals('GET', $form->getAttribute('method'));
+
     }
 
     /** @test */
@@ -72,11 +79,11 @@ class FormletTest extends TestCase
 
         $form->route('tests.destroy');
         $this->assertEquals('http://localhost/tests', $form->getAttribute('action'));
-        $this->assertEquals('DELETE', $form->getAttribute('method'));
+        $this->assertEquals('DELETE', $form->getMethod());
 
         $form->route('tests.update', ['id' => 4]);
         $this->assertEquals('http://localhost/tests/4', $form->getAttribute('action'));
-        $this->assertEquals('PUT', $form->getAttribute('method'));
+        $this->assertEquals('PUT', $form->getMethod());
 
         $this->expectException(\InvalidArgumentException::class);
         $form->route('fake');
@@ -90,7 +97,7 @@ class FormletTest extends TestCase
         $this->session(['_token' => $token]);
         $data = $form->build();
 
-        $field = $data->get('_hidden')->get('token');
+        $field = $data->get('form')->get('hidden')->get('token');
         $this->assertInstanceOf(Hidden::class, $field);
         $this->assertEquals('_token', $field->getName());
         $this->assertEquals($token, $field->getValue());
@@ -99,11 +106,11 @@ class FormletTest extends TestCase
     public function getFormMethods()
     {
         return [
-          ['GET', false],
-          ['PUT', true],
-          ['POST', false],
-          ['DELETE', true],
-          ['PATCH', true],
+            ['GET', false],
+            ['PUT', true],
+            ['POST', false],
+            ['DELETE', true],
+            ['PATCH', true],
         ];
     }
 
@@ -117,7 +124,7 @@ class FormletTest extends TestCase
         $form->method($method);
         $data = $form->build();
 
-        $field = $data->get('_hidden')->get('method');
+        $field = $data->get('form')->get('hidden')->get('method');
 
         if ($required) {
             $this->assertInstanceOf(Hidden::class, $field);
@@ -158,13 +165,13 @@ class FormletTest extends TestCase
             $form->add(new Checkbox('agree', 'Yes', 'No'));
             $form->add(new Checkbox('novalue', 'Yes', 'No'));
             $form->add(new Radio('radio', [
-              'foo' => 'bar',
-              'bim' => 'baz'
+                'foo' => 'bar',
+                'bim' => 'baz'
             ]));
             $form->add(new CheckboxGroup('cb'), [
-              1 => '1',
-              2 => '2',
-              4 => '3'
+                1 => '1',
+                2 => '2',
+                4 => '3'
             ]);
         });
 
@@ -248,8 +255,8 @@ class FormletTest extends TestCase
     public function can_repopulate_select()
     {
         $this->setOldInput([
-          'size' => 'M',
-          'foo'  => ['multi' => ['L', 'S']]
+            'size' => 'M',
+            'foo' => ['multi' => ['L', 'S']]
         ]);
         $model = $this->createModel(['size' => ['key' => 'S'], 'other' => 'val']);
         $list = ['L' => 'Large', 'M' => 'Medium', 'S' => 'Small'];
@@ -272,7 +279,7 @@ class FormletTest extends TestCase
     public function can_repopulate_checkbox()
     {
         $this->setOldInput([
-          'check' => ['key' => 'yes']
+            'check' => ['key' => 'yes']
         ]);
 
         $form = $this->formlet(function (Formlet $form) {
@@ -291,12 +298,12 @@ class FormletTest extends TestCase
     public function can_repopulate_checkbox_group()
     {
         $this->setOldInput([
-          'multicheck' => [1, 3]
+            'multicheck' => [1, 3]
         ]);
         $list = [
-          1 => 1,
-          2 => 2,
-          3 => 3
+            1 => 1,
+            2 => 2,
+            3 => 3
         ];
 
         $form = $this->formlet(function (Formlet $form) use ($list) {
@@ -313,12 +320,12 @@ class FormletTest extends TestCase
     public function can_repopulate_a_radio()
     {
         $this->setOldInput([
-          'radio' => [1, 3]
+            'radio' => [1, 3]
         ]);
         $list = [
-          1 => 1,
-          2 => 2,
-          3 => 3
+            1 => 1,
+            2 => 2,
+            3 => 3
         ];
 
         $form = $this->formlet(function (Formlet $form) use ($list) {
@@ -342,18 +349,19 @@ class FormletTest extends TestCase
 
         $form = $this->formlet(function (Formlet $form) {
             $form->add(new CheckboxGroup('items', [
-              1 => 1,
-              2 => 2,
-              3 => 3,
-              4 => 4
+                1 => 1,
+                2 => 2,
+                3 => 3,
+                4 => 4
             ]));
         });
 
         $form->model($model)->build();
         $fields = $form->fields();
 
-        $this->assertObjectHasAttribute('id',$fields->get('items')->getValue()->first());
-        $this->assertContains('<input name="items[]" type="checkbox" checked="checked" value="2"/>',$fields->get('items')->render()->render());
+        $this->assertObjectHasAttribute('id', $fields->get('items')->getValue()->first());
+        $this->assertContains('<input name="items[]" type="checkbox" checked="checked" value="2"/>',
+            $fields->get('items')->render()->render());
 
     }
 

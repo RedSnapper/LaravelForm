@@ -2,6 +2,7 @@
 
 namespace RS\Form;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use RS\Form\Console\FormletMakeCommand;
 
@@ -26,8 +27,39 @@ class FormServiceProvider extends ServiceProvider
 
 		$this->publishes([
 		  __DIR__.'/resources/views' => resource_path('views/form'),
-		  //__DIR__.'/View' => app_path('View')
 		],'form');
+
+        Blade::component('form::components.form', 'form');
+
+        Blade::directive('field',function($expression){
+
+            $vars = explode(',',$expression);
+
+            if(count($vars) == 2){
+                list($form,$field) = $vars;
+                $accessor = "['formlets'][$form]['fields'][{$field}]";
+            }else{
+                list($field) = $vars;
+                $accessor = "['formlet']['fields'][{$field}]";
+            }
+
+            return "<?php echo \array_except(get_defined_vars(), array('__data', '__path')){$accessor}->render(); ?>";
+        });
+
+        Blade::directive('formlet',function($expression){
+
+            if($expression == ""){
+                $accessor = "['formlet']";
+            }else{
+                list($name) = explode(',',$expression);
+                $accessor = "['formlets'][{$name}]";
+            }
+
+            return "<?php foreach(array_except(get_defined_vars(), array('__data', '__path')){$accessor}['fields'] as \$field){
+                echo \$field->render(); 
+            } ?>";
+        });
+
 
     }
 

@@ -10,6 +10,12 @@ use RS\Form\Formlet;
 
 trait ManagesForm
 {
+    /**
+     * Form method
+     *
+     * @var string
+     */
+    protected $method = 'POST';
 
     /**
      * Form attributes
@@ -41,10 +47,34 @@ trait ManagesForm
         return $this;
     }
 
+    /**
+     * Set the method for the form
+     * @param string $name
+     * @return Formlet
+     */
     public function method(string $name): Formlet
     {
-        $this->setAttribute('method', strtoupper($name));
+        $method = strtoupper($name);
+
+        $this->method = $method;
+
+        // If the method is a spoofed method then we need to set the attribute
+        // to be a POST
+        if(in_array($method,$this->spoofedMethods)){
+            $method = "POST";
+        }
+
+        $this->setAttribute('method',$method);
+
         return $this;
+    }
+
+    /**
+     * Returns the current method of the form
+     * @return string
+     */
+    public function getMethod():string{
+        return $this->method;
     }
 
     /**
@@ -77,12 +107,12 @@ trait ManagesForm
           'token' => $this->token()
         ]);
 
-        $method = $this->getAttribute('method');
+        $method = $this->getMethod();
 
         // If the HTTP method is in this list of spoofed methods, we will attach the
         // method spoofer hidden input to the form. This allows us to use regular
         // form to initiate PUT and DELETE requests in addition to the typical.
-        if (in_array($this->getAttribute('method'), $this->spoofedMethods)) {
+        if (in_array($method, $this->spoofedMethods)) {
             $hidden->put('method', (new Hidden('_method'))->setValue($method));
         }
 

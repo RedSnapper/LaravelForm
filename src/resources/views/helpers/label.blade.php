@@ -1,3 +1,3 @@
 @if(isset($label))
-    <label class="control-label" for="{{$attributes['name']}}">{{$label}}</label>
+    <label class="control-label" for="{{$attributes['id']}}">{{$label}}</label>
 @endif

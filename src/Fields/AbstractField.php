@@ -45,6 +45,13 @@ abstract class AbstractField {
 	protected $attributes;
 
     /**
+     * Whether or not to include an ID
+     * on the field
+     * @var bool
+     */
+	protected $includeID = true;
+
+    /**
      * Attributes for field
      *
      * @var Collection
@@ -367,7 +374,10 @@ abstract class AbstractField {
             $name = $name . "[]";
         }
         $this->setAttribute("name",$name);
-        $this->setAttribute("id",$name);
+        if($this->includeID){
+            $this->setAttribute("id",$name);
+        }
+
     }
 
 }

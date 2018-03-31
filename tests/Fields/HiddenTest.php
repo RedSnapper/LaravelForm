@@ -19,6 +19,13 @@ class HiddenTest extends AbstractFieldTest
     }
 
     /** @test */
+    public function will_set_an_id_value_for_a_field()
+    {
+        $field = $this->getTestField("foo");
+        $this->assertNull($field->getAttribute('id'));
+    }
+
+    /** @test */
     public function a_hidden_input_will_have_a_type_attribute_set()
     {
         $field = new Hidden('bim');
@@ -30,7 +37,7 @@ class HiddenTest extends AbstractFieldTest
         $field = new Hidden('bim');
         $field->setValue('baz');
         $rendered = $field->render()->render();
-        $this->assertContains('<input id="bim" name="bim" type="hidden" value="baz"/>',$rendered);
+        $this->assertContains('<input name="bim" type="hidden" value="baz"/>',$rendered);
     }
 
 }
