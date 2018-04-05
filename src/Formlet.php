@@ -70,6 +70,13 @@ abstract class Formlet
      */
     protected $key = 0;
 
+    /**
+     * Whether formlets have been prepared
+     *
+     * @var int
+     */
+    protected $prepared = false;
+
     abstract public function prepare(): void;
 
     public function initialize()
@@ -148,7 +155,7 @@ abstract class Formlet
      *
      * @return int $key
      */
-    public function getKey():int{
+    protected function getKey():int{
         return $this->key;
     }
 
@@ -257,33 +264,54 @@ abstract class Formlet
 
         $this->prepareFormlets();
 
-        $this->formlets->each(function(Collection $formlets){
-            $formlets->each(function(Formlet $formlet){
-                $formlet->fields()->each(function(AbstractField $field,$key) use ($formlet){
-                    if ($value = $this->getValueAttribute($field->getInstanceName(),$key)) {
-                        $field->setValue($value);
-                    }
+        $this->iterateFields(function(AbstractField $field){
 
-                    $this->populateErrors($field, $this->transformKey($field->getInstanceName()));
-                });
-            });
+            // Populate all formlet fields
+            if ($value = $this->getValueAttribute($field->getInstanceName(),$field->getName())) {
+                $field->setValue($value);
+            }
+
+            $this->populateErrors($field, $this->transformKey($field->getInstanceName()));
+        });
+
+
+    }
+
+    /**
+     * Prepare formlets by setting the name for all formlet
+     * fields
+     */
+    protected function prepareFormlets():void{
+
+        if($this->prepared){
+            return;
+        }
+
+        $this->addFormlet($this->name,$this);
+
+        $this->iterateFields(function(AbstractField $field,Formlet $formlet){
+
+            $instance = $formlet->name . "[" . $formlet->getKey() . "][" . $field->getName() . "]";
+            $field->setInstanceName($instance);
+            $formlet->prepared = true; // Formlet field names are now set
         });
 
     }
 
-    protected function prepareFormlets(){
+    /**
+     * Iterate all formlet fields
+     *
+     * @param \Closure $closure
+     */
+    protected function iterateFields(\Closure $closure){
 
-        $this->addFormlet($this->name,$this);
-
-        $this->formlets->each(function(Collection $formlets){
-            $formlets->each(function(Formlet $formlet){
-                $formlet->fields()->each(function(AbstractField $field,$key) use ($formlet){
-
-                    $instance = $formlet->name . "[" . $formlet->getKey() . "][" . $field->getName() . "]";
-                    $field->setInstanceName($instance);
-                });
-            });
-        });
+        foreach ($this->formlets as $formlets) {
+            foreach ($formlets as $formlet){
+                foreach($formlet->fields() as $fields){
+                    $closure($fields,$formlet);
+                }
+            }
+        }
     }
 
     /**
@@ -310,6 +338,9 @@ abstract class Formlet
 
     /**
      * Get the value that should be assigned to the field.
+     * 1) Session Flash Data (Old Input)
+     * 2) The request
+     * 3) Model Attribute Data
      *
      * @param  string $name
      * @param  string $modelKey

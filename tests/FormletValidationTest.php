@@ -34,7 +34,7 @@ class FormletValidationTest extends TestCase
         $form->validate(false);
 
         $this->assertTrue($form->isValid());
-        $this->assertCount(0, $form->getErrors());
+        $this->assertCount(0, $form->errors());
     }
 
     /** @test */
@@ -46,7 +46,7 @@ class FormletValidationTest extends TestCase
 
         $this->assertFalse($form->isValid());
 
-        $errors = $form->getErrors();
+        $errors = $form->errors();
 
         $this->assertCount(2, $errors);
         $this->assertEquals(["The name field is required."], $errors->get('main.0.name'));
@@ -87,7 +87,7 @@ class FormletValidationTest extends TestCase
         $form = $this->form();
 
         $form->validate(false);
-        $errors = $form->getErrors();
+        $errors = $form->errors();
 
         $this->assertEquals(["An Email Address is needed."], $errors->get('main.0.email'));
     }
@@ -104,7 +104,7 @@ class FormletValidationTest extends TestCase
         $form = $this->form();
         $form->build();
 
-        $errors = $form->getErrors();
+        $errors = $form->errors();
         $fields = $form->fields();
 
         $this->assertEquals(["Session error"], $errors->get('main.0.name'));

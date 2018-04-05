@@ -73,7 +73,7 @@ trait ManagesForm
      * Returns the current method of the form
      * @return string
      */
-    public function getMethod():string{
+    protected function getMethod():string{
         return $this->method;
     }
 

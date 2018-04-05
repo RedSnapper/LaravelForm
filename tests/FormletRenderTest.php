@@ -13,7 +13,7 @@ class FormletRenderTest extends TestCase
     protected function setUp()
     {
         parent::setUp();
-        View::addLocation(__DIR__ . "/stubs/views");
+        View::addLocation(__DIR__ . "/Fixtures/views");
     }
 
     public function getFormViews()

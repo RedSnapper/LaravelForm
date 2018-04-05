@@ -23,9 +23,13 @@ class FormletPostTest extends TestCase
         $this->request = $this->app['request'];
 
         $this->request->merge([
-            'name' => 'foo',
-            'agree' => 'Yes',
-            'cb' => [1, 2]
+          'main' => [
+            [
+              'name'  => 'foo',
+              'agree' => 'Yes',
+              'cb'    => [1, 2]
+            ]
+          ]
         ]);
     }
 
@@ -38,18 +42,22 @@ class FormletPostTest extends TestCase
             $form->add(new Checkbox('agree', 'Yes', 'No'));
             $form->add(new Checkbox('foo', 'Yes', 'No'));
             $form->add(new CheckboxGroup('cb', [
-                1 => 1,
-                2 => 2,
-                3 => 3
+              1 => 1,
+              2 => 2,
+              3 => 3
             ]));
         });
 
-        $this->assertEquals($form->post()->toArray(), [
-            'name' => 'foo',
-            'agree' => 'Yes',
-            'foo' => 'No',
-            'cb' => [1, 2]
-        ]);
+        $this->assertEquals([
+          'main' => [
+            [
+              'name'  => 'foo',
+              'agree' => 'Yes',
+              'foo'   => 'No',
+              'cb'    => [1, 2]
+            ]
+          ]
+        ],$form->allPostData()->toArray());
     }
 
     /** @test */
@@ -65,21 +73,20 @@ class FormletPostTest extends TestCase
     /** @test */
     public function store_throws_an_error_on_invalid_post()
     {
-        $this->request->merge(['name' => '']);
 
-        $form = $this->formlet(function ($form) {
-            $form->add(new Input('text', 'name'));
-        });
-
-        Route::post('/test', function () use ($form) {
+        Route::post('/test', function () {
+            $form = $this->formlet(function ($form) {
+                $form->add(new Input('text', 'name'));
+            });
             $form->store();
         });
 
-
         $this->from('/test')
-            ->post('/test', ['name' => ''])
-            ->assertRedirect('/test')
-            ->assertSessionHasErrors(['name']);
+          ->post('/test', [
+            ['main'=>[['name' => '']]]
+          ])
+          ->assertRedirect('/test')
+          ->assertSessionHasErrors(['main.0.name']);
     }
 
     /** @test */
@@ -95,21 +102,20 @@ class FormletPostTest extends TestCase
     /** @test */
     public function update_throws_an_error_on_invalid_post()
     {
-        $this->request->merge(['name' => '']);
 
-        $form = $this->formlet(function ($form) {
-            $form->add(new Input('text', 'name'));
-        });
-
-        Route::post('/test', function () use ($form) {
+        Route::post('/test', function () {
+            $form = $this->formlet(function ($form) {
+                $form->add(new Input('text', 'name'));
+            });
             $form->update();
         });
 
-
         $this->from('/test')
-            ->post('/test', ['name' => ''])
-            ->assertRedirect('/test')
-            ->assertSessionHasErrors(['name']);
+          ->post('/test', [
+            ['main'=>[['name' => '']]]
+          ])
+          ->assertRedirect('/test')
+          ->assertSessionHasErrors(['main.0.name']);
     }
 
     private function formlet(\Closure $closure = null): Formlet
@@ -140,18 +146,18 @@ class PostFormlet extends Formlet
     public function rules(): array
     {
         return [
-            'name' => 'required'
+          'name' => 'required'
         ];
     }
 
     public function persist()
     {
-        return $this->post()->toArray();
+        return $this->postData()->toArray();
     }
 
     public function edit()
     {
-        return $this->post()->toArray();
+        return $this->postData()->toArray();
     }
 
 }

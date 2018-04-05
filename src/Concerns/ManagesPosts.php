@@ -2,10 +2,9 @@
 
 namespace RS\Form\Concerns;
 
-
-
 use Illuminate\Support\Collection;
 use RS\Form\Fields\AbstractField;
+use RS\Form\Formlet;
 
 trait ManagesPosts
 {
@@ -15,26 +14,44 @@ trait ManagesPosts
      * by the post
      * @var bool
      */
-    protected $bound = false;
+    public $bound = false;
+
 
     /**
-     * Returns the posted values
+     * Returns the posted values for this formlet
      * Only fields set in the view will appear here
      * @return Collection
      */
-    public function post():Collection{
+    public function postData():Collection{
 
         $this->preparePost();
 
-        return $this->fields->map->getValue();
+        return $this->fields()->map->getValue();
+    }
+
+    /**
+     * Returns all the posted values
+     * Only fields set in the view will appear here
+     * @return Collection
+     */
+    public function allPostData():Collection{
+
+        $this->preparePost();
+
+        return $this->formlets->map(function(Collection $forms){
+            return $forms->map(function(Formlet $formlet){
+                return $formlet->fields()->map->getValue();
+            });
+        });
     }
 
     /**
      * Method called when storing
      */
     public function persist(){
+
         if (isset($this->model)) {
-            $this->model = $this->model->create($this->post());
+            $this->model = $this->model->create($this->postData());
         }
         return $this->model;
     }
@@ -44,7 +61,7 @@ trait ManagesPosts
      */
     public function edit(){
         if (isset($this->model)) {
-            $this->model = $this->model->fill($this->post());
+            $this->model = $this->model->fill($this->postData());
             $this->model->save();
         }
         return $this->model;
@@ -85,13 +102,15 @@ trait ManagesPosts
             return;
         }
 
-        $this->fields->each(function (AbstractField $field, $key) {
-            if ($request = $this->request($key)) {
+        $this->prepareFormlets();
+
+        $this->iterateFields(function(AbstractField $field,Formlet $formlet){
+            if ($request = $this->request($field->getInstanceName())) {
                 $field->setValue($request);
             }
+            $formlet->bound = true;
         });
 
-        $this->bound = true;
     }
 
 }

@@ -54,15 +54,11 @@ class FormletTest extends TestCase
     {
         $form = $this->formlet();
         $this->assertEquals('POST', $form->getAttribute('method'));
-        $this->assertEquals('POST', $form->getMethod());
         $form->method('put');
-        $this->assertEquals('PUT', $form->getMethod());
         $this->assertEquals('POST', $form->getAttribute('method'));
         $form->method('DELETE');
-        $this->assertEquals('DELETE', $form->getMethod());
         $this->assertEquals('POST', $form->getAttribute('method'));
         $form->method('get');
-        $this->assertEquals('GET', $form->getMethod());
         $this->assertEquals('GET', $form->getAttribute('method'));
     }
 
@@ -82,11 +78,11 @@ class FormletTest extends TestCase
 
         $form->route('tests.destroy');
         $this->assertEquals('http://localhost/tests', $form->getAttribute('action'));
-        $this->assertEquals('DELETE', $form->getMethod());
+        $this->assertEquals('DELETE', $form->build()->get('form')->get('hidden')->get('method')->getValue());
 
         $form->route('tests.update', ['id' => 4]);
         $this->assertEquals('http://localhost/tests/4', $form->getAttribute('action'));
-        $this->assertEquals('PUT', $form->getMethod());
+        $this->assertEquals('PUT', $form->build()->get('form')->get('hidden')->get('method')->getValue());
 
         $this->expectException(\InvalidArgumentException::class);
         $form->route('fake');
@@ -461,7 +457,7 @@ class TestFormlet extends Formlet
 
     public function persist()
     {
-        return $this->post()->toArray();
+        return $this->allPostData()->toArray();
     }
 
 }

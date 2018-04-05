@@ -57,7 +57,7 @@ trait ValidatesForm
 
         $this->formlets->each(function ($forms) {
             $forms->each(function (Formlet $formlet) {
-                $errors = $formlet->_validateRequest();
+                $errors = $formlet->validateRequest();
 
                 if (count($errors) > 0) {
                     $this->errors = $this->errors->merge(collect($errors)->mapWithKeys(function ($error, $key) use ($formlet) {
@@ -105,7 +105,7 @@ trait ValidatesForm
     /**
      * Returns all the errors for this form
      */
-    public function getErrors(): Collection
+    public function errors(): Collection
     {
         return collect($this->errors);
     }
@@ -115,7 +115,7 @@ trait ValidatesForm
      *
      * @return array
      */
-    public function _validateRequest(): array
+    public function validateRequest(): array
     {
 
         $request = $this->request->input("{$this->name}.{$this->getKey()}") ?? [];
@@ -168,7 +168,7 @@ trait ValidatesForm
      */
     protected function populateErrors(AbstractField $field, $key): void
     {
-        $errors = $this->getErrors();
+        $errors = $this->errors();
         if ($error = $errors->get($key)) {
             $field->setErrors(collect($error));
         }
