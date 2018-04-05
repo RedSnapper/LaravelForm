@@ -36,6 +36,13 @@ abstract class Formlet
     public $request;
 
     /**
+     * The formlet name
+     *
+     * @var string
+     */
+    public $name = "main";
+
+    /**
      * Fields added to the form
      *
      * @var Collection
@@ -49,6 +56,20 @@ abstract class Formlet
      */
     protected $model;
 
+    /**
+     * All the formlets attached to this form.
+     *
+     * @var Collection
+     */
+    protected $formlets;
+
+    /**
+     * Formlet key.
+     *
+     * @var int
+     */
+    protected $key = 0;
+
     abstract public function prepare(): void;
 
     public function initialize()
@@ -57,9 +78,11 @@ abstract class Formlet
         $this->attributes = collect($this->attributes);
         $this->attributes->put('action', $this->url->current());
         $this->fields = collect();
+        $this->formlets = collect();
         $this->errors = $this->session->get('errors') ?? collect();
 
         $this->prepare();
+
     }
 
     /**
@@ -99,12 +122,44 @@ abstract class Formlet
     }
 
     /**
+     * Set the name for the formlet
+     *
+     * @param string $name
+     * @return Formlet
+     */
+    public function name(string $name):Formlet{
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * Set the name for the formlet
+     *
+     * @param int $key
+     * @return Formlet
+     */
+    public function key(int $key):Formlet{
+        $this->key = $key;
+        return $this;
+    }
+
+    /**
+     * Get the key for the formlet
+     *
+     * @return int $key
+     */
+    public function getKey():int{
+        return $this->key;
+    }
+
+    /**
      * Build the current form
      *
      * @return Collection
      */
     public function build(): Collection
     {
+
         $this->populate();
 
         return collect([
@@ -154,16 +209,76 @@ abstract class Formlet
     }
 
     /**
+     * Add a formlet to this form
+     *
+     * @param $relation
+     * @param $formlet
+     */
+    public function addFormlet($relation,$formlet){
+
+        $formlet = $formlet instanceof Formlet ? $formlet : app()->make($formlet);
+
+        $formlet->name($relation);
+
+        if(!$this->formlets->has($relation)){
+            $this->formlets->put($relation,collect());
+        }
+
+        $formlet->key($this->formlets->get($relation)->count());
+
+        $this->formlets[$relation][] = $formlet;
+
+    }
+
+    /**
+     * Returns the formlets added to this form
+     * @param string|null $name
+     * @return Collection
+     */
+    public function formlets(string $name = null):Collection{
+
+        if (is_null($name)) {
+            return $this->formlets;
+        }
+
+        return $this->formlets->get($name);
+    }
+
+    /**
      * Populates all the fields
      * Populates the field from the request
      */
     protected function populate(): void
     {
-        $this->fields->each(function (AbstractField $field, $key) {
-            if ($value = $this->getValueAttribute($key)) {
-                $field->setValue($value);
-            }
-            $this->populateErrors($field, $key);
+
+        $this->prepareFormlets();
+
+        $this->formlets->each(function(Collection $formlets){
+            $formlets->each(function(Formlet $formlet){
+                $formlet->fields()->each(function(AbstractField $field,$key) use ($formlet){
+                    if ($value = $this->getValueAttribute($field->getInstanceName(),$key)) {
+                        $field->setValue($value);
+                    }
+
+                    $this->populateErrors($field, $this->transformKey($field->getInstanceName()));
+                });
+            });
+        });
+
+    }
+
+    protected function prepareFormlets(){
+
+        $this->addFormlet($this->name,$this);
+
+        $this->formlets->each(function(Collection $formlets){
+            $formlets->each(function(Formlet $formlet){
+                $formlet->fields()->each(function(AbstractField $field,$key) use ($formlet){
+
+                    $instance = $formlet->name . "[" . $formlet->getKey() . "][" . $field->getName() . "]";
+                    $field->setInstanceName($instance);
+                });
+            });
         });
     }
 
@@ -193,9 +308,10 @@ abstract class Formlet
      * Get the value that should be assigned to the field.
      *
      * @param  string $name
+     * @param  string $modelKey
      * @return mixed
      */
-    public function getValueAttribute($name)
+    protected function getValueAttribute(string $name,string $modelKey)
     {
 
         $old = $this->old($name);
@@ -208,7 +324,7 @@ abstract class Formlet
         }
 
         if (isset($this->model)) {
-            return $this->getModelValueAttribute($name);
+            return $this->getModelValueAttribute($modelKey);
         }
 
         return null;
@@ -220,7 +336,7 @@ abstract class Formlet
      * @param  string $name
      * @return mixed
      */
-    public function old($name)
+    protected function old($name)
     {
         return $this->session->getOldInput($this->transformKey($name));
     }

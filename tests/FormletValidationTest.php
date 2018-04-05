@@ -5,6 +5,7 @@ namespace Tests;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Validator;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
 
@@ -22,13 +23,12 @@ class FormletValidationTest extends TestCase
     {
         parent::setUp();
         $this->request = $this->app['request'];
-
     }
 
     /** @test */
     public function it_passes_validation()
     {
-        $this->request->merge(['name' => 'John', 'email' => 'john@example.com']);
+        $this->request->merge($this->validPost());
         $form = $this->form();
 
         $form->validate(false);
@@ -49,40 +49,36 @@ class FormletValidationTest extends TestCase
         $errors = $form->getErrors();
 
         $this->assertCount(2, $errors);
-        $this->assertEquals(["The name field is required."], $errors->get('name'));
+        $this->assertEquals(["The name field is required."], $errors->get('main.0.name'));
     }
 
     /** @test */
     public function it_can_automatically_redirect_after_failing_validation()
     {
-        $form = $this->form();
 
-        $this->request->merge(['name' => '']);
-
-        Route::post('/test', function () use ($form) {
+        Route::post('/test', function (){
+            $form = $this->form();
             $form->validate();
         });
 
         $this->from('/test')
-            ->post('/test', ['name' => ''])
-            ->assertRedirect('/test')
-            ->assertSessionHasErrors(['name']);
+          ->post('/test', [])
+          ->assertRedirect('/test')
+          ->assertSessionHasErrors(['main.0.name']);
     }
 
     /** @test */
     public function it_does_not_automatically_redirect_after_passing_validation()
     {
-        $form = $this->form();
 
-        $this->request->merge(['name' => 'John', 'email' => 'john@example.com']);
-
-        Route::post('/test', function () use ($form) {
+        Route::post('/test', function () {
+            $form = $this->form();
             $form->validate();
         });
 
-        $this->post('/test', ['name' => ''])
-            ->assertStatus(200)
-            ->assertSessionMissing('errors');
+        $this->post('/test', $this->validPost())
+          ->assertStatus(200)
+          ->assertSessionMissing('errors');
     }
 
     /** @test */
@@ -93,16 +89,16 @@ class FormletValidationTest extends TestCase
         $form->validate(false);
         $errors = $form->getErrors();
 
-        $this->assertEquals(["An Email Address is needed."], $errors->get('email'));
+        $this->assertEquals(["An Email Address is needed."], $errors->get('main.0.email'));
     }
 
     /** @test */
     public function can_retrieve_errors_from_session()
     {
         $this->session([
-            'errors' => [
-                'name' => ['Session error']
-            ]
+          'errors' => [
+            'main.0.name' => ['Session error']
+          ]
         ]);
 
         $form = $this->form();
@@ -111,35 +107,43 @@ class FormletValidationTest extends TestCase
         $errors = $form->getErrors();
         $fields = $form->fields();
 
-        $this->assertEquals(["Session error"], $errors->get('name'));
+        $this->assertEquals(["Session error"], $errors->get('main.0.name'));
         $this->assertEquals(["Session error"], $fields->get('name')->getErrors()->toArray());
-
     }
 
     /** @test */
     public function can_set_a_redirect_route_on_validation_failure()
     {
 
-        $form = $this->form(function(Formlet $form){
-            $form->redirectRoute = "redirect";
-        });
-
-        Route::post('/test', function () use ($form) {
+        Route::post('/test', function (){
+            $form = $this->form(function (Formlet $form) {
+                $form->redirectRoute = "redirect";
+            });
             $form->validate();
         });
 
-        Route::get('/redirect',function(){})->name('redirect');
+        Route::get('/redirect', function () {
+        })->name('redirect');
 
         $this->from('/test')
-            ->post('/test', ['name' => ''])
-            ->assertRedirect('/redirect')
-            ->assertSessionHasErrors(['name']);
-
+          ->post('/test', ['name' => ''])
+          ->assertRedirect('/redirect')
+          ->assertSessionHasErrors(['main.0.name']);
     }
+
 
     private function form(\Closure $closure = null): Formlet
     {
         return $this->app->makeWith(ValidationFormlet::class, ['closure' => $closure]);
+    }
+
+    protected function validPost()
+    {
+        return [
+          'main' => [
+            ['name' => 'John', 'email' => 'john@example.com']
+          ]
+        ];
     }
 
 }
@@ -166,22 +170,22 @@ class ValidationFormlet extends Formlet
     public function rules(): array
     {
         return [
-            'name' => 'required',
-            'email' => 'required'
+          'name'  => 'required',
+          'email' => 'required'
         ];
     }
 
     public function messages(): array
     {
         return [
-            'email.required' => 'An :attribute is needed.',
+          'email.required' => 'An :attribute is needed.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'email' => 'Email Address'
+          'email' => 'Email Address'
         ];
     }
 

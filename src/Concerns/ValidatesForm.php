@@ -2,10 +2,13 @@
 
 namespace RS\Form\Concerns;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 use RS\Form\Fields\AbstractField;
+use RS\Form\Formlet;
+use Symfony\Component\HttpFoundation\Response;
 
 trait ValidatesForm
 {
@@ -48,11 +51,24 @@ trait ValidatesForm
      */
     public function validate($redirect = true)
     {
-        $this->errors = $this->_validateRequest();
+        $this->prepareFormlets();
+
+        $this->errors = collect();
+
+        $this->formlets->each(function ($forms) {
+            $forms->each(function (Formlet $formlet) {
+                $errors = $formlet->_validateRequest();
+
+                if (count($errors) > 0) {
+                    $this->errors = $this->errors->merge(collect($errors)->mapWithKeys(function ($error, $key) use ($formlet) {
+                        return ["{$formlet->name}.{$formlet->key}.{$key}" => $error];
+                    })->toArray());
+                }
+            });
+        });
 
         if (!$this->isValid() && $redirect) {
-            throw (new ValidationException($this->validator))
-                    ->redirectTo($this->getRedirectUrl());
+            throw (new ValidationException($this->validator, $this->buildFailedValidationResponse()));
         }
     }
 
@@ -101,8 +117,15 @@ trait ValidatesForm
      */
     public function _validateRequest(): array
     {
-        $this->validator = $this->getValidationFactory()->make($this->request->all(), $this->rules(), $this->messages(),
-          $this->attributes());
+
+        $request = $this->request->input("{$this->name}.{$this->getKey()}") ?? [];
+
+        $this->validator = $this->getValidationFactory()->make(
+          $request,
+          $this->rules(),
+          $this->messages(),
+          $this->attributes()
+        );
 
         if ($this->validator->fails()) {
             return $this->validator->errors()->getMessages();
@@ -140,15 +163,31 @@ trait ValidatesForm
      * Populate field with errors
      *
      * @param AbstractField $field
-     * @param $key
+     * @param               $key
      * @return void
      */
     protected function populateErrors(AbstractField $field, $key): void
     {
         $errors = $this->getErrors();
-        if($error = $errors->get($key)){
+        if ($error = $errors->get($key)) {
             $field->setErrors(collect($error));
         }
+    }
+
+    /**
+     * Create the response for when a request fails validation.
+     *
+     * @return Response
+     */
+    protected function buildFailedValidationResponse(): Response
+    {
+        if ($this->request->expectsJson()) {
+            return new JsonResponse($this->errors, 422);
+        }
+
+        return redirect()->to($this->getRedirectUrl())
+          ->withInput($this->request->input())
+          ->withErrors($this->errors->toArray());
     }
 
 }

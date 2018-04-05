@@ -28,11 +28,15 @@ class FormletTest extends TestCase
         $this->request = $this->app['request'];
 
         $this->request->merge([
-            'name' => 'foo',
-            'person' => ['name' => 'John'],
-            'agree' => 'Yes',
-            'radio' => 'foo',
-            'cb' => [1, 2]
+          'main' => [
+            [
+              'name'   => 'foo',
+              'person' => ['name' => 'John'],
+              'agree'  => 'Yes',
+              'radio'  => 'foo',
+              'cb'     => [1, 2]
+            ]
+          ]
         ]);
     }
 
@@ -60,7 +64,6 @@ class FormletTest extends TestCase
         $form->method('get');
         $this->assertEquals('GET', $form->getMethod());
         $this->assertEquals('GET', $form->getAttribute('method'));
-
     }
 
     /** @test */
@@ -106,11 +109,11 @@ class FormletTest extends TestCase
     public function getFormMethods()
     {
         return [
-            ['GET', false],
-            ['PUT', true],
-            ['POST', false],
-            ['DELETE', true],
-            ['PATCH', true],
+          ['GET', false],
+          ['PUT', true],
+          ['POST', false],
+          ['DELETE', true],
+          ['PATCH', true],
         ];
     }
 
@@ -156,6 +159,32 @@ class FormletTest extends TestCase
     }
 
     /** @test */
+    public function can_add_a_formlet_to_a_form()
+    {
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add(new Input('text', 'foo'));
+            $form->addFormlet('child', ChildFormlet::class);
+            $form->addFormlet('child', ChildFormlet::class);
+        });
+
+        $form->build();
+
+        $this->assertCount(2, $form->formlets());
+        $this->assertCount(2, $form->formlets('child'));
+        $this->assertCount(1, $form->formlets('main'));
+        $this->assertInstanceOf(TestFormlet::class, $form->formlets('main')->first());
+        $this->assertInstanceOf(ChildFormlet::class, $form->formlets('child')->first());
+
+        $mainFormlet = $form->formlets('main')->first();
+        $childFormlet = $form->formlets('child');
+
+        $this->assertEquals('main[0][foo]', $mainFormlet->fields('foo')->first()->getInstanceName());
+        $this->assertEquals('main[0][foo]', $form->fields('foo')->first()->getInstanceName());
+        $this->assertEquals('child[0][name]', $childFormlet->get(0)->fields('name')->first()->getInstanceName());
+        $this->assertEquals('child[1][name]', $childFormlet->get(1)->fields('name')->first()->getInstanceName());
+    }
+
+    /** @test */
     public function fields_can_be_filled_by_the_request()
     {
 
@@ -165,13 +194,13 @@ class FormletTest extends TestCase
             $form->add(new Checkbox('agree', 'Yes', 'No'));
             $form->add(new Checkbox('novalue', 'Yes', 'No'));
             $form->add(new Radio('radio', [
-                'foo' => 'bar',
-                'bim' => 'baz'
+              'foo' => 'bar',
+              'bim' => 'baz'
             ]));
             $form->add(new CheckboxGroup('cb'), [
-                1 => '1',
-                2 => '2',
-                4 => '3'
+              1 => '1',
+              2 => '2',
+              4 => '3'
             ]);
         });
 
@@ -187,10 +216,16 @@ class FormletTest extends TestCase
     }
 
     /** @test */
-    public function should_populate__from_session()
+    public function should_populate_from_session()
     {
         // Takes precedence over request value
-        $this->setOldInput(['name' => 'sessionVal']);
+        $this->setOldInput([
+          'main' => [
+            [
+              'name' => 'sessionVal'
+            ]
+          ]
+        ]);
 
         $form = $this->formlet(function ($form) {
             $form->add(new Input('text', 'name'));
@@ -219,7 +254,11 @@ class FormletTest extends TestCase
     public function form_is_populated_from_session_before_model()
     {
 
-        $this->setOldInput(['foo' => 'bim']);
+        $this->setOldInput([
+          'main' => [
+            ['foo' => 'bim']
+          ]
+        ]);
 
         $form = $this->formlet(function ($form) {
             $form->add(new Input('text', 'foo'));
@@ -255,8 +294,12 @@ class FormletTest extends TestCase
     public function can_repopulate_select()
     {
         $this->setOldInput([
-            'size' => 'M',
-            'foo' => ['multi' => ['L', 'S']]
+          'main' => [
+            [
+              'size' => 'M',
+              'foo'  => ['multi' => ['L', 'S']]
+            ]
+          ]
         ]);
         $model = $this->createModel(['size' => ['key' => 'S'], 'other' => 'val']);
         $list = ['L' => 'Large', 'M' => 'Medium', 'S' => 'Small'];
@@ -279,7 +322,9 @@ class FormletTest extends TestCase
     public function can_repopulate_checkbox()
     {
         $this->setOldInput([
-            'check' => ['key' => 'yes']
+          'main' => [
+            ['check' => ['key' => 'yes']]
+          ]
         ]);
 
         $form = $this->formlet(function (Formlet $form) {
@@ -298,12 +343,14 @@ class FormletTest extends TestCase
     public function can_repopulate_checkbox_group()
     {
         $this->setOldInput([
-            'multicheck' => [1, 3]
+          'main' => [
+            ['multicheck' => [1, 3]]
+          ]
         ]);
         $list = [
-            1 => 1,
-            2 => 2,
-            3 => 3
+          1 => 1,
+          2 => 2,
+          3 => 3
         ];
 
         $form = $this->formlet(function (Formlet $form) use ($list) {
@@ -320,12 +367,14 @@ class FormletTest extends TestCase
     public function can_repopulate_a_radio()
     {
         $this->setOldInput([
-            'radio' => [1, 3]
+          'main' => [
+            ['radio' => [1, 3]]
+          ]
         ]);
         $list = [
-            1 => 1,
-            2 => 2,
-            3 => 3
+          1 => 1,
+          2 => 2,
+          3 => 3
         ];
 
         $form = $this->formlet(function (Formlet $form) use ($list) {
@@ -349,10 +398,10 @@ class FormletTest extends TestCase
 
         $form = $this->formlet(function (Formlet $form) {
             $form->add(new CheckboxGroup('items', [
-                1 => 1,
-                2 => 2,
-                3 => 3,
-                4 => 4
+              1 => 1,
+              2 => 2,
+              3 => 3,
+              4 => 4
             ]));
         });
 
@@ -361,10 +410,8 @@ class FormletTest extends TestCase
 
         $this->assertObjectHasAttribute('id', $fields->get('items')->getValue()->first());
         $this->assertContains('<input name="items[]" type="checkbox" checked="checked" value="2"/>',
-            $fields->get('items')->render()->render());
-
+          $fields->get('items')->render()->render());
     }
-
 
     private function formlet(\Closure $closure = null): TestFormlet
     {
@@ -379,6 +426,17 @@ class FormletTest extends TestCase
     protected function setOldInput(array $data)
     {
         $this->session(['_old_input' => $data]);
+    }
+
+    protected function withRequest()
+    {
+        $this->request->merge([
+          'name'   => 'foo',
+          'person' => ['name' => 'John'],
+          'agree'  => 'Yes',
+          'radio'  => 'foo',
+          'cb'     => [1, 2]
+        ]);
     }
 
 }
@@ -401,8 +459,19 @@ class TestFormlet extends Formlet
         }
     }
 
-    public function persist(){
+    public function persist()
+    {
         return $this->post()->toArray();
+    }
+
+}
+
+class ChildFormlet extends Formlet
+{
+
+    public function prepare(): void
+    {
+        $this->add(new Input('text', 'name'));
     }
 
 }
