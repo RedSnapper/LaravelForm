@@ -167,9 +167,13 @@ abstract class Formlet
                 'hidden' => $this->getHiddenFields(),
                 'attributes' => $this->attributes->sortKeys()
             ]),
-            'formlets' => [
-                'main' => ['fields' => $this->fields()]
-            ]
+            'formlets' => $this->formlets->map(function(Collection $forms){
+                return $forms->map(function(Formlet $formlet){
+                    return [
+                      'fields'=>$formlet->fields()
+                    ];
+                });
+            })
         ]);
     }
 

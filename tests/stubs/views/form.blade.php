@@ -3,6 +3,7 @@
      
     @field('main','name')
     @field('main','email')
+    @field('child','name')
 
 @endform
 

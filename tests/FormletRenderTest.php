@@ -42,7 +42,8 @@ class FormletRenderTest extends TestCase
             ->assertSee('<input name="_method" type="hidden" value="PUT"/>')
             ->assertSee('<input name="_token" type="hidden" value="'.app('session')->token() .'"/>')
             ->assertSee('<input class="form_control" id="main[0][name]" name="main[0][name]" type="text" />')
-            ->assertSee('<input class="form_control" id="main[0][email]" name="main[0][email]" type="email" />');
+            ->assertSee('<input class="form_control" id="main[0][email]" name="main[0][email]" type="email" />')
+            ->assertSee('<input class="form_control" id="child[0][name]" name="child[0][name]" type="text" />');
 
     }
 
@@ -58,6 +59,18 @@ class RenderFormlet extends Formlet
     {
         $this->add(new Input('text','name'));
         $this->add(new Input('email','email'));
+
+        $this->addFormlet('child',ChildRenderFormlet::class);
+    }
+
+}
+
+class ChildRenderFormlet extends Formlet
+{
+
+    public function prepare(): void
+    {
+        $this->add(new Input('text','name'));
     }
 
 }
