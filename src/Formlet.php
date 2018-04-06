@@ -159,6 +159,7 @@ abstract class Formlet
         return $this->key;
     }
 
+
     /**
      * Build the current form
      *
@@ -174,13 +175,7 @@ abstract class Formlet
                 'hidden' => $this->getHiddenFields(),
                 'attributes' => $this->attributes->sortKeys()
             ]),
-            'formlets' => $this->formlets->map(function(Collection $forms){
-                return $forms->map(function(Formlet $formlet){
-                    return [
-                      'fields'=>$formlet->fields()
-                    ];
-                });
-            })
+            'formlets' => $this->buildFormlets($this->formlets)
         ]);
     }
 
@@ -273,8 +268,6 @@ abstract class Formlet
 
             $this->populateErrors($field, $this->transformKey($field->getInstanceName()));
         });
-
-
     }
 
     /**
@@ -287,14 +280,36 @@ abstract class Formlet
             return;
         }
 
-        $this->addFormlet($this->name,$this);
+        // Add parent
+        $parent = clone $this;
+        $this->formlets = collect();
+        $this->addFormlet($this->name,$parent);
 
-        $this->iterateFields(function(AbstractField $field,Formlet $formlet){
+        $this->setFieldNames($this->formlets);
+        $this->prepared = true;
+    }
 
-            $instance = $formlet->name . "[" . $formlet->getKey() . "][" . $field->getName() . "]";
-            $field->setInstanceName($instance);
-            $formlet->prepared = true; // Formlet field names are now set
-        });
+    protected function setFieldNames(Collection $formlets,string $prefix=""){
+
+        foreach ($formlets as $forms) {
+            foreach ($forms as $formlet){
+
+                if($prefix == ""){
+                    $formletInstance = $formlet->name . "[" . $formlet->getKey() . "]";
+                }else{
+                    $formletInstance = $prefix . "[" . $formlet->name . "][" . $formlet->getKey() . "]";
+                }
+
+                if($formlet->formlets()->count() > 0){
+                    $this->setFieldNames($formlet->formlets(),$formletInstance);
+                }
+
+                foreach($formlet->fields() as $field){
+                    $instance = $formletInstance . "[" . $field->getName() . "]";
+                    $field->setInstanceName($instance);
+                }
+            }
+        }
 
     }
 
@@ -387,4 +402,10 @@ abstract class Formlet
         return data_get($this->model, $this->transformKey($name));
     }
 
+    protected function buildFormlets(Collection $formlets)
+    {
+        return new FormletViewCollection($this->formlets);
+    }
+
 }
+

@@ -165,19 +165,26 @@ class FormletTest extends TestCase
 
         $form->build();
 
-        $this->assertCount(2, $form->formlets());
-        $this->assertCount(2, $form->formlets('child'));
+        $this->assertCount(1, $form->formlets());
+
         $this->assertCount(1, $form->formlets('main'));
         $this->assertInstanceOf(TestFormlet::class, $form->formlets('main')->first());
-        $this->assertInstanceOf(ChildFormlet::class, $form->formlets('child')->first());
+        $this->assertEquals(
+          'main[0][foo]',
+          $form->formlets('main')->first()->fields('foo')->first()->getInstanceName()
+        );
 
-        $mainFormlet = $form->formlets('main')->first();
-        $childFormlet = $form->formlets('child');
-
-        $this->assertEquals('main[0][foo]', $mainFormlet->fields('foo')->first()->getInstanceName());
-        $this->assertEquals('main[0][foo]', $form->fields('foo')->first()->getInstanceName());
-        $this->assertEquals('child[0][name]', $childFormlet->get(0)->fields('name')->first()->getInstanceName());
-        $this->assertEquals('child[1][name]', $childFormlet->get(1)->fields('name')->first()->getInstanceName());
+        $childFormlets = $form->formlets('main')->first()->formlets('child');
+        $this->assertCount(2, $childFormlets);
+        $this->assertInstanceOf(ChildFormlet::class, $childFormlets->first());
+        $this->assertEquals(
+          'main[0][child][0][name]',
+          $childFormlets->get(0)->fields('name')->first()->getInstanceName()
+        );
+        $this->assertEquals(
+          'main[0][child][1][name]',
+          $childFormlets->get(1)->fields('name')->first()->getInstanceName()
+        );
     }
 
     /** @test */

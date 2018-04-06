@@ -18,6 +18,7 @@ class FormletRenderTest extends TestCase
 
     public function getFormViews()
     {
+        //return [['form'],['formlet'],['fields']];
         return [['form'],['formlet'],['formlets'],['fields']];
     }
 
@@ -29,26 +30,24 @@ class FormletRenderTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
-        Route::put('/users/{user}',function(){})->name('users.update');
+        Route::put('/users/{user}', function () {
+        })->name('users.update');
 
-        Route::get('/users/{user}/edit',function(RenderFormlet $form) use($view){
-            return view($view,$form->route('users.update',['user'=>1])->build());
+        Route::get('/users/{user}/edit', function (RenderFormlet $form) use ($view) {
+            return view($view, $form->route('users.update', ['user' => 1])->build());
         })->name('users.edit');
 
-
         $this->get('/users/1/edit')
-            ->assertStatus(200)
-            ->assertSee('<form class="form" accept-charset="UTF-8" action="http://localhost/users/1" enctype="multipart/form-data" method="POST" >')
-            ->assertSee('<input name="_method" type="hidden" value="PUT"/>')
-            ->assertSee('<input name="_token" type="hidden" value="'.app('session')->token() .'"/>')
-            ->assertSee('<input class="form_control" id="main[0][name]" name="main[0][name]" type="text" />')
-            ->assertSee('<input class="form_control" id="main[0][email]" name="main[0][email]" type="email" />')
-            ->assertSee('<input class="form_control" id="child[0][name]" name="child[0][name]" type="text" />');
-
+          ->assertStatus(200)
+          ->assertSee('<form class="form" accept-charset="UTF-8" action="http://localhost/users/1" enctype="multipart/form-data" method="POST" >')
+          ->assertSee('<input name="_method" type="hidden" value="PUT"/>')
+          ->assertSee('<input name="_token" type="hidden" value="' . app('session')->token() . '"/>')
+          ->assertSee('<input class="form_control" id="main[0][name]" name="main[0][name]" type="text" />')
+          ->assertSee('<input class="form_control" id="main[0][email]" name="main[0][email]" type="email" />')
+          ->assertSee('<input class="form_control" id="main[0][child][0][name]" name="main[0][child][0][name]" type="text" />')
+          ->assertSee('<input class="form_control" id="main[0][multi][0][foo]" name="main[0][multi][0][foo]" type="text" />')
+          ->assertSee('<input class="form_control" id="main[0][multi][1][foo]" name="main[0][multi][1][foo]" type="text" />');
     }
-
-
-
 
 }
 
@@ -57,10 +56,12 @@ class RenderFormlet extends Formlet
 
     public function prepare(): void
     {
-        $this->add(new Input('text','name'));
-        $this->add(new Input('email','email'));
+        $this->add(new Input('text', 'name'));
+        $this->add(new Input('email', 'email'));
 
-        $this->addFormlet('child',ChildRenderFormlet::class);
+        $this->addFormlet('child', ChildRenderFormlet::class);
+        $this->addFormlet('multi', MultiRenderFormlet::class);
+        $this->addFormlet('multi', MultiRenderFormlet::class);
     }
 
 }
@@ -70,7 +71,17 @@ class ChildRenderFormlet extends Formlet
 
     public function prepare(): void
     {
-        $this->add(new Input('text','name'));
+        $this->add(new Input('text', 'name'));
+    }
+
+}
+
+class MultiRenderFormlet extends Formlet
+{
+
+    public function prepare(): void
+    {
+        $this->add(new Input('text', 'foo'));
     }
 
 }
