@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace RS\Form;
 
@@ -15,42 +14,39 @@ class FormletViewCollection implements \IteratorAggregate
 
     public function __construct(Collection $formlets)
     {
-        $this->formlets = $formlets->map(function(Collection $forms){
-            return $forms->map(function(Formlet $formlet){
-                return new FormletView($formlet->fields(),new FormletViewCollection($formlet->formlets()));
+        $this->formlets = $formlets->map(function (Collection $forms) {
+            return $forms->map(function (Formlet $formlet) {
+                return new FormletView($formlet);
             });
         });
     }
 
-    public function renderAll(){
-        dd($this->renderFormlets($this)->flatten()->map->render());
-    }
-
-    protected function renderFormlets(FormletViewCollection $collection){
-
-        return collect($collection)->map(function($forms){
-            return collect($forms)->map(function($formlet){
-                dd($formlet->get());
-                return $formlet->fields()->map->render();
-            });
-        });
-    }
-
-
-
-    public function first($name){
-
-        $names = collect(explode('.',$name));
-
-        return $names->reduce(function($carry,$item){
-            return $carry->get($item)->first();
-        },$this->formlets);
-
-    }
-
-    public function get($name=null)
+    /**
+     * Renders all of the child formlets
+     * @return string
+     */
+    public function renderAll(): string
     {
-        if(is_null($name)){
+        return $this->renderFormlets($this)
+            ->flatten()
+            ->map->render()
+            ->implode('');
+    }
+
+    public function first($name)
+    {
+
+        $names = collect(explode('.', $name));
+
+        return $names->reduce(function ($carry, $item) {
+            return $carry->get($item)->first();
+        }, $this->formlets);
+
+    }
+
+    public function get($name = null)
+    {
+        if (is_null($name)) {
             return $this->formlets;
         }
         return $this->formlets->get($name);
@@ -66,6 +62,17 @@ class FormletViewCollection implements \IteratorAggregate
         return new \ArrayIterator($this->formlets->toArray());
     }
 
+    protected function renderFormlets(FormletViewCollection $collection): Collection
+    {
+
+        return collect($collection)->map(function ($forms) {
+            return collect($forms)->map(function ($formlet) {
+                $collection = $this->renderFormlets($formlet->get());
+                $collection->prepend($formlet->fields()->map->render());
+                return $collection;
+            });
+        });
+    }
 
 }
 

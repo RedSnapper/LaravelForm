@@ -29,42 +29,7 @@ class FormServiceProvider extends ServiceProvider
 		  __DIR__.'/resources/views' => resource_path('views/form'),
 		],'form');
 
-        Blade::component('form::components.form', 'form');
-
-        Blade::directive('field',function($expression){
-
-            $vars = explode(',',$expression);
-
-            if(count($vars) == 2){
-                list($form,$field) = $vars;
-
-                $accessor = "['formlets']->first($form)->field($field)";
-
-            }else{
-                list($field) = $vars;
-                $accessor = "['formlet']->field({$field})";
-            }
-
-            return "<?php echo \array_except(get_defined_vars(), array('__data', '__path')){$accessor}->render(); ?>";
-        });
-
-        Blade::directive('formlet',function($expression){
-
-            if($expression == ""){
-                $accessor = "['formlet']";
-            }else{
-                list($name) = explode(',',$expression);
-                $accessor = "['formlets']->first($name)";
-            }
-
-            return "<?php foreach(array_except(get_defined_vars(), array('__data', '__path')){$accessor}->fields() as \$field){
-                echo \$field->render(); 
-            } ?>";
-        });
-
-        Blade::directive('formlets',function($expression){
-            return "<?php echo \array_except(get_defined_vars(), array('__data', '__path'))['formlets']->renderAll(); ?>";
-        });
+        $this->addBladeDirectives();
 
 
     }
@@ -77,5 +42,45 @@ class FormServiceProvider extends ServiceProvider
             $formlet->initialize();
 		});
 	}
+
+    protected function addBladeDirectives(): void
+    {
+        Blade::component('form::components.form', 'form');
+
+        Blade::directive('field', function ($expression) {
+
+            $vars = explode(',', $expression);
+
+            if (count($vars) == 2) {
+                list($form, $field) = $vars;
+
+                $accessor = "['formlets']->first($form)->field($field)";
+
+            } else {
+                list($field) = $vars;
+                $accessor = "['formlet']->field({$field})";
+            }
+
+            return "<?php echo \array_except(get_defined_vars(), array('__data', '__path')){$accessor}->render(); ?>";
+        });
+
+        Blade::directive('formlet', function ($expression) {
+
+            if ($expression == "") {
+                $accessor = "['formlet']";
+            } else {
+                list($name) = explode(',', $expression);
+                $accessor = "['formlets']->first($name)";
+            }
+
+            return "<?php foreach(array_except(get_defined_vars(), array('__data', '__path')){$accessor}->fields() as \$field){
+                echo \$field->render(); 
+            } ?>";
+        });
+
+        Blade::directive('formlets', function ($expression) {
+            return "<?php echo \array_except(get_defined_vars(), array('__data', '__path'))['formlets']->renderAll(); ?>";
+        });
+    }
 
 }

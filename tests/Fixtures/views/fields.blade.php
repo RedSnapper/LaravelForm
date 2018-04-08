@@ -5,12 +5,12 @@
         @field('email')
     @endforeach
 
-    @foreach($formlets->first('main')->multi as $formlet)
-        @field('foo')
-    @endforeach
-
     @foreach($formlets->first('main')->child as $formlet)
         @field('name')
+    @endforeach
+
+    @foreach($formlets->first('main.child')->multi as $formlet)
+        @field('foo')
     @endforeach
 
 

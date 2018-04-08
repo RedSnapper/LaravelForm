@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace RS\Form;
 
@@ -175,7 +174,7 @@ abstract class Formlet
                 'hidden' => $this->getHiddenFields(),
                 'attributes' => $this->attributes->sortKeys()
             ]),
-            'formlets' => $this->buildFormlets($this->formlets)
+            'formlets' => new FormletViewCollection($this->formlets)
         ]);
     }
 
@@ -402,10 +401,6 @@ abstract class Formlet
         return data_get($this->model, $this->transformKey($name));
     }
 
-    protected function buildFormlets(Collection $formlets)
-    {
-        return new FormletViewCollection($this->formlets);
-    }
 
 }
 

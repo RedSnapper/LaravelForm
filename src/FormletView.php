@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 namespace RS\Form;
 
@@ -8,35 +7,46 @@ use Illuminate\Support\Collection;
 class FormletView
 {
     /**
-     * @var Collection
+     * The formlet
+     * @var Formlet
      */
-    public $fields;
+    protected $formlet;
 
     /**
+     * The formlet fields
      * @var Collection
      */
-    public $formlets;
+    protected $fields;
 
-    public function __construct(Collection $fields,FormletViewCollection $formlets)
+    /**
+     * Child formlet collection
+     * @var FormletViewCollection
+     */
+    protected $children;
+
+    public function __construct(Formlet $formlet)
     {
-        $this->fields = $fields;
-        $this->formlets = $formlets;
+        $this->formlet = $formlet;
+        $this->fields = $formlet->fields();
+        $this->children = new FormletViewCollection($formlet->formlets());
     }
 
-    public function field($name){
+    public function field($name)
+    {
         return $this->fields->get($name);
     }
 
-    public function fields(){
+    public function fields(): Collection
+    {
         return $this->fields;
     }
 
-    public function get($name=null)
+    public function get($name = null)
     {
-        if(is_null($name)){
-            return $this->formlets;
+        if (is_null($name)) {
+            return $this->children;
         }
-        return $this->formlets->get($name);
+        return $this->children->get($name);
     }
 
     public function __get($name)
@@ -44,13 +54,14 @@ class FormletView
         return $this->get($name);
     }
 
-    public function first($name){
+    public function first($name)
+    {
 
-        $names = collect(explode('.',$name));
+        $names = collect(explode('.', $name));
 
-        return $names->reduce(function($carry,$item){
+        return $names->reduce(function ($carry, $item) {
             return $carry->get($item)->first();
-        },$this->formlets);
+        }, $this->children);
 
     }
 

@@ -18,7 +18,6 @@ class FormletRenderTest extends TestCase
 
     public function getFormViews()
     {
-        //return [['form'],['formlet'],['fields']];
         return [['form'],['formlet'],['formlets'],['fields']];
     }
 
@@ -45,8 +44,8 @@ class FormletRenderTest extends TestCase
           ->assertSee('<input class="form_control" id="main[0][name]" name="main[0][name]" type="text" />')
           ->assertSee('<input class="form_control" id="main[0][email]" name="main[0][email]" type="email" />')
           ->assertSee('<input class="form_control" id="main[0][child][0][name]" name="main[0][child][0][name]" type="text" />')
-          ->assertSee('<input class="form_control" id="main[0][multi][0][foo]" name="main[0][multi][0][foo]" type="text" />')
-          ->assertSee('<input class="form_control" id="main[0][multi][1][foo]" name="main[0][multi][1][foo]" type="text" />');
+            ->assertSee('<input class="form_control" id="main[0][child][0][multi][0][foo]" name="main[0][child][0][multi][0][foo]" type="text" />')
+            ->assertSee('<input class="form_control" id="main[0][child][0][multi][1][foo]" name="main[0][child][0][multi][1][foo]" type="text" />');
     }
 
 }
@@ -58,10 +57,7 @@ class RenderFormlet extends Formlet
     {
         $this->add(new Input('text', 'name'));
         $this->add(new Input('email', 'email'));
-
         $this->addFormlet('child', ChildRenderFormlet::class);
-        $this->addFormlet('multi', MultiRenderFormlet::class);
-        $this->addFormlet('multi', MultiRenderFormlet::class);
     }
 
 }
@@ -72,6 +68,8 @@ class ChildRenderFormlet extends Formlet
     public function prepare(): void
     {
         $this->add(new Input('text', 'name'));
+        $this->addFormlet('multi', MultiRenderFormlet::class);
+        $this->addFormlet('multi', MultiRenderFormlet::class);
     }
 
 }
