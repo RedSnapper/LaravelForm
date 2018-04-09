@@ -55,20 +55,25 @@ trait ValidatesForm
 
         $this->errors = collect();
 
-        $this->formlets->each(function ($forms) {
-            $forms->each(function (Formlet $formlet) {
-                $errors = $formlet->validateRequest();
-
-                if (count($errors) > 0) {
-                    $this->errors = $this->errors->merge(collect($errors)->mapWithKeys(function ($error, $key) use ($formlet) {
-                        return ["{$formlet->name}.{$formlet->key}.{$key}" => $error];
-                    })->toArray());
-                }
-            });
-        });
+        $this->validateFormlets($this->formlets);
 
         if (!$this->isValid() && $redirect) {
             throw (new ValidationException($this->validator, $this->buildFailedValidationResponse()));
+        }
+    }
+
+    protected function validateFormlets(Collection $formlets){
+        foreach ($formlets as $forms) {
+            foreach ($forms as $formlet) {
+
+                $errors = $formlet->validateRequest();
+
+                if (count($errors) > 0) {
+                    $this->errors = $this->errors->merge($errors);
+                }
+
+                $this->validateFormlets($formlet->formlets());
+            }
         }
     }
 
@@ -115,10 +120,10 @@ trait ValidatesForm
      *
      * @return array
      */
-    public function validateRequest(): array
+    public function validateRequest(): Collection
     {
 
-        $request = $this->request->input("{$this->name}.{$this->getKey()}") ?? [];
+        $request = $this->request->input($this->transformKey($this->instanceName)) ?? [];
 
         $this->validator = $this->getValidationFactory()->make(
           $request,
@@ -128,10 +133,13 @@ trait ValidatesForm
         );
 
         if ($this->validator->fails()) {
-            return $this->validator->errors()->getMessages();
+
+            return collect($this->validator->errors()->getMessages())->mapWithKeys(function($error, $key){
+                return ["{$this->transformKey($this->instanceName)}.{$key}" => $error];
+            });
         }
 
-        return [];
+        return collect();
     }
 
     /**

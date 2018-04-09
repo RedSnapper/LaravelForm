@@ -47,15 +47,16 @@ class FormletValidationTest extends TestCase
 
         $errors = $form->errors();
 
-        $this->assertCount(2, $errors);
+        $this->assertCount(3, $errors);
         $this->assertEquals(["The name field is required."], $errors->get('main.0.name'));
+        $this->assertEquals(["The country field is required."], $errors->get('main.0.child.0.country'));
     }
 
     /** @test */
     public function it_can_automatically_redirect_after_failing_validation()
     {
 
-        Route::post('/test', function (){
+        Route::post('/test', function () {
             $form = $this->form();
             $form->validate();
         });
@@ -96,7 +97,8 @@ class FormletValidationTest extends TestCase
     {
         $this->session([
           'errors' => [
-            'main.0.name' => ['Session error']
+            'main.0.name' => ['Session error'],
+            'main.0.child.0.country' => ['Country error']
           ]
         ]);
 
@@ -105,16 +107,22 @@ class FormletValidationTest extends TestCase
 
         $errors = $form->errors();
         $fields = $form->fields();
+        $childFormlet = $form->formlets('main')->first()->formlets('child')->first();
 
         $this->assertEquals(["Session error"], $errors->get('main.0.name'));
         $this->assertEquals(["Session error"], $fields->get('name')->getErrors()->toArray());
+
+        $this->assertEquals(["Country error"], $errors->get('main.0.child.0.country'));
+        $this->assertEquals(["Country error"], $childFormlet->fields()->get('country')->getErrors()->toArray());
+
+
     }
 
     /** @test */
     public function can_set_a_redirect_route_on_validation_failure()
     {
 
-        Route::post('/test', function (){
+        Route::post('/test', function () {
             $form = $this->form(function (Formlet $form) {
                 $form->redirectRoute = "redirect";
             });
@@ -130,7 +138,6 @@ class FormletValidationTest extends TestCase
           ->assertSessionHasErrors(['main.0.name']);
     }
 
-
     private function form(\Closure $closure = null): Formlet
     {
         return $this->app->makeWith(ValidationFormlet::class, ['closure' => $closure]);
@@ -140,7 +147,13 @@ class FormletValidationTest extends TestCase
     {
         return [
           'main' => [
-            ['name' => 'John', 'email' => 'john@example.com']
+            [
+              'name'  => 'John',
+              'email' => 'john@example.com',
+              'child'=>[
+                ['country'=>'England']
+              ]
+            ]
           ]
         ];
     }
@@ -164,6 +177,7 @@ class ValidationFormlet extends Formlet
     public function prepare(): void
     {
         $this->add(new Input('text', 'name'));
+        $this->addFormlet('child', ChildValidationFormlet::class);
     }
 
     public function rules(): array
@@ -188,4 +202,20 @@ class ValidationFormlet extends Formlet
         ];
     }
 
+}
+
+class ChildValidationFormlet extends Formlet
+{
+
+    public function prepare(): void
+    {
+        $this->add(new Input('text', 'country'));
+    }
+
+    public function rules(): array
+    {
+        return [
+          'country' => 'required'
+        ];
+    }
 }

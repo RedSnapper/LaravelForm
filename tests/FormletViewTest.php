@@ -18,7 +18,7 @@ class FormletViewTest extends TestCase
     public function setUp()
     {
         parent::setUp();
-        $this->form = app(TestFormlet::class);
+        $this->form = app(ViewTestFormlet::class);
         $this->formletView = new FormletView($this->form);
     }
     
@@ -51,13 +51,13 @@ class FormletViewTest extends TestCase
 
 }
 
-class TestFormlet extends Formlet
+class ViewTestFormlet extends Formlet
 {
 
     public function prepare(): void
     {
         $this->add(new Input('text', 'name'));
-        $this->addFormlet('child',ChildFormlet::class);
+        $this->addFormlet('child',ViewChildFormlet::class);
     }
 
     public function persist()
@@ -67,18 +67,18 @@ class TestFormlet extends Formlet
 
 }
 
-class ChildFormlet extends Formlet
+class ViewChildFormlet extends Formlet
 {
 
     public function prepare(): void
     {
         $this->add(new Input('text', 'child'));
-        $this->addFormlet('grandchild',GrandChildFormlet::class);
+        $this->addFormlet('grandchild',ViewGrandChildFormlet::class);
     }
 
 }
 
-class GrandChildFormlet extends Formlet
+class ViewGrandChildFormlet extends Formlet
 {
 
     public function prepare(): void

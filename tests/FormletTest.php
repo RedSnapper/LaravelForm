@@ -15,7 +15,6 @@ use RS\Form\Fields\Select;
 use RS\Form\Formlet;
 use stdClass;
 
-//TODO Test Child Formlet population
 
 class FormletTest extends TestCase
 {
@@ -416,6 +415,28 @@ class FormletTest extends TestCase
         $this->assertObjectHasAttribute('id', $fields->get('items')->getValue()->first());
         $this->assertContains('<input name="items[]" type="checkbox" checked="checked" value="2"/>',
           $fields->get('items')->render()->render());
+    }
+
+    /** @test */
+    public function can_populate_child_formlets()
+    {
+        $this->setOldInput([
+          'main' => [
+            [
+              'child' =>[
+                ['name'=>'bar']
+              ]
+            ]
+          ]
+        ]);
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->addFormlet('child',ChildFormlet::class);
+        });
+        $form->build();
+        $fields = $form->formlets('main')->first()->formlets('child')->first()->fields();
+
+        $this->assertEquals('bar', $fields->get('name')->getValue());
     }
 
     private function formlet(\Closure $closure = null): TestFormlet
