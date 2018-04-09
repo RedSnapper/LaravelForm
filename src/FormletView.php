@@ -3,23 +3,27 @@
 namespace RS\Form;
 
 use Illuminate\Support\Collection;
+use RS\Form\Fields\AbstractField;
 
 class FormletView
 {
     /**
      * The formlet
+     *
      * @var Formlet
      */
     protected $formlet;
 
     /**
      * The formlet fields
+     *
      * @var Collection
      */
     protected $fields;
 
     /**
      * Child formlet collection
+     *
      * @var FormletViewCollection
      */
     protected $children;
@@ -31,17 +35,33 @@ class FormletView
         $this->children = new FormletViewCollection($formlet->formlets());
     }
 
-    public function field($name)
+    /**
+     * Get a named field for this formlet
+     *
+     * @param string $name
+     * @return null|AbstractField
+     */
+    public function field(string $name): ?AbstractField
     {
         return $this->fields->get($name);
     }
 
+    /**
+     * Get all the fields for this formlet
+     *
+     * @return Collection
+     */
     public function fields(): Collection
     {
         return $this->fields;
     }
 
-    public function get($name = null)
+    /**
+     * Get a collection of formlets
+     * @param null|string $name
+     * @return mixed
+     */
+    public function get(string $name = null)
     {
         if (is_null($name)) {
             return $this->children;
@@ -54,6 +74,13 @@ class FormletView
         return $this->get($name);
     }
 
+    /**
+     * Get the first named formlet from
+     * the collection
+     *
+     * @param string $name
+     * @return mixed
+     */
     public function first($name)
     {
 
@@ -62,7 +89,6 @@ class FormletView
         return $names->reduce(function ($carry, $item) {
             return $carry->get($item)->first();
         }, $this->children);
-
     }
 
 }

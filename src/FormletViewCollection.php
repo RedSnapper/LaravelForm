@@ -3,7 +3,6 @@
 namespace RS\Form;
 
 use Illuminate\Support\Collection;
-use Traversable;
 
 class FormletViewCollection implements \IteratorAggregate
 {
@@ -33,7 +32,14 @@ class FormletViewCollection implements \IteratorAggregate
             ->implode('');
     }
 
-    public function first($name)
+    /**
+     * Get the first named formlet from
+     * the collection
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function first(string $name)
     {
 
         $names = collect(explode('.', $name));
@@ -44,7 +50,12 @@ class FormletViewCollection implements \IteratorAggregate
 
     }
 
-    public function get($name = null)
+    /**
+     * Get a collection of formlets
+     * @param null|string $name
+     * @return mixed
+     */
+    public function get(string $name = null)
     {
         if (is_null($name)) {
             return $this->formlets;
