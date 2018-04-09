@@ -27,7 +27,8 @@ class FormletPostTest extends TestCase
             [
               'name'  => 'foo',
               'agree' => 'Yes',
-              'cb'    => [1, 2]
+              'cb'    => [1, 2],
+              'child'=> [['foo'=>'bar']]
             ]
           ]
         ]);
@@ -37,7 +38,7 @@ class FormletPostTest extends TestCase
     public function can_retrieve_posted_values()
     {
 
-        $form = $this->formlet(function ($form) {
+        $form = $this->formlet(function (Formlet $form) {
             $form->add(new Input('text', 'name'));
             $form->add(new Checkbox('agree', 'Yes', 'No'));
             $form->add(new Checkbox('foo', 'Yes', 'No'));
@@ -46,6 +47,7 @@ class FormletPostTest extends TestCase
               2 => 2,
               3 => 3
             ]));
+            $form->addFormlet('child',ChildPostFormlet::class);
         });
 
         $this->assertEquals([
@@ -54,7 +56,8 @@ class FormletPostTest extends TestCase
               'name'  => 'foo',
               'agree' => 'Yes',
               'foo'   => 'No',
-              'cb'    => [1, 2]
+              'cb'    => [1, 2],
+              'child'=> [['foo'=>'bar']]
             ]
           ]
         ],$form->allPostData()->toArray());
@@ -159,5 +162,17 @@ class PostFormlet extends Formlet
     {
         return $this->postData()->toArray();
     }
+
+}
+
+class ChildPostFormlet extends Formlet
+{
+
+    public function prepare(): void
+    {
+        $this->add(new Input('text','foo'));
+    }
+
+
 
 }

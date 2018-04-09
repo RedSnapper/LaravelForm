@@ -38,11 +38,7 @@ trait ManagesPosts
 
         $this->preparePost();
 
-        return $this->formlets->map(function(Collection $forms){
-            return $forms->map(function(Formlet $formlet){
-                return $formlet->fields()->map->getValue();
-            });
-        });
+        return $this->formletsPost($this->formlets);
     }
 
     /**
@@ -92,6 +88,25 @@ trait ManagesPosts
     }
 
     /**
+     * Maps the formlets to the values stored in the fields
+     *
+     * @param Collection $formlets
+     * @return Collection
+     */
+    protected function formletsPost(Collection $formlets):Collection{
+
+        return $formlets->map(function(Collection $forms){
+            return $forms->map(function(Formlet $formlet){
+
+                $values =  $formlet->fields()->map->getValue();
+
+                return $values->merge($this->formletsPost($formlet->formlets()));
+
+            });
+        });
+    }
+
+    /**
      * Populate the fields from the post
      *
      */
@@ -102,14 +117,9 @@ trait ManagesPosts
             return;
         }
 
-        $this->prepareFormlets();
+        $this->populate();
 
-        $this->iterateFields(function(AbstractField $field,Formlet $formlet){
-            if ($request = $this->request($field->getInstanceName())) {
-                $field->setValue($request);
-            }
-            $formlet->bound = true;
-        });
+        $this->bound = true;
 
     }
 
