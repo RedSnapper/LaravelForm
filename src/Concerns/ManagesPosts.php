@@ -20,13 +20,13 @@ trait ManagesPosts
     /**
      * Returns the posted values for this formlet
      * Only fields set in the view will appear here
-     * @return Collection
+     * @return array
      */
-    public function postData():Collection{
+    public function postData():array{
 
         $this->preparePost();
 
-        return $this->fields()->map->getValue();
+        return $this->fields()->map->getValue()->toArray();
     }
 
     /**
@@ -112,15 +112,7 @@ trait ManagesPosts
      */
     protected function preparePost(): void
     {
-
-        if($this->bound){
-            return;
-        }
-
         $this->populate();
-
-        $this->bound = true;
-
     }
 
 }

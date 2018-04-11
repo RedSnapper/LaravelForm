@@ -51,7 +51,7 @@ trait ValidatesForm
      */
     public function validate($redirect = true)
     {
-        $this->prepareFormlets();
+        $this->populate();
 
         $this->errors = collect();
 

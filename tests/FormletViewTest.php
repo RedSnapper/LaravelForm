@@ -18,23 +18,26 @@ class FormletViewTest extends TestCase
     public function setUp()
     {
         parent::setUp();
-        $this->form = app(ViewTestFormlet::class);
-        $this->formletView = new FormletView($this->form);
+        $form = app(ViewTestFormlet::class);
+        $form->build();
+        $this->form = $form;
+        $this->formletView = new FormletView($form);
     }
     
     /** @test */
     public function can_get_child_formlets()
     {
         $this->assertInstanceOf(FormletViewCollection::class,$this->formletView->get());
-        $this->assertCount(1,$this->formletView->get('child'));
+        $this->assertCount(1,$this->formletView->get('main'));
+        $this->assertCount(1,$this->formletView->first('main')->get('child'));
     }
 
     /** @test */
     public function can_get_first_child_of_a_formlet_collection()
     {
-        $this->assertInstanceOf(FormletView::class,$this->formletView->first('child'));
+        $this->assertInstanceOf(FormletView::class,$this->formletView->first('main'));
 
-        $grandChild = $this->formletView->first('child.grandchild');
+        $grandChild = $this->formletView->first('main.child.grandchild');
         $this->assertInstanceOf(FormletView::class,$grandChild);
         $this->assertEquals('grandchild',$grandChild->field('grandchild')->getName());
 

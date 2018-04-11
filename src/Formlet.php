@@ -79,9 +79,9 @@ abstract class Formlet
     /**
      * Whether formlets have been prepared
      *
-     * @var int
+     * @var bool
      */
-    protected $prepared = false;
+    public $prepared = false;
 
     abstract public function prepare(): void;
 
@@ -93,8 +93,6 @@ abstract class Formlet
         $this->fields = collect();
         $this->formlets = collect();
         $this->errors = $this->session->get('errors') ?? collect();
-
-        $this->prepare();
     }
 
     /**
@@ -238,8 +236,9 @@ abstract class Formlet
      *
      * @param $relation
      * @param $formlet
+     * @return Formlet
      */
-    public function addFormlet($relation, $formlet)
+    public function addFormlet($relation, $formlet):Formlet
     {
 
         $formlet = $formlet instanceof Formlet ? $formlet : app()->make($formlet);
@@ -253,6 +252,18 @@ abstract class Formlet
         $formlet->key($this->formlets->get($relation)->count());
 
         $this->formlets[$relation][] = $formlet;
+
+        return $formlet;
+    }
+
+    public function relation($relation,$formlet){
+
+        $formlet = $this->addFormlet($relation,$formlet);
+
+        if(isset($this->model)){
+            $formlet->model($this->model->$relation);
+        }
+
     }
 
     /**
@@ -277,9 +288,12 @@ abstract class Formlet
      */
     protected function populate(): void
     {
-
+        if($this->prepared){
+            return;
+        }
         $this->prepareFormlets();
         $this->populateFields($this->formlets);
+        $this->prepared = true;
     }
 
     /**
@@ -293,7 +307,11 @@ abstract class Formlet
         $formlets->each(function(Collection $forms){
             $forms->each(function(Formlet $formlet){
 
-                $formlet->fields()->each(\Closure::fromCallable([$this,'populateField']));
+                $formlet->fields()->each(function(AbstractField $field) use($formlet){
+                    $this->populateField($field,$formlet->model);
+                });
+
+                $formlet->prepared = true;
 
                 $this->populateFields($formlet->formlets());
             });
@@ -303,11 +321,12 @@ abstract class Formlet
     /**
      * Populate formlet field
      * @param AbstractField $field
+     * @param mixed $model
      */
-    protected function populateField(AbstractField $field): void
+    protected function populateField(AbstractField $field,$model): void
     {
 
-        if ($value = $this->getValueAttribute($field->getInstanceName(), $field->getName())) {
+        if ($value = $this->getValueAttribute($field->getInstanceName(),$model,$field->getName())) {
             $field->setValue($value);
         }
         $this->populateErrors($field, $this->transformKey($field->getInstanceName()));
@@ -320,17 +339,13 @@ abstract class Formlet
     protected function prepareFormlets(): void
     {
 
-        if ($this->prepared) {
-            return;
-        }
-
         // Add parent
         $parent = clone $this;
         $this->formlets = collect();
         $this->addFormlet($this->name, $parent);
 
         $this->setFieldNames($this->formlets);
-        $this->prepared = true;
+
     }
 
     /**
@@ -344,12 +359,15 @@ abstract class Formlet
         $formlets->each(function(Collection $forms) use($prefix){
             $forms->each(function(Formlet $formlet) use($prefix){
 
+                $formlet->prepare();
+
                 $this->setFormletInstance($prefix,$formlet);
-                $this->setFieldNames($formlet->formlets(), $formlet->instanceName);
 
                 $formlet->fields()->each(function(AbstractField $field) use($formlet){
                     $this->setFieldName($field,$formlet->instanceName);
                 });
+
+                $this->setFieldNames($formlet->formlets(), $formlet->instanceName);
 
             });
         });
@@ -395,10 +413,11 @@ abstract class Formlet
      * 3) Model Attribute Data
      *
      * @param  string $name
+     * @param  mixed $model
      * @param  string $modelKey
      * @return mixed
      */
-    protected function getValueAttribute(string $name, string $modelKey)
+    protected function getValueAttribute(string $name, $model, string $modelKey)
     {
 
         $old = $this->old($name);
@@ -410,8 +429,8 @@ abstract class Formlet
             return $request;
         }
 
-        if (isset($this->model)) {
-            return $this->getModelValueAttribute($modelKey);
+        if ($model) {
+            return $this->getModelValueAttribute($model,$modelKey);
         }
 
         return null;
@@ -434,9 +453,9 @@ abstract class Formlet
      * @param  string $name
      * @return mixed
      */
-    protected function getModelValueAttribute($name)
+    protected function getModelValueAttribute($model,$name)
     {
-        return data_get($this->model, $this->transformKey($name));
+        return data_get($model, $this->transformKey($name));
     }
 
     /**

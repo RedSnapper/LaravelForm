@@ -155,12 +155,12 @@ class PostFormlet extends Formlet
 
     public function persist()
     {
-        return $this->postData()->toArray();
+        return $this->postData();
     }
 
     public function edit()
     {
-        return $this->postData()->toArray();
+        return $this->postData();
     }
 
 }
