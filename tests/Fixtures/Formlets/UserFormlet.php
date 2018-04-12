@@ -7,7 +7,6 @@ use RS\Form\Formlet;
 
 class UserFormlet extends Formlet
 {
-    public $name = "user";
 
     public function prepare(): void
     {

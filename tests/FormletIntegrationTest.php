@@ -25,7 +25,7 @@ class FormletIntegrationTest extends TestCase
             return $formlet->model($model)->store();
         });
 
-        $this->post('/users', ['user' => [['email' => 'john@example.com']]])
+        $this->post('/users', ['email' => 'john@example.com'])
           ->assertStatus(201);
 
         $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
@@ -44,7 +44,7 @@ class FormletIntegrationTest extends TestCase
             return $formlet->model($user)->update();
         });
 
-        $this->put('/users/1', ['user' => [['email' => 'james@example.com']]])
+        $this->put('/users/1', ['email' => 'james@example.com'])
           ->assertStatus(200);
 
         $this->assertDatabaseHas('users', ['id' => 1, 'email' => 'james@example.com']);
@@ -61,7 +61,7 @@ class FormletIntegrationTest extends TestCase
         $form->model($user)->build();
 
         $fields = $form->fields();
-        $profileFormlet = $form->formlets('user')->first()->formlets('profile')->first();
+        $profileFormlet = $form->formlet('profile');
 
         $this->assertEquals('john@example.com', $fields->get('email')->getValue());
         $this->assertEquals('John', $profileFormlet->fields()->get('name')->getValue());
@@ -77,10 +77,8 @@ class FormletIntegrationTest extends TestCase
         });
 
         $this->post('/users', [
-          'user' =>
-            [
-              ['email' => 'john@example.com','profile'=>[['name'=>'John']]]
-            ]
+          'email' => 'john@example.com',
+          'profile'=>[['name'=>'John']]
         ])->assertStatus(200);
         $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
         $this->assertDatabaseHas('profiles', ['user_id'=>1,'name' => 'John']);

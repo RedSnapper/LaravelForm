@@ -7,7 +7,6 @@ use RS\Form\Formlet;
 
 class UserProfileFormlet extends Formlet
 {
-    public $name = "user";
 
     public function prepare(): void
     {
@@ -20,7 +19,7 @@ class UserProfileFormlet extends Formlet
         
         $user = $this->model->create($this->postData());
 
-        $user->assignProfile($this->formlets('user')->first()->formlets('profile')->first()->postData());
+        $user->assignProfile($this->formlet('profile')->postData());
 
     }
 
