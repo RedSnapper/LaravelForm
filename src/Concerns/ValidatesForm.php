@@ -53,28 +53,33 @@ trait ValidatesForm
     {
         $this->populate();
 
-        $this->errors = collect();
-
-        $this->validateFormlets($this->formlets);
+        $this->errors = $this->validateFormlet(collect());
 
         if (!$this->isValid() && $redirect) {
             throw (new ValidationException($this->validator, $this->buildFailedValidationResponse()));
         }
     }
 
-    protected function validateFormlets(Collection $formlets){
-        foreach ($formlets as $forms) {
+    protected function validateFormlet(Collection $errorBag):Collection{
+
+        $errors = $this->validateRequest();
+
+        if (count($errors) > 0) {
+            $errorBag = $errorBag->merge($errors);
+        }
+
+        return $this->validateFormlets($errorBag);
+
+    }
+
+    protected function validateFormlets(Collection $errorBag):Collection{
+        foreach ($this->formlets as $forms) {
             foreach ($forms as $formlet) {
 
-                $errors = $formlet->validateRequest();
-
-                if (count($errors) > 0) {
-                    $this->errors = $this->errors->merge($errors);
-                }
-
-                $this->validateFormlets($formlet->formlets());
+                $errorBag = $formlet->validateFormlet($errorBag);
             }
         }
+        return $errorBag;
     }
 
     /**
@@ -123,7 +128,7 @@ trait ValidatesForm
     public function validateRequest(): Collection
     {
 
-        $request = $this->request->input($this->transformKey($this->instanceName)) ?? [];
+        $request = $this->request($this->instanceName) ?? [];
 
         $this->validator = $this->getValidationFactory()->make(
           $request,
@@ -135,6 +140,11 @@ trait ValidatesForm
         if ($this->validator->fails()) {
 
             return collect($this->validator->errors()->getMessages())->mapWithKeys(function($error, $key){
+
+                if($this->instanceName ==""){
+                    return [$key=>$error];
+                }
+
                 return ["{$this->transformKey($this->instanceName)}.{$key}" => $error];
             });
         }

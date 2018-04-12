@@ -48,8 +48,8 @@ class FormletValidationTest extends TestCase
         $errors = $form->errors();
 
         $this->assertCount(3, $errors);
-        $this->assertEquals(["The name field is required."], $errors->get('main.0.name'));
-        $this->assertEquals(["The country field is required."], $errors->get('main.0.child.0.country'));
+        $this->assertEquals(["The name field is required."], $errors->get('name'));
+        $this->assertEquals(["The country field is required."], $errors->get('child.0.country'));
     }
 
     /** @test */
@@ -64,7 +64,7 @@ class FormletValidationTest extends TestCase
         $this->from('/test')
           ->post('/test', [])
           ->assertRedirect('/test')
-          ->assertSessionHasErrors(['main.0.name']);
+          ->assertSessionHasErrors(['name']);
     }
 
     /** @test */
@@ -89,7 +89,7 @@ class FormletValidationTest extends TestCase
         $form->validate(false);
         $errors = $form->errors();
 
-        $this->assertEquals(["An Email Address is needed."], $errors->get('main.0.email'));
+        $this->assertEquals(["An Email Address is needed."], $errors->get('email'));
     }
 
     /** @test */
@@ -97,8 +97,8 @@ class FormletValidationTest extends TestCase
     {
         $this->session([
           'errors' => [
-            'main.0.name' => ['Session error'],
-            'main.0.child.0.country' => ['Country error']
+            'name'            => ['Session error'],
+            'child.0.country' => ['Country error']
           ]
         ]);
 
@@ -107,15 +107,13 @@ class FormletValidationTest extends TestCase
 
         $errors = $form->errors();
         $fields = $form->fields();
-        $childFormlet = $form->formlets('main')->first()->formlets('child')->first();
+        $childFormlet = $form->formlet('child');
 
-        $this->assertEquals(["Session error"], $errors->get('main.0.name'));
+        $this->assertEquals(["Session error"], $errors->get('name'));
         $this->assertEquals(["Session error"], $fields->get('name')->getErrors()->toArray());
 
-        $this->assertEquals(["Country error"], $errors->get('main.0.child.0.country'));
-        $this->assertEquals(["Country error"], $childFormlet->fields()->get('country')->getErrors()->toArray());
-
-
+        $this->assertEquals(["Country error"], $errors->get('child.0.country'));
+        $this->assertEquals(["Country error"], $childFormlet->field('country')->getErrors()->toArray());
     }
 
     /** @test */
@@ -135,7 +133,7 @@ class FormletValidationTest extends TestCase
         $this->from('/test')
           ->post('/test', ['name' => ''])
           ->assertRedirect('/redirect')
-          ->assertSessionHasErrors(['main.0.name']);
+          ->assertSessionHasErrors(['name']);
     }
 
     private function form(\Closure $closure = null): Formlet
@@ -146,14 +144,10 @@ class FormletValidationTest extends TestCase
     protected function validPost()
     {
         return [
-          'main' => [
-            [
-              'name'  => 'John',
-              'email' => 'john@example.com',
-              'child'=>[
-                ['country'=>'England']
-              ]
-            ]
+          'name'  => 'John',
+          'email' => 'john@example.com',
+          'child' => [
+            ['country' => 'England']
           ]
         ];
     }

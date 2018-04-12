@@ -46,7 +46,7 @@ abstract class Formlet
      *
      * @var string
      */
-    protected $instanceName = "";
+    protected $instanceName;
 
     /**
      * Fields added to the form
@@ -408,11 +408,11 @@ abstract class Formlet
      * Set field instance name
      *
      * @param AbstractField $field
-     * @param string        $formletInstance
+     * @param string|null   $formletInstance
      */
-    protected function setFieldName(AbstractField $field, string $formletInstance)
+    protected function setFieldName(AbstractField $field, string $formletInstance = null)
     {
-        if ($formletInstance !== "") {
+        if (!is_null($formletInstance)) {
             $field->setInstanceName($formletInstance . "[" . $field->getName() . "]");
         }
     }
@@ -425,7 +425,8 @@ abstract class Formlet
      */
     protected function request($name)
     {
-        return $this->request->input($this->transformKey($name));
+        $key = is_null($name) ? null : $this->transformKey($name);
+        return $this->request->input($key);
     }
 
     /**
