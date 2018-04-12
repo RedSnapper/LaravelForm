@@ -43,13 +43,25 @@ class FormletValidationTest extends TestCase
 
         $form->validate(false);
 
-        $this->assertFalse($form->isValid());
+        $this->assertFalse($form->isAllValid());
 
-        $errors = $form->errors();
+        $errors = $form->allErrors();
 
         $this->assertCount(3, $errors);
         $this->assertEquals(["The name field is required."], $errors->get('name'));
         $this->assertEquals(["The country field is required."], $errors->get('child.0.country'));
+
+        $errors = $form->errors();
+        $this->assertFalse($form->isValid());
+        $this->assertCount(2, $errors);
+        $this->assertEquals(["The name field is required."], $errors->get('name'));
+
+        $childForm = $form->formlet('child');
+        $errors = $childForm->errors();
+        $this->assertFalse($childForm->isValid());
+        $this->assertCount(1, $errors);
+        $this->assertEquals(["The country field is required."], $errors->get('country'));
+
     }
 
     /** @test */
@@ -87,7 +99,7 @@ class FormletValidationTest extends TestCase
         $form = $this->form();
 
         $form->validate(false);
-        $errors = $form->errors();
+        $errors = $form->allErrors();
 
         $this->assertEquals(["An Email Address is needed."], $errors->get('email'));
     }
@@ -105,9 +117,10 @@ class FormletValidationTest extends TestCase
         $form = $this->form();
         $form->build();
 
-        $errors = $form->errors();
+        $errors = $form->allErrors();
         $fields = $form->fields();
         $childFormlet = $form->formlet('child');
+
 
         $this->assertEquals(["Session error"], $errors->get('name'));
         $this->assertEquals(["Session error"], $fields->get('name')->getErrors()->toArray());

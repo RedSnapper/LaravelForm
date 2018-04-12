@@ -13,11 +13,18 @@ use Symfony\Component\HttpFoundation\Response;
 trait ValidatesForm
 {
     /**
-     * An errors for the form.
+     * An errors for the formlet.
      *
      * @var Collection
      */
     protected $errors;
+
+    /**
+     * All errors for the form.
+     *
+     * @var Collection
+     */
+    protected $allErrors;
 
     /**
      * Validator for the form.
@@ -53,16 +60,18 @@ trait ValidatesForm
     {
         $this->populate();
 
-        $this->errors = $this->validateFormlet(collect());
+        $this->allErrors = $this->validateFormlet(collect());
 
-        if (!$this->isValid() && $redirect) {
+        if (!$this->isAllValid() && $redirect) {
             throw (new ValidationException($this->validator, $this->buildFailedValidationResponse()));
         }
     }
 
     protected function validateFormlet(Collection $errorBag):Collection{
 
-        $errors = $this->validateRequest();
+        $this->errors = $this->validateRequest();
+
+        $errors = $this->mapErrorsToInstances();
 
         if (count($errors) > 0) {
             $errorBag = $errorBag->merge($errors);
@@ -83,13 +92,23 @@ trait ValidatesForm
     }
 
     /**
-     * Is the current form valid
+     * Is the current formlet valid
      *
      * @return bool
      */
     public function isValid(): bool
     {
         return count($this->errors) == 0;
+    }
+
+    /**
+     * Is the current formlet valid
+     *
+     * @return bool
+     */
+    public function isAllValid(): bool
+    {
+        return count($this->allErrors) == 0;
     }
 
     /**
@@ -113,19 +132,27 @@ trait ValidatesForm
     }
 
     /**
-     * Returns all the errors for this form
+     * Returns all the errors for this formlet
      */
     public function errors(): Collection
     {
-        return collect($this->errors);
+        return $this->errors;
+    }
+
+    /**
+     * Returns all the errors for this form
+     */
+    public function allErrors(): Collection
+    {
+        return $this->allErrors;
     }
 
     /**
      * Validate the given request with the given rules.
      *
-     * @return array
+     * @return Collection
      */
-    public function validateRequest(): Collection
+    protected function validateRequest(): Collection
     {
 
         $request = $this->request($this->instanceName) ?? [];
@@ -138,15 +165,7 @@ trait ValidatesForm
         );
 
         if ($this->validator->fails()) {
-
-            return collect($this->validator->errors()->getMessages())->mapWithKeys(function($error, $key){
-
-                if($this->instanceName ==""){
-                    return [$key=>$error];
-                }
-
-                return ["{$this->transformKey($this->instanceName)}.{$key}" => $error];
-            });
+            return collect($this->validator->errors()->getMessages());
         }
 
         return collect();
@@ -186,7 +205,7 @@ trait ValidatesForm
      */
     protected function populateErrors(AbstractField $field, $key): void
     {
-        $errors = $this->errors();
+        $errors = $this->allErrors();
         if ($error = $errors->get($key)) {
             $field->setErrors(collect($error));
         }
@@ -200,12 +219,22 @@ trait ValidatesForm
     protected function buildFailedValidationResponse(): Response
     {
         if ($this->request->expectsJson()) {
-            return new JsonResponse($this->errors, 422);
+            return new JsonResponse($this->allErrors, 422);
         }
 
         return redirect()->to($this->getRedirectUrl())
           ->withInput($this->request->input())
-          ->withErrors($this->errors->toArray());
+          ->withErrors($this->allErrors->toArray());
+    }
+
+    protected function mapErrorsToInstances():Collection{
+        return $this->errors->mapWithKeys(function($error, $key){
+
+            if($this->instanceName ==""){
+                return [$key=>$error];
+            }
+            return ["{$this->transformKey($this->instanceName)}.{$key}" => $error];
+        });
     }
 
 }
