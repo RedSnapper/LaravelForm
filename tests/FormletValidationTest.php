@@ -127,6 +127,12 @@ class FormletValidationTest extends TestCase
 
         $this->assertEquals(["Country error"], $errors->get('child.0.country'));
         $this->assertEquals(["Country error"], $childFormlet->field('country')->getErrors()->toArray());
+
+        $this->assertEquals(["Session error"], $form->error('name'));
+        $this->assertEquals(["Country error"], $childFormlet->error('country'));
+
+
+
     }
 
     /** @test */

@@ -60,36 +60,15 @@ trait ValidatesForm
     {
         $this->populate();
 
-        $this->allErrors = $this->validateFormlet(collect());
+        $this->validateFormlet();
+
+        $this->allErrors = $this->validateMapFormlet(collect());
 
         if (!$this->isAllValid() && $redirect) {
             throw (new ValidationException($this->validator, $this->buildFailedValidationResponse()));
         }
     }
 
-    protected function validateFormlet(Collection $errorBag):Collection{
-
-        $this->errors = $this->validateRequest();
-
-        $errors = $this->mapErrorsToInstances();
-
-        if (count($errors) > 0) {
-            $errorBag = $errorBag->merge($errors);
-        }
-
-        return $this->validateFormlets($errorBag);
-
-    }
-
-    protected function validateFormlets(Collection $errorBag):Collection{
-        foreach ($this->formlets as $forms) {
-            foreach ($forms as $formlet) {
-
-                $errorBag = $formlet->validateFormlet($errorBag);
-            }
-        }
-        return $errorBag;
-    }
 
     /**
      * Is the current formlet valid
@@ -140,11 +119,82 @@ trait ValidatesForm
     }
 
     /**
+     * Returns errors for a particular field
+     * @param string $name
+     * @return array|null
+     */
+    public function error(string $name): ?array
+    {
+        return $this->errors->get($name);
+    }
+
+    /**
      * Returns all the errors for this form
      */
     public function allErrors(): Collection
     {
         return $this->allErrors;
+    }
+
+    /**
+     * Validates the current formlet
+     * and all child formlets
+     */
+    protected function validateFormlet():void{
+
+        $this->errors = $this->validateRequest();
+
+        $this->formlets->each(function(Collection $forms){
+            $forms->each(function (Formlet $formlet){
+                $formlet->validateFormlet();
+            });
+        });
+
+    }
+
+    /**
+     * We need to translate all the errors to their specific instance
+     * We can then fill the session with these errors and the map them
+     * back to the appropriate formlet
+     *
+     * @param Collection $errorBag
+     * @return Collection
+     */
+    protected function validateMapFormlet(Collection $errorBag):Collection{
+
+        return $this->validateMapFormlets($errorBag->merge($this->mapErrorsToInstances()));
+    }
+
+    /**
+     *
+     * @param Collection $errorBag
+     * @return Collection
+     */
+    protected function validateMapFormlets(Collection $errorBag):Collection{
+
+        foreach($this->formlets as $forms){
+            foreach($forms as $formlet){
+                $errorBag = $formlet->validateMapFormlet($errorBag);
+            }
+        }
+
+        return $errorBag;
+
+    }
+
+    /**
+     * @return Collection
+     */
+    protected function mapErrorsToInstances():Collection{
+
+        if($this->instanceName ==""){
+            return $this->errors;
+        }
+
+        return $this->errors->mapWithKeys(function($error, $key){
+
+            return ["{$this->transformKey($this->instanceName)}.{$key}" => $error];
+        });
     }
 
     /**
@@ -207,6 +257,7 @@ trait ValidatesForm
     {
         $errors = $this->allErrors();
         if ($error = $errors->get($key)) {
+            $this->errors = $this->errors->put($field->getName(),$error);
             $field->setErrors(collect($error));
         }
     }
@@ -227,14 +278,6 @@ trait ValidatesForm
           ->withErrors($this->allErrors->toArray());
     }
 
-    protected function mapErrorsToInstances():Collection{
-        return $this->errors->mapWithKeys(function($error, $key){
 
-            if($this->instanceName ==""){
-                return [$key=>$error];
-            }
-            return ["{$this->transformKey($this->instanceName)}.{$key}" => $error];
-        });
-    }
 
 }
