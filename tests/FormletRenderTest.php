@@ -18,7 +18,7 @@ class FormletRenderTest extends TestCase
 
     public function getFormViews()
     {
-        return [['form'],['formlet'],['formlets'],['fields']];
+        return [['form'],['formlet'],['fields']];
     }
 
     /**
@@ -41,11 +41,11 @@ class FormletRenderTest extends TestCase
           ->assertSee('<form class="form" accept-charset="UTF-8" action="http://localhost/users/1" enctype="multipart/form-data" method="POST" >')
           ->assertSee('<input name="_method" type="hidden" value="PUT"/>')
           ->assertSee('<input name="_token" type="hidden" value="' . app('session')->token() . '"/>')
-          ->assertSee('<input class="form_control" id="main[0][name]" name="main[0][name]" type="text" />')
-          ->assertSee('<input class="form_control" id="main[0][email]" name="main[0][email]" type="email" />')
-          ->assertSee('<input class="form_control" id="main[0][child][0][name]" name="main[0][child][0][name]" type="text" />')
-            ->assertSee('<input class="form_control" id="main[0][child][0][multi][0][foo]" name="main[0][child][0][multi][0][foo]" type="text" />')
-            ->assertSee('<input class="form_control" id="main[0][child][0][multi][1][foo]" name="main[0][child][0][multi][1][foo]" type="text" />');
+          ->assertSee('<input class="form_control" id="name" name="name" type="text" />')
+          ->assertSee('<input class="form_control" id="email" name="email" type="email" />')
+          ->assertSee('<input class="form_control" id="child[0][name]" name="child[0][name]" type="text" />')
+            ->assertSee('<input class="form_control" id="child[0][multi][0][foo]" name="child[0][multi][0][foo]" type="text" />')
+            ->assertSee('<input class="form_control" id="child[0][multi][1][foo]" name="child[0][multi][1][foo]" type="text" />');
     }
 
 }

@@ -32,21 +32,21 @@ abstract class Formlet
      *
      * @var Request
      */
-    public $request;
+    protected $request;
 
     /**
      * The formlet name
      *
      * @var string
      */
-    public $name;
+    protected $name;
 
     /**
      * The formlet instance name
      *
      * @var string
      */
-    public $instanceName = "";
+    protected $instanceName = "";
 
     /**
      * Fields added to the form
@@ -81,7 +81,7 @@ abstract class Formlet
      *
      * @var bool
      */
-    public $prepared = false;
+    protected $prepared = false;
 
     abstract public function prepare(): void;
 
@@ -192,7 +192,7 @@ abstract class Formlet
             'hidden'     => $this->getHiddenFields(),
             'attributes' => $this->attributes->sortKeys()
           ]),
-          'formlets' => new FormletViewCollection($this->formlets)
+          'formlet' => $this
         ]);
     }
 
@@ -245,7 +245,7 @@ abstract class Formlet
      */
     public function field(string $name): ?AbstractField
     {
-        return optional($this->fields->get($name))->first();
+        return $this->fields->get($name);
     }
 
     /**
@@ -297,6 +297,11 @@ abstract class Formlet
         }
 
         return $this->formlets->get($name) ?? collect();
+    }
+
+    public function __get($name)
+    {
+        return $this->formlets($name);
     }
 
     /**
@@ -375,7 +380,7 @@ abstract class Formlet
 
         $this->prepare();
 
-        $this->setFormletInstance($prefix);
+        $prefix = $this->setFormletInstance($prefix);
 
         $this->fields()->each(function (AbstractField $field) {
             $this->setFieldName($field, $this->instanceName);

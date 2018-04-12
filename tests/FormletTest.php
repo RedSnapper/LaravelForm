@@ -187,6 +187,27 @@ class FormletTest extends TestCase
         );
 
         $this->assertInstanceOf(GrandChildFormlet::class, $childFormlet->formlet('grandchild'));
+
+        $this->assertEquals(
+          'child[0][grandchild][0][name]',
+          $childFormlet->formlets('grandchild')->get(0)->fields('name')->first()->getInstanceName()
+        );
+    }
+
+    /** @test */
+    public function can_get_formlets_as_properties_of_the_formlet()
+    {
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add(new Input('text', 'foo'));
+            $form->addFormlet('child', ChildFormlet::class);
+            $form->addFormlet('name', ChildFormlet::class);
+        });
+
+        $form->build();
+
+        $this->assertInstanceOf(ChildFormlet::class,$form->child->first());
+        $this->assertInstanceOf(ChildFormlet::class,$form->name->first());
+        $this->assertInstanceOf(GrandChildFormlet::class,$form->formlet('child')->grandchild->first());
     }
 
     /** @test */

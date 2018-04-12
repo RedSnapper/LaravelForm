@@ -54,7 +54,7 @@ class FormServiceProvider extends ServiceProvider
             if (count($vars) == 2) {
                 list($form, $field) = $vars;
 
-                $accessor = "['formlets']->first($form)->field($field)";
+                $accessor = "['formlet']->formlet($form)->field($field)";
 
             } else {
                 list($field) = $vars;
@@ -70,7 +70,7 @@ class FormServiceProvider extends ServiceProvider
                 $accessor = "['formlet']";
             } else {
                 list($name) = explode(',', $expression);
-                $accessor = "['formlets']->first($name)";
+                $accessor = "['formlet']->formlet($name)";
             }
 
             return "<?php foreach(array_except(get_defined_vars(), array('__data', '__path')){$accessor}->fields() as \$field){
@@ -78,9 +78,7 @@ class FormServiceProvider extends ServiceProvider
             } ?>";
         });
 
-        Blade::directive('formlets', function ($expression) {
-            return "<?php echo \array_except(get_defined_vars(), array('__data', '__path'))['formlets']->renderAll(); ?>";
-        });
+
     }
 
 }
