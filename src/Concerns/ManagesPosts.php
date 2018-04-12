@@ -38,7 +38,7 @@ trait ManagesPosts
 
         $this->preparePost();
 
-        return $this->formletsPost($this->formlets);
+        return $this->formletPost();
     }
 
     /**
@@ -93,17 +93,20 @@ trait ManagesPosts
      * @param Collection $formlets
      * @return Collection
      */
-    protected function formletsPost(Collection $formlets):Collection{
+    protected function formletsPost():Collection{
 
-        return $formlets->map(function(Collection $forms){
+        return $this->formlets->map(function(Collection $forms){
             return $forms->map(function(Formlet $formlet){
 
-                $values =  $formlet->fields()->map->getValue();
-
-                return $values->merge($this->formletsPost($formlet->formlets()));
+                return $formlet->formletPost();
 
             });
         });
+    }
+
+    protected function formletPost(){
+        $values =  $this->fields()->map->getValue();
+        return $values->merge($this->formletsPost());
     }
 
     /**

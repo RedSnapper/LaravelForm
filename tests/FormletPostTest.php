@@ -15,22 +15,16 @@ class FormletPostTest extends TestCase
     /** @var Request */
     protected $request;
 
-    //TODO Test default persist and edit methods
-
     protected function setUp()
     {
         parent::setUp();
         $this->request = $this->app['request'];
 
         $this->request->merge([
-          'main' => [
-            [
-              'name'  => 'foo',
-              'agree' => 'Yes',
-              'cb'    => [1, 2],
-              'child'=> [['foo'=>'bar']]
-            ]
-          ]
+          'name'  => 'foo',
+          'agree' => 'Yes',
+          'cb'    => [1, 2],
+          'child' => [['foo' => 'bar']]
         ]);
     }
 
@@ -47,21 +41,32 @@ class FormletPostTest extends TestCase
               2 => 2,
               3 => 3
             ]));
-            $form->addFormlet('child',ChildPostFormlet::class);
+            $form->addFormlet('child', ChildPostFormlet::class);
         });
 
+        $form->build();
+
         $this->assertEquals([
-          'main' => [
-            [
-              'name'  => 'foo',
-              'agree' => 'Yes',
-              'foo'   => 'No',
-              'cb'    => [1, 2],
-              'child'=> [['foo'=>'bar']]
-            ]
-          ]
-        ],$form->allPostData()->toArray());
+          'name'  => 'foo',
+          'agree' => 'Yes',
+          'foo'   => 'No',
+          'cb'    => [1, 2],
+        ], $form->postData());
+
+        $this->assertEquals([
+          'foo'=>'bar'
+        ], $form->formlet('child')->postData());
+
+        $this->assertEquals([
+          'name'  => 'foo',
+          'agree' => 'Yes',
+          'foo'   => 'No',
+          'cb'    => [1, 2],
+          'child' => [['foo' => 'bar']]
+        ], $form->allPostData()->toArray());
     }
+
+
 
     /** @test */
     public function can_store_with_a_valid_post()
@@ -86,10 +91,10 @@ class FormletPostTest extends TestCase
 
         $this->from('/test')
           ->post('/test', [
-            ['main'=>[['name' => '']]]
+            'name' => ''
           ])
           ->assertRedirect('/test')
-          ->assertSessionHasErrors(['main.0.name']);
+          ->assertSessionHasErrors(['name']);
     }
 
     /** @test */
@@ -115,10 +120,10 @@ class FormletPostTest extends TestCase
 
         $this->from('/test')
           ->post('/test', [
-            ['main'=>[['name' => '']]]
+            'name' => ''
           ])
           ->assertRedirect('/test')
-          ->assertSessionHasErrors(['main.0.name']);
+          ->assertSessionHasErrors(['name']);
     }
 
     private function formlet(\Closure $closure = null): Formlet
@@ -170,9 +175,7 @@ class ChildPostFormlet extends Formlet
 
     public function prepare(): void
     {
-        $this->add(new Input('text','foo'));
+        $this->add(new Input('text', 'foo'));
     }
-
-
 
 }
