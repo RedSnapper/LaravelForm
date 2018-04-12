@@ -39,7 +39,7 @@ abstract class Formlet
      *
      * @var string
      */
-    public $name = "main";
+    public $name;
 
     /**
      * The formlet instance name
@@ -218,6 +218,12 @@ abstract class Formlet
         return $this;
     }
 
+    /**
+     * Return fields for this formlet
+     *
+     * @param null|string|array $name
+     * @return Collection
+     */
     public function fields($name = null): Collection
     {
         $names = is_array($name) ? $name : func_get_args();
@@ -232,13 +238,24 @@ abstract class Formlet
     }
 
     /**
+     * Return named field
+     *
+     * @param string $name
+     * @return null|AbstractField
+     */
+    public function field(string $name): ?AbstractField
+    {
+        return optional($this->fields->get($name))->first();
+    }
+
+    /**
      * Add a formlet to this form
      *
      * @param $relation
      * @param $formlet
      * @return Formlet
      */
-    public function addFormlet($relation, $formlet):Formlet
+    public function addFormlet($relation, $formlet): Formlet
     {
 
         $formlet = $formlet instanceof Formlet ? $formlet : app()->make($formlet);
@@ -256,14 +273,14 @@ abstract class Formlet
         return $formlet;
     }
 
-    public function relation($relation,$formlet){
+    public function relation($relation, $formlet)
+    {
 
-        $formlet = $this->addFormlet($relation,$formlet);
+        $formlet = $this->addFormlet($relation, $formlet);
 
-        if(isset($this->model)){
+        if (isset($this->model)) {
             $formlet->model($this->model->$relation);
         }
-
     }
 
     /**
@@ -279,7 +296,18 @@ abstract class Formlet
             return $this->formlets;
         }
 
-        return $this->formlets->get($name);
+        return $this->formlets->get($name) ?? collect();
+    }
+
+    /**
+     * Return a single formlet
+     *
+     * @param string $name
+     * @return null|Formlet
+     */
+    public function formlet(string $name): ?Formlet
+    {
+        return optional($this->formlets->get($name))->first();
     }
 
     /**
@@ -288,101 +316,101 @@ abstract class Formlet
      */
     protected function populate(): void
     {
-        if($this->prepared){
+        if ($this->prepared) {
             return;
         }
-        $this->prepareFormlets();
-        $this->populateFields($this->formlets);
+        $this->setFieldNames();
+        $this->populateFields();
         $this->prepared = true;
     }
 
     /**
-     * Populate all formlet fields
-     *
-     * @param Collection $formlets
+     * Populate Fields for this formlet
      */
-    protected function populateFields(Collection $formlets)
+    protected function populateFields(): void
     {
 
-        $formlets->each(function(Collection $forms){
-            $forms->each(function(Formlet $formlet){
+        $this->fields()->each(function (AbstractField $field) {
+            $this->populateField($field);
+        });
 
-                $formlet->fields()->each(function(AbstractField $field) use($formlet){
-                    $this->populateField($field,$formlet->model);
-                });
+        $this->prepared = true;
 
-                $formlet->prepared = true;
+        $this->populateFormletFields();
+    }
 
-                $this->populateFields($formlet->formlets());
+    /**
+     * Populate this formlets fields
+     */
+    protected function populateFormletFields(): void
+    {
+        $this->formlets->each(function (Collection $forms) {
+            $forms->each(function (Formlet $formlet) {
+                $formlet->populateFields();
             });
         });
     }
 
     /**
      * Populate formlet field
+     *
      * @param AbstractField $field
-     * @param mixed $model
      */
-    protected function populateField(AbstractField $field,$model): void
+    protected function populateField(AbstractField $field): void
     {
 
-        if ($value = $this->getValueAttribute($field->getInstanceName(),$model,$field->getName())) {
+        if ($value = $this->getValueAttribute($field->getInstanceName(), $field->getName())) {
             $field->setValue($value);
         }
         $this->populateErrors($field, $this->transformKey($field->getInstanceName()));
     }
 
     /**
-     * Prepare formlets by setting the name for all formlet
-     * fields
+     * Set all field names for this formlet
+     *
+     * @param string $prefix
      */
-    protected function prepareFormlets(): void
+    protected function setFieldNames(string $prefix = ""): void
     {
 
-        // Add parent
-        $parent = clone $this;
-        $this->formlets = collect();
-        $this->addFormlet($this->name, $parent);
+        $this->prepare();
 
-        $this->setFieldNames($this->formlets);
+        $this->setFormletInstance($prefix);
 
+        $this->fields()->each(function (AbstractField $field) {
+            $this->setFieldName($field, $this->instanceName);
+        });
+
+        $this->setFormletFieldNames($prefix);
     }
 
     /**
      * Set all field names
-     * @param Collection $formlets
-     * @param string     $prefix
+     *
+     * @param string $prefix
      */
-    protected function setFieldNames(Collection $formlets, string $prefix = ""):void
+    protected function setFormletFieldNames(string $prefix = ""): void
     {
 
-        $formlets->each(function(Collection $forms) use($prefix){
-            $forms->each(function(Formlet $formlet) use($prefix){
-
-                $formlet->prepare();
-
-                $this->setFormletInstance($prefix,$formlet);
-
-                $formlet->fields()->each(function(AbstractField $field) use($formlet){
-                    $this->setFieldName($field,$formlet->instanceName);
-                });
-
-                $this->setFieldNames($formlet->formlets(), $formlet->instanceName);
-
+        $this->formlets->each(function (Collection $forms) use ($prefix) {
+            $forms->each(function (Formlet $formlet) use ($prefix) {
+                $formlet->setFieldNames($prefix);
             });
         });
-
     }
 
     /**
      * Set field instance name
+     *
      * @param AbstractField $field
      * @param string        $formletInstance
      */
-    protected function setFieldName(AbstractField $field,string $formletInstance){
-        $field->setInstanceName($formletInstance . "[" . $field->getName() . "]");
+    protected function setFieldName(AbstractField $field, string $formletInstance)
+    {
+        if ($formletInstance !== "") {
+            $field->setInstanceName($formletInstance . "[" . $field->getName() . "]");
+        }
     }
-
 
     /**
      * Get value from current Request
@@ -413,11 +441,10 @@ abstract class Formlet
      * 3) Model Attribute Data
      *
      * @param  string $name
-     * @param  mixed $model
      * @param  string $modelKey
      * @return mixed
      */
-    protected function getValueAttribute(string $name, $model, string $modelKey)
+    protected function getValueAttribute(string $name, string $modelKey)
     {
 
         $old = $this->old($name);
@@ -429,8 +456,8 @@ abstract class Formlet
             return $request;
         }
 
-        if ($model) {
-            return $this->getModelValueAttribute($model,$modelKey);
+        if ($this->model) {
+            return $this->getModelValueAttribute($this->model, $modelKey);
         }
 
         return null;
@@ -453,26 +480,30 @@ abstract class Formlet
      * @param  string $name
      * @return mixed
      */
-    protected function getModelValueAttribute($model,$name)
+    protected function getModelValueAttribute($model, $name)
     {
         return data_get($model, $this->transformKey($name));
     }
 
     /**
      * Set the formlet instance based on parent formlets
-     * @param string  $prefix
-     * @param Formlet $formlet
+     *
+     * @param string $prefix
      * @return string
      */
-    private function setFormletInstance(string $prefix, Formlet $formlet):string
+    private function setFormletInstance(string $prefix): string
     {
-        if ($prefix == "") {
-            $formletInstance = $formlet->name . "[" . $formlet->getKey() . "]";
-        } else {
-            $formletInstance = $prefix . "[" . $formlet->name . "][" . $formlet->getKey() . "]";
+        if(is_null($this->name)){
+            return "";
         }
 
-        $formlet->instanceName($formletInstance);
+        if ($prefix == "") {
+            $formletInstance = $this->name . "[" . $this->getKey() . "]";
+        } else {
+            $formletInstance = $prefix . "[" . $this->name . "][" . $this->getKey() . "]";
+        }
+
+        $this->instanceName($formletInstance);
 
         return $formletInstance;
     }
