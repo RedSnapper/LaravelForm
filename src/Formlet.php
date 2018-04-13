@@ -279,7 +279,7 @@ abstract class Formlet
 
         $formlet = $this->addFormlet($relation, $formlet);
 
-        if (isset($this->model)) {
+        if (isset($this->model) && $this->model->exists) {
             $formlet->model($this->model->$relation);
         }
     }

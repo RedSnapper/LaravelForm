@@ -17,9 +17,18 @@ class UserProfileFormlet extends Formlet
     public function persist()
     {
         
-        $user = $this->model->create($this->postData());
+        $user = $this->model->create($this->postData()->all());
 
-        $user->assignProfile($this->formlet('profile')->postData());
+        $user->assignProfile($this->formlet('profile')->postData()->all());
+
+    }
+
+    public function edit()
+    {
+        $user = $this->model;
+        $user->update($this->postData()->all());
+
+        $user->assignProfile($this->formlet('profile')->postData()->all());
 
     }
 

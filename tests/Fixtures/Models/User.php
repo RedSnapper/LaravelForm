@@ -18,8 +18,14 @@ class User extends Model
         return $this->hasOne(Profile::class);
     }
 
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
     public function assignProfile($attributes)
     {
         return $this->profile()->save(new Profile($attributes));
     }
+
 }

@@ -20,13 +20,17 @@ trait ManagesPosts
     /**
      * Returns the posted values for this formlet
      * Only fields set in the view will appear here
-     * @return array
+     * @return mixed
      */
-    public function postData():array{
+    public function postData(string $name = null){
 
-        $this->preparePost();
+        $this->populate();
 
-        return $this->fields()->map->getValue()->toArray();
+        if(is_null($name)){
+            return $this->fields()->map->getValue();
+        }
+
+        return optional($this->field($name))->getValue();
     }
 
     /**
@@ -36,7 +40,7 @@ trait ManagesPosts
      */
     public function allPostData():Collection{
 
-        $this->preparePost();
+        $this->populate();
 
         return $this->formletPost();
     }
@@ -47,7 +51,7 @@ trait ManagesPosts
     public function persist(){
 
         if (isset($this->model)) {
-            $this->model = $this->model->create($this->postData());
+            $this->model = $this->model->create($this->postData()->all());
         }
         return $this->model;
     }
@@ -57,32 +61,33 @@ trait ManagesPosts
      */
     public function edit(){
         if (isset($this->model)) {
-            $this->model = $this->model->fill($this->postData());
-            $this->model->save();
+            $this->model->update($this->postData()->all());
         }
         return $this->model;
     }
 
     /**
      * Store method for the form request
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(){
 
         $this->validate();
 
-        $this->preparePost();
+        $this->populate();
 
         return $this->persist();
     }
 
     /**
      * Update method for the form request
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function update(){
 
         $this->validate();
 
-        $this->preparePost();
+        $this->populate();
 
         return $this->edit();
     }
@@ -109,13 +114,5 @@ trait ManagesPosts
         return $values->merge($this->formletsPost());
     }
 
-    /**
-     * Populate the fields from the post
-     *
-     */
-    protected function preparePost(): void
-    {
-        $this->populate();
-    }
 
 }

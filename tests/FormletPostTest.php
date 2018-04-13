@@ -51,11 +51,13 @@ class FormletPostTest extends TestCase
           'agree' => 'Yes',
           'foo'   => 'No',
           'cb'    => [1, 2],
-        ], $form->postData());
+        ], $form->postData()->all());
+
+        $this->assertEquals('foo',$form->postData('name'));
 
         $this->assertEquals([
           'foo'=>'bar'
-        ], $form->formlet('child')->postData());
+        ], $form->formlet('child')->postData()->all());
 
         $this->assertEquals([
           'name'  => 'foo',
@@ -160,12 +162,12 @@ class PostFormlet extends Formlet
 
     public function persist()
     {
-        return $this->postData();
+        return $this->postData()->all();
     }
 
     public function edit()
     {
-        return $this->postData();
+        return $this->postData()->all();
     }
 
 }

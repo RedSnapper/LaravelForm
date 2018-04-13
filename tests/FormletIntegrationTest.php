@@ -5,6 +5,8 @@ namespace Tests;
 use Illuminate\Support\Facades\Route;
 use Tests\Fixtures\Formlets\UserFormlet;
 use Tests\Fixtures\Formlets\UserProfileFormlet;
+use Tests\Fixtures\Formlets\UserRoleFormlet;
+use Tests\Fixtures\Models\Role;
 use Tests\Fixtures\Models\User;
 
 class FormletIntegrationTest extends TestCase
@@ -51,11 +53,33 @@ class FormletIntegrationTest extends TestCase
     }
 
     /** @test */
+    public function test_many_to_many_associations_store()
+    {
+        $this->withoutExceptionHandling();
+        $adminRole = Role::create(['name' => 'Admin']);
+        $userRole = Role::create(['name' => 'User']);
+        $editorRole = Role::create(['name' => 'Editor']);
+
+        Route::post('/users', function (UserRoleFormlet $formlet, User $user) {
+            return $formlet->model($user)->store();
+        });
+
+        $this->post('/users', ['email' => 'james@example.com','roles'=>[$adminRole->id,$userRole->id]])
+          ->assertStatus(200);
+
+        $this->assertDatabaseHas('users', ['id' => 1, 'email' => 'james@example.com']);
+        $this->assertDatabaseHas('role_user', ['user_id' => 1, 'role_id' => $adminRole->id]);
+        $this->assertDatabaseHas('role_user', ['user_id' => 1, 'role_id' => $userRole->id]);
+        $this->assertDatabaseMissing('role_user', ['user_id' => 1, 'role_id' => $editorRole->id]);
+
+    }
+
+    /** @test */
     public function formlet_has_one_relation()
     {
 
         $user = User::create(['email' => 'john@example.com']);
-        $user->assignProfile(['name'=>'John']);
+        $user->assignProfile(['name' => 'John']);
 
         $form = app(UserProfileFormlet::class);
         $form->model($user)->build();
@@ -65,7 +89,6 @@ class FormletIntegrationTest extends TestCase
 
         $this->assertEquals('john@example.com', $fields->get('email')->getValue());
         $this->assertEquals('John', $profileFormlet->fields()->get('name')->getValue());
-
     }
 
     /** @test */
@@ -77,14 +100,33 @@ class FormletIntegrationTest extends TestCase
         });
 
         $this->post('/users', [
-          'email' => 'john@example.com',
-          'profile'=>[['name'=>'John']]
+          'email'   => 'john@example.com',
+          'profile' => [['name' => 'John']]
         ])->assertStatus(200);
         $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
-        $this->assertDatabaseHas('profiles', ['user_id'=>1,'name' => 'John']);
-
+        $this->assertDatabaseHas('profiles', ['user_id' => 1, 'name' => 'John']);
     }
 
+    /** @test */
+    public function formlet_has_one_relation_update_method()
+    {
+        $this->withoutExceptionHandling();
+
+        $user = User::create(['email' => 'john@example.com']);
+        $user->assignProfile(['name' => 'John']);
+
+        Route::put('/users/{user}', function ($user, UserProfileFormlet $formlet) {
+            $user = User::find($user);
+            return $formlet->model($user)->update();
+        });
+
+        $this->put('/users/1', [
+          'email'   => 'james@example.com',
+          'profile' => [['name' => 'James']]
+        ])->assertStatus(200);
+        $this->assertDatabaseHas('users', ['email' => 'james@example.com']);
+        $this->assertDatabaseHas('profiles', ['user_id' => 1, 'name' => 'James']);
+    }
 
 }
 
