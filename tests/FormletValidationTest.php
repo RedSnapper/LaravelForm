@@ -5,6 +5,9 @@ namespace Tests;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
 
@@ -107,11 +110,16 @@ class FormletValidationTest extends TestCase
     /** @test */
     public function can_retrieve_errors_from_session()
     {
+        $viewBag = new ViewErrorBag();
+        $errorBag = new MessageBag([
+          'name'            => ['Session error'],
+          'child.0.country' => ['Country error']
+        ]);
+
+        $viewBag->put('default',$errorBag);
+
         $this->session([
-          'errors' => [
-            'name'            => ['Session error'],
-            'child.0.country' => ['Country error']
-          ]
+          'errors' =>$viewBag
         ]);
 
         $form = $this->form();
@@ -131,7 +139,32 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["Session error"], $form->error('name'));
         $this->assertEquals(["Country error"], $childFormlet->error('country'));
 
+    }
 
+    /** @test */
+    public function can_populate_formlets_with_session_errors()
+    {
+
+
+
+        Route::post('/user', function () {
+            $form = $this->form();
+            $form->validate();
+        });
+
+        Route::get('/user', function () {
+            $form = $this->form();
+            return $form->build();
+        });
+
+        $formlet  = $this->from('/user')
+                        ->followingRedirects()
+                        ->post('/user')
+                        ->getOriginalContent()->get('formlet');
+
+        $this->assertEquals(["The name field is required."],$formlet->error('name'));
+        $this->assertEquals(["An Email Address is needed."],$formlet->error('email'));
+        $this->assertEquals(["The country field is required."],$formlet->formlet('child')->error('country'));
 
     }
 

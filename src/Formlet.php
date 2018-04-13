@@ -6,6 +6,7 @@ use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\MessageBag;
 use RS\Form\Concerns\{
   ManagesForm, ManagesPosts, ValidatesForm
 };
@@ -92,8 +93,8 @@ abstract class Formlet
         $this->attributes->put('action', $this->url->current());
         $this->fields = collect();
         $this->formlets = collect();
-        $this->allErrors = collect($this->session->get('errors')) ?? collect();
-        $this->errors = collect();
+        $this->allErrors = optional($this->session->get('errors'))->getBag('default') ?? new MessageBag();
+        $this->errors = new MessageBag();
     }
 
     /**
@@ -326,7 +327,11 @@ abstract class Formlet
             return;
         }
         $this->setFieldNames();
+
         $this->populateFields();
+
+        $this->populateErrors();
+
         $this->prepared = true;
     }
 
@@ -342,20 +347,12 @@ abstract class Formlet
 
         $this->prepared = true;
 
-        $this->populateFormletFields();
-    }
-
-    /**
-     * Populate this formlets fields
-     */
-    protected function populateFormletFields(): void
-    {
-        $this->formlets->each(function (Collection $forms) {
-            $forms->each(function (Formlet $formlet) {
-                $formlet->populateFields();
-            });
+        $this->iterateFormlets(function(Formlet $formlet) {
+            $formlet->populateFields();
         });
     }
+
+
 
     /**
      * Populate formlet field
@@ -368,7 +365,7 @@ abstract class Formlet
         if ($value = $this->getValueAttribute($field->getInstanceName(), $field->getName())) {
             $field->setValue($value);
         }
-        $this->populateErrors($field, $this->transformKey($field->getInstanceName()));
+        $this->populateFieldErrors($field);
     }
 
     /**
@@ -387,23 +384,11 @@ abstract class Formlet
             $this->setFieldName($field, $this->instanceName);
         });
 
-        $this->setFormletFieldNames($prefix);
-    }
-
-    /**
-     * Set all field names
-     *
-     * @param string $prefix
-     */
-    protected function setFormletFieldNames(string $prefix = ""): void
-    {
-
-        $this->formlets->each(function (Collection $forms) use ($prefix) {
-            $forms->each(function (Formlet $formlet) use ($prefix) {
-                $formlet->setFieldNames($prefix);
-            });
+        $this->iterateFormlets(function(Formlet $formlet) use ($prefix){
+            $formlet->setFieldNames($prefix);
         });
     }
+
 
     /**
      * Set field instance name
@@ -416,6 +401,18 @@ abstract class Formlet
         if (!is_null($formletInstance)) {
             $field->setInstanceName($formletInstance . "[" . $field->getName() . "]");
         }
+    }
+
+    /**
+     * Iterate child formlets
+     * @param \Closure $closure
+     */
+    protected function iterateFormlets(\Closure $closure){
+        $this->formlets->each(function (Collection $forms) use($closure) {
+            $forms->each(function (Formlet $formlet) use($closure) {
+                $closure($formlet);
+            });
+        });
     }
 
     /**

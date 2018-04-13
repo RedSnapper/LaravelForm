@@ -4,6 +4,7 @@ namespace RS\Form\Concerns;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\MessageBag;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 use RS\Form\Fields\AbstractField;
@@ -15,14 +16,14 @@ trait ValidatesForm
     /**
      * An errors for the formlet.
      *
-     * @var Collection
+     * @var MessageBag
      */
     protected $errors;
 
     /**
      * All errors for the form.
      *
-     * @var Collection
+     * @var MessageBag
      */
     protected $allErrors;
 
@@ -62,7 +63,7 @@ trait ValidatesForm
 
         $this->validateFormlet();
 
-        $this->allErrors = $this->validateMapFormlet(collect());
+        $this->allErrors = $this->validateMapFormlet(new MessageBag());
 
         if (!$this->isAllValid() && $redirect) {
             throw (new ValidationException($this->validator, $this->buildFailedValidationResponse()));
@@ -113,7 +114,7 @@ trait ValidatesForm
     /**
      * Returns all the errors for this formlet
      */
-    public function errors(): Collection
+    public function errors(): MessageBag
     {
         return $this->errors;
     }
@@ -131,7 +132,7 @@ trait ValidatesForm
     /**
      * Returns all the errors for this form
      */
-    public function allErrors(): Collection
+    public function allErrors(): MessageBag
     {
         return $this->allErrors;
     }
@@ -144,10 +145,8 @@ trait ValidatesForm
 
         $this->errors = $this->validateRequest();
 
-        $this->formlets->each(function(Collection $forms){
-            $forms->each(function (Formlet $formlet){
-                $formlet->validateFormlet();
-            });
+        $this->iterateFormlets(function(Formlet $formlet){
+            $formlet->validateFormlet();
         });
 
     }
@@ -157,20 +156,23 @@ trait ValidatesForm
      * We can then fill the session with these errors and the map them
      * back to the appropriate formlet
      *
-     * @param Collection $errorBag
-     * @return Collection
+     * @param MessageBag $errorBag
+     * @return MessageBag
      */
-    protected function validateMapFormlet(Collection $errorBag):Collection{
+    protected function validateMapFormlet(MessageBag $errorBag):MessageBag{
+        $array = $this->mapErrorsToInstances();
 
-        return $this->validateMapFormlets($errorBag->merge($this->mapErrorsToInstances()));
+        $errorBag = $errorBag->merge($array);
+
+        return $this->validateMapFormlets($errorBag);
     }
 
     /**
      *
-     * @param Collection $errorBag
-     * @return Collection
+     * @param MessageBag $errorBag
+     * @return MessageBag
      */
-    protected function validateMapFormlets(Collection $errorBag):Collection{
+    protected function validateMapFormlets(MessageBag $errorBag):MessageBag{
 
         foreach($this->formlets as $forms){
             foreach($forms as $formlet){
@@ -183,18 +185,17 @@ trait ValidatesForm
     }
 
     /**
-     * @return Collection
+     * @return array
      */
-    protected function mapErrorsToInstances():Collection{
+    protected function mapErrorsToInstances():array{
 
-        if($this->instanceName ==""){
-            return $this->errors;
+        if(is_null($this->instanceName)){
+            return $this->errors->messages();
         }
 
-        return $this->errors->mapWithKeys(function($error, $key){
-
+        return collect($this->errors->messages())->mapWithKeys(function($error, $key){
             return ["{$this->transformKey($this->instanceName)}.{$key}" => $error];
-        });
+        })->all();
     }
 
     /**
@@ -202,7 +203,7 @@ trait ValidatesForm
      *
      * @return Collection
      */
-    protected function validateRequest(): Collection
+    protected function validateRequest(): MessageBag
     {
 
         $request = $this->request($this->instanceName) ?? [];
@@ -214,11 +215,7 @@ trait ValidatesForm
           $this->attributes()
         );
 
-        if ($this->validator->fails()) {
-            return collect($this->validator->errors()->getMessages());
-        }
-
-        return collect();
+        return $this->validator->messages();
     }
 
     /**
@@ -250,16 +247,42 @@ trait ValidatesForm
      * Populate field with errors
      *
      * @param AbstractField $field
-     * @param               $key
      * @return void
      */
-    protected function populateErrors(AbstractField $field, $key): void
+    protected function populateFieldErrors(AbstractField $field): void
     {
+        $key = $this->transformKey($field->getInstanceName());
+
         $errors = $this->allErrors();
         if ($error = $errors->get($key)) {
-            $this->errors = $this->errors->put($field->getName(),$error);
             $field->setErrors(collect($error));
         }
+    }
+
+    /**
+     * Populates each formlet with the errors
+     * found in the session for this formlet
+     * Uses the formlets rules method to find
+     * which errors should be added to the formlet
+     */
+    protected function populateErrors(){
+
+        $formletKey = $this->transformKey($this->instanceName);
+
+        $mappedRules = collect($this->rules())->keys()->mapWithKeys(function($rule) use($formletKey){
+            return [$formletKey == "" ? $rule : "$formletKey.$rule" => $rule];
+        });
+
+        $errors = collect($this->allErrors()->messages())->only($mappedRules->keys())->mapWithKeys(function($value,$key) use($mappedRules){
+            return [$mappedRules->get($key) => $value];
+        });
+
+        $this->errors = $this->errors->merge($errors->all());
+
+        $this->iterateFormlets(function(Formlet $formlet){
+            $formlet->populateErrors();
+        });
+
     }
 
     /**
@@ -270,7 +293,7 @@ trait ValidatesForm
     protected function buildFailedValidationResponse(): Response
     {
         if ($this->request->expectsJson()) {
-            return new JsonResponse($this->allErrors, 422);
+            return new JsonResponse($this->allErrors->toArray(), 422);
         }
 
         return redirect()->to($this->getRedirectUrl())
