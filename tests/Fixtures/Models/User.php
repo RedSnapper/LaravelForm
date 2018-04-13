@@ -25,7 +25,8 @@ class User extends Model
 
     public function assignProfile($attributes)
     {
-        return $this->profile()->save(new Profile($attributes));
+
+        return $this->profile()->create($attributes);
     }
 
 }

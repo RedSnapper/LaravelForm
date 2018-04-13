@@ -14,7 +14,10 @@ class CreateProfilesTable extends Migration{
         Schema::create('profiles', function ($table) {
             $table->integer('user_id')->unsigned();
             $table->string('name');
+            $table->boolean('active')->default(true);
             $table->timestamps();
+
+            $table->primary(['user_id']);
         });
     }
 }

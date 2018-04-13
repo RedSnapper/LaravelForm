@@ -25,8 +25,8 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertTrue($field->isChecked());
 
         $field->setValue('wibble');
-        $this->assertEquals('baz', $field->getValue());
-        $this->assertFalse($field->isChecked());
+        $this->assertEquals('bim',$field->getValue());
+        $this->assertTrue($field->isChecked());
 
     }
 
@@ -43,7 +43,7 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertEquals('bim', $field->getHTMLValue());
 
         $field->setValue('wibble');
-        $this->assertEquals('baz', $field->getValue());
+        $this->assertEquals('bim', $field->getValue());
         $this->assertEquals('bim', $field->getHTMLValue());
 
 
@@ -99,11 +99,7 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertFalse($field->isChecked());
 
         $field->setValue('foo');
-        $this->assertEquals('bim', $field->getValue());
-        $this->assertFalse($field->isChecked());
-
-        $field->setValue('bar');
-        $this->assertEquals('bar', $field->getValue());
+        $this->assertEquals('bar',$field->getValue());
         $this->assertTrue($field->isChecked());
 
     }

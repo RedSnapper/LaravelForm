@@ -332,7 +332,6 @@ abstract class Formlet
 
         $this->populateErrors();
 
-        $this->prepared = true;
     }
 
     /**
@@ -377,6 +376,7 @@ abstract class Formlet
     {
 
         $this->prepare();
+        $this->prepared = true;
 
         $prefix = $this->setFormletInstance($prefix);
 
@@ -460,7 +460,7 @@ abstract class Formlet
             return $request;
         }
 
-        if ($this->model) {
+        if ($this->model && $this->request->isMethod('GET')) {
             return $this->getModelValueAttribute($this->model, $modelKey);
         }
 

@@ -12,4 +12,8 @@ class Profile extends Model
      * @var array
      */
     protected $guarded = [];
+
+
+
+
 }

@@ -28,7 +28,7 @@ class UserProfileFormlet extends Formlet
         $user = $this->model;
         $user->update($this->postData()->all());
 
-        $user->assignProfile($this->formlet('profile')->postData()->all());
+        $user->profile()->update($this->formlet('profile')->postData()->all());
 
     }
 

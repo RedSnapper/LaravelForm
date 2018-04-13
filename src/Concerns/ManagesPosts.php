@@ -16,17 +16,18 @@ trait ManagesPosts
      */
     public $bound = false;
 
-
     /**
      * Returns the posted values for this formlet
      * Only fields set in the view will appear here
+     *
      * @return mixed
      */
-    public function postData(string $name = null){
+    public function postData(string $name = null)
+    {
 
         $this->populate();
 
-        if(is_null($name)){
+        if (is_null($name)) {
             return $this->fields()->map->getValue();
         }
 
@@ -36,9 +37,11 @@ trait ManagesPosts
     /**
      * Returns all the posted values
      * Only fields set in the view will appear here
+     *
      * @return Collection
      */
-    public function allPostData():Collection{
+    public function allPostData(): Collection
+    {
 
         $this->populate();
 
@@ -48,7 +51,8 @@ trait ManagesPosts
     /**
      * Method called when storing
      */
-    public function persist(){
+    public function persist()
+    {
 
         if (isset($this->model)) {
             $this->model = $this->model->create($this->postData()->all());
@@ -59,7 +63,8 @@ trait ManagesPosts
     /**
      * Method called when updating
      */
-    public function edit(){
+    public function edit()
+    {
         if (isset($this->model)) {
             $this->model->update($this->postData()->all());
         }
@@ -68,9 +73,11 @@ trait ManagesPosts
 
     /**
      * Store method for the form request
+     *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(){
+    public function store()
+    {
 
         $this->validate();
 
@@ -81,9 +88,11 @@ trait ManagesPosts
 
     /**
      * Update method for the form request
+     *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function update(){
+    public function update()
+    {
 
         $this->validate();
 
@@ -95,24 +104,23 @@ trait ManagesPosts
     /**
      * Maps the formlets to the values stored in the fields
      *
-     * @param Collection $formlets
      * @return Collection
      */
-    protected function formletsPost():Collection{
+    protected function formletsPost(): Collection
+    {
 
-        return $this->formlets->map(function(Collection $forms){
-            return $forms->map(function(Formlet $formlet){
+        return $this->formlets->map(function (Collection $forms) {
+            return $forms->map(function (Formlet $formlet) {
 
                 return $formlet->formletPost();
-
             });
         });
     }
 
-    protected function formletPost(){
-        $values =  $this->fields()->map->getValue();
+    protected function formletPost()
+    {
+        $values = $this->fields()->map->getValue();
         return $values->merge($this->formletsPost());
     }
-
 
 }
