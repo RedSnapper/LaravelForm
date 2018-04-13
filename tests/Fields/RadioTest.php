@@ -10,42 +10,42 @@ class RadioTest extends AbstractFieldTest
 
     protected function getTestField($name = "foo")
     {
-        return new Radio($name);
+        return new Radio($name, ['foo' => 'bar']);
     }
 
     /** @test */
     public function can_render_radio()
     {
-        $field = new Radio('bim',[
+        $field = new Radio('bim', [
             'foo' => 'bar',
             'bim' => 'baz',
         ]);
         $field->setValue('bim');
 
-        $this->assertContains('<input name="bim" type="radio" value="foo"/>',
-            $field->render()->render());
-        $this->assertContains('<input name="bim" type="radio" checked="checked" value="bim"/>',
-            $field->render()->render());
+        $this->assertContains('<input class="form-check-input" name="bim" type="radio" value="foo"/>',
+            $this->renderField($field));
+        $this->assertContains('<input class="form-check-input" name="bim" type="radio" checked="checked" value="bim"/>',
+            $this->renderField($field));
         $this->assertContains('bar',
-            $field->render()->render());
+            $this->renderField($field));
         $this->assertContains('baz',
-            $field->render()->render());
+            $this->renderField($field));
 
     }
 
     /** @test */
     public function can_render_radio_attributes()
     {
-        $field = new Radio('bim',[[
+        $field = new Radio('bim', [[
             'label' => "bar",
             'value' => "foo",
             'attributes' => ['disabled'],
         ]]);
 
-        $this->assertContains('<input name="bim" type="radio" disabled="disabled" value="foo"/>',
-            $field->render()->render());
+        $this->assertContains('<input class="form-check-input" name="bim" type="radio" disabled="disabled" value="foo"/>',
+            $this->renderField($field));
         $this->assertContains('bar',
-            $field->render()->render());
+            $this->renderField($field));
 
     }
 
@@ -54,10 +54,10 @@ class RadioTest extends AbstractFieldTest
     {
         $field = new Radio('foo');
         $this->assertNotContains('My Label',
-            $field->render()->render());
+            $this->renderField($field));
         $field->label('My Label');
         $this->assertContains('My Label',
-            $field->render()->render());
+            $this->renderField($field));
     }
 
 }

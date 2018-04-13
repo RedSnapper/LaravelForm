@@ -10,77 +10,77 @@ class CheckboxGroupTest extends AbstractFieldTest
 
     protected function getTestField($name = "foo")
     {
-        return new CheckboxGroup($name);
+        return new CheckboxGroup($name, ['foo' => 'bar']);
     }
 
     /** @test */
     public function a_field_has_a__name()
     {
         $field = $this->getTestField("foo");
-        $this->assertEquals("foo",$field->getName());
-        $this->assertEquals("foo[]",$field->getAttribute("name"));
+        $this->assertEquals("foo", $field->getName());
+        $this->assertEquals("foo[]", $field->getAttribute("name"));
         $field->setName("bar");
-        $this->assertEquals("bar",$field->getName());
-        $this->assertEquals("bar[]",$field->getAttribute("name"));
+        $this->assertEquals("bar", $field->getName());
+        $this->assertEquals("bar[]", $field->getAttribute("name"));
     }
 
     /** @test */
     public function can_set_an_instance_name_for_a_field()
     {
         $field = $this->getTestField("foo");
-        $this->assertEquals("foo",$field->getInstanceName());
+        $this->assertEquals("foo", $field->getInstanceName());
         $field->setInstanceName("bar");
-        $this->assertEquals("bar",$field->getInstanceName());
-        $this->assertEquals("foo",$field->getName());
-        $this->assertEquals("bar[]",$field->getAttribute('name'));
+        $this->assertEquals("bar", $field->getInstanceName());
+        $this->assertEquals("foo", $field->getName());
+        $this->assertEquals("bar[]", $field->getAttribute('name'));
     }
 
     /** @test */
     public function will_set_an_id_value_for_a_field()
     {
         $field = $this->getTestField("foo");
-        $this->assertEquals("foo[]",$field->getAttribute('id'));
+        $this->assertEquals("foo[]", $field->getAttribute('id'));
         $field->setInstanceName("bar");
-        $this->assertEquals("bar[]",$field->getAttribute('id'));
+        $this->assertEquals("bar[]", $field->getAttribute('id'));
     }
 
     /** @test */
     public function can_render_a_checkbox_group()
     {
         $field = new CheckboxGroup('bim', [
-          'foo' => 'bar',
-          'bim' => 'baz',
-          'bar' => 'wibble',
+            'foo' => 'bar',
+            'bim' => 'baz',
+            'bar' => 'wibble',
         ]);
-        $field->setValue(['bim','bar']);
+        $field->setValue(['bim', 'bar']);
 
-        $this->assertContains('<input name="bim[]" type="checkbox" value="foo"/>',
-          $field->render()->render());
-        $this->assertContains('<input name="bim[]" type="checkbox" checked="checked" value="bim"/>',
-          $field->render()->render());
-        $this->assertContains('<input name="bim[]" type="checkbox" checked="checked" value="bar"/>',
-          $field->render()->render());
+        $this->assertContains('<input class="form-check-input" name="bim[]" type="checkbox" value="foo"/>',
+            $this->renderField($field));
+        $this->assertContains('<input class="form-check-input" name="bim[]" type="checkbox" checked="checked" value="bim"/>',
+            $this->renderField($field));
+        $this->assertContains('<input class="form-check-input" name="bim[]" type="checkbox" checked="checked" value="bar"/>',
+            $this->renderField($field));
         $this->assertContains('bar',
-          $field->render()->render());
+            $this->renderField($field));
         $this->assertContains('baz',
-          $field->render()->render());
+            $this->renderField($field));
     }
 
     /** @test */
     public function can_render_checkbox_attributes()
     {
         $field = new CheckboxGroup('bim', [
-          [
-            'label'      => "bar",
-            'value'      => "foo",
-            'attributes' => ['disabled'],
-          ]
+            [
+                'label' => "bar",
+                'value' => "foo",
+                'attributes' => ['disabled'],
+            ]
         ]);
 
-        $this->assertContains('<input name="bim[]" type="checkbox" disabled="disabled" value="foo"/>',
-          $field->render()->render());
+        $this->assertContains('<input class="form-check-input" name="bim[]" type="checkbox" disabled="disabled" value="foo"/>',
+            $this->renderField($field));
         $this->assertContains('bar',
-          $field->render()->render());
+            $this->renderField($field));
     }
 
     /** @test */
@@ -88,10 +88,10 @@ class CheckboxGroupTest extends AbstractFieldTest
     {
         $field = new CheckboxGroup('foo');
         $this->assertNotContains('My Label',
-          $field->render()->render());
+            $this->renderField($field));
         $field->label('My Label');
         $this->assertContains('My Label',
-          $field->render()->render());
+            $this->renderField($field));
     }
 
 }

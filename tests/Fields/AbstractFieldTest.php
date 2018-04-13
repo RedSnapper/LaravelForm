@@ -1,36 +1,37 @@
 <?php
 
 namespace Tests\Fields;
+
 use RS\Form\Fields\AbstractField;
 use Tests\TestCase;
 
 class AbstractFieldTest extends TestCase
 {
-    
-    protected function getTestField($name="foo"){
+
+    protected function getTestField($name = "foo")
+    {
         return new TestField($name);
     }
-    
 
     /** @test */
     public function a_field_has_a__name()
     {
         $field = $this->getTestField("foo");
-        $this->assertEquals("foo",$field->getName());
-        $this->assertEquals("foo",$field->getAttribute("name"));
+        $this->assertEquals("foo", $field->getName());
+        $this->assertEquals("foo", $field->getAttribute("name"));
         $field->setName("bar");
-        $this->assertEquals("bar",$field->getName());
+        $this->assertEquals("bar", $field->getName());
     }
 
     /** @test */
     public function can_set_an_instance_name_for_a_field()
     {
         $field = $this->getTestField("foo");
-        $this->assertEquals("foo",$field->getInstanceName());
+        $this->assertEquals("foo", $field->getInstanceName());
         $field->setInstanceName("bar");
-        $this->assertEquals("bar",$field->getInstanceName());
-        $this->assertEquals("foo",$field->getName());
-        $this->assertEquals("bar",$field->getAttribute('name'));
+        $this->assertEquals("bar", $field->getInstanceName());
+        $this->assertEquals("foo", $field->getName());
+        $this->assertEquals("bar", $field->getAttribute('name'));
     }
 
     /** @test */
@@ -38,17 +39,17 @@ class AbstractFieldTest extends TestCase
     {
         $field = $this->getTestField("foo");
         $field->multiple(true);
-        $this->assertEquals("foo[]",$field->getAttribute('name'));
-        $this->assertEquals("foo",$field->getName());
+        $this->assertEquals("foo[]", $field->getAttribute('name'));
+        $this->assertEquals("foo", $field->getName());
     }
 
     /** @test */
     public function will_set_an_id_value_for_a_field()
     {
         $field = $this->getTestField("foo");
-        $this->assertEquals("foo",$field->getAttribute('id'));
+        $this->assertEquals("foo", $field->getAttribute('id'));
         $field->setInstanceName("bar");
-        $this->assertEquals("bar",$field->getAttribute('id'));
+        $this->assertEquals("bar", $field->getAttribute('id'));
     }
 
     /** @test */
@@ -57,9 +58,9 @@ class AbstractFieldTest extends TestCase
         $field = $this->getTestField();
         $this->assertNull($field->getLabel());
         $field->label("foo");
-        $this->assertEquals("foo",$field->getLabel());
+        $this->assertEquals("foo", $field->getLabel());
         $field->label("bar");
-        $this->assertEquals("bar",$field->getLabel());
+        $this->assertEquals("bar", $field->getLabel());
     }
 
     /** @test */
@@ -68,9 +69,9 @@ class AbstractFieldTest extends TestCase
         $field = $this->getTestField();
         $this->assertNull($field->getLabel());
         $field->view("foo");
-        $this->assertEquals("foo",$field->getView());
+        $this->assertEquals("foo", $field->getView());
         $field->view("bar");
-        $this->assertEquals("bar",$field->getView());
+        $this->assertEquals("bar", $field->getView());
     }
 
     /** @test */
@@ -79,9 +80,9 @@ class AbstractFieldTest extends TestCase
         $field = $this->getTestField();
         $this->assertNull($field->getDefault());
         $field->default("foo");
-        $this->assertEquals("foo",$field->getDefault());
+        $this->assertEquals("foo", $field->getDefault());
         $field->default("bar");
-        $this->assertEquals("bar",$field->getDefault());
+        $this->assertEquals("bar", $field->getDefault());
     }
 
     /** @test */
@@ -90,16 +91,16 @@ class AbstractFieldTest extends TestCase
         $field = $this->getTestField();
 
         $field->default('foo');
-        $this->assertEquals('foo',$field->getValue());
-        $this->assertEquals('foo',$field->getHTMLValue());
+        $this->assertEquals('foo', $field->getValue());
+        $this->assertEquals('foo', $field->getHTMLValue());
 
         $field->setValue('bar');
-        $this->assertEquals('bar',$field->getValue());
-        $this->assertEquals('bar',$field->getHTMLValue());
+        $this->assertEquals('bar', $field->getValue());
+        $this->assertEquals('bar', $field->getHTMLValue());
 
         $field->default('bim');
-        $this->assertEquals('bar',$field->getValue());
-        $this->assertEquals('bar',$field->getHTMLValue());
+        $this->assertEquals('bar', $field->getValue());
+        $this->assertEquals('bar', $field->getHTMLValue());
     }
 
 
@@ -108,11 +109,11 @@ class AbstractFieldTest extends TestCase
     {
         $field = $this->getTestField();
         $field->setName("foo");
-        $this->assertEquals("foo",$field->getErrorName());
+        $this->assertEquals("foo", $field->getErrorName());
         $field->setInstanceName("bar");
-        $this->assertEquals("bar",$field->getErrorName());
+        $this->assertEquals("bar", $field->getErrorName());
         $field->setInstanceName("bim[]");
-        $this->assertEquals("bim",$field->getErrorName());
+        $this->assertEquals("bim", $field->getErrorName());
     }
 
     /** @test */
@@ -121,7 +122,7 @@ class AbstractFieldTest extends TestCase
         $field = $this->getTestField();
         $this->assertNull($field->getAttribute('disabled'));
         $field->disabled();
-        $this->assertEquals('disabled',$field->getAttribute('disabled'));
+        $this->assertEquals('disabled', $field->getAttribute('disabled'));
         $field->disabled(false);
         $this->assertNull($field->getAttribute('disabled'));
     }
@@ -132,7 +133,7 @@ class AbstractFieldTest extends TestCase
         $field = $this->getTestField();
         $this->assertNull($field->getAttribute('required'));
         $field->required();
-        $this->assertEquals('required',$field->getAttribute('required'));
+        $this->assertEquals('required', $field->getAttribute('required'));
         $field->required(false);
         $this->assertNull($field->getAttribute('required'));
     }
@@ -143,7 +144,7 @@ class AbstractFieldTest extends TestCase
         $field = $this->getTestField();
         $this->assertNull($field->getAttribute('placeholder'));
         $field->placeholder('foo');
-        $this->assertEquals('foo',$field->getAttribute('placeholder'));
+        $this->assertEquals('foo', $field->getAttribute('placeholder'));
     }
 
     /** @test */
@@ -155,15 +156,15 @@ class AbstractFieldTest extends TestCase
 
         $field->guarded(true);
         $this->assertNull($field->getHTMLValue());
-        $this->assertEquals("foo",$field->getValue());
+        $this->assertEquals("foo", $field->getValue());
 
         $field->default("bar");
-        $this->assertEquals("bar",$field->getHTMLValue());
-        $this->assertEquals("foo",$field->getValue());
+        $this->assertEquals("bar", $field->getHTMLValue());
+        $this->assertEquals("foo", $field->getValue());
 
         $field->guarded(false);
-        $this->assertEquals("foo",$field->getHTMLValue());
-        $this->assertEquals("foo",$field->getValue());
+        $this->assertEquals("foo", $field->getHTMLValue());
+        $this->assertEquals("foo", $field->getValue());
     }
 
     /** @test */
@@ -171,20 +172,20 @@ class AbstractFieldTest extends TestCase
     {
         $field = $this->getTestField();
         $field->setAttribute('foo');
-        $this->assertEquals('foo',$field->getAttribute('foo'));
-        $field->setAttribute('foo','bar');
-        $this->assertEquals('bar',$field->getAttribute('foo'));
+        $this->assertEquals('foo', $field->getAttribute('foo'));
+        $field->setAttribute('foo', 'bar');
+        $this->assertEquals('bar', $field->getAttribute('foo'));
     }
 
     /** @test */
     public function can_set_errors_for_a_field()
     {
         $field = $this->getTestField();
-        $this->assertCount(0,$field->getErrors());
-        $field->setErrors(collect(['error1','error2']));
-        $this->assertCount(2,$field->getErrors());
-        $this->assertEquals('error1',$field->getErrors()->first());
-        $this->assertEquals('error2',$field->getErrors()->last());
+        $this->assertCount(0, $field->getErrors());
+        $field->setErrors(collect(['error1', 'error2']));
+        $this->assertCount(2, $field->getErrors());
+        $this->assertEquals('error1', $field->getErrors()->first());
+        $this->assertEquals('error2', $field->getErrors()->last());
 
     }
 
@@ -193,28 +194,26 @@ class AbstractFieldTest extends TestCase
     {
         $field = $this->getTestField();
         $field->setAttributes([
-          'foo'=> 'foo',
-          'bar'=> 'bar'
+            'foo' => 'foo',
+            'bar' => 'bar'
         ]);
 
-        $this->assertEquals('foo',$field->getAttribute('foo'));
-        $this->assertEquals('bar',$field->getAttribute('bar'));
+        $this->assertEquals('foo', $field->getAttribute('foo'));
+        $this->assertEquals('bar', $field->getAttribute('bar'));
     }
-
 
     /** @test */
     public function can_dynamically_add_attributes_to_a_field()
     {
         $field = $this->getTestField();
         $field->foo('bar');
-        $this->assertEquals('bar',$field->getAttribute('foo'));
+        $this->assertEquals('bar', $field->getAttribute('foo'));
     }
-
-
 
 }
 
-class TestField extends AbstractField{
+class TestField extends AbstractField
+{
 
     public function __construct($name)
     {

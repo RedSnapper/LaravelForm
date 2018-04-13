@@ -1,13 +1,15 @@
 <?php
 
 namespace Tests\Fields;
+
 use RS\Form\Fields\TextArea;
 
 class TextAreaTest extends AbstractFieldTest
 {
-    use RendersLabels,RendersErrors;
+    use RendersLabels, RendersErrors;
 
-    protected function getTestField($name="foo"){
+    protected function getTestField($name = "foo")
+    {
         return new TextArea($name);
     }
 
@@ -15,10 +17,9 @@ class TextAreaTest extends AbstractFieldTest
     public function a_textarea_will_have_a_name_set()
     {
         $field = $this->getTestField("bim");
-        $this->assertEquals('bim',$field->getName());
-        $this->assertEquals('bim',$field->getInstanceName());
+        $this->assertEquals('bim', $field->getName());
+        $this->assertEquals('bim', $field->getInstanceName());
     }
-
 
     /** @test */
     public function can_set_rows_for_a_textarea()
@@ -26,7 +27,7 @@ class TextAreaTest extends AbstractFieldTest
         $field = $this->getTestField();
         $this->assertNull($field->getAttribute('rows'));
         $field->rows(10);
-        $this->assertEquals(10,$field->getAttribute('rows'));
+        $this->assertEquals(10, $field->getAttribute('rows'));
     }
 
     /** @test */
@@ -35,15 +36,16 @@ class TextAreaTest extends AbstractFieldTest
         $field = $this->getTestField();
         $this->assertNull($field->getAttribute('cols'));
         $field->cols(10);
-        $this->assertEquals(10,$field->getAttribute('cols'));
+        $this->assertEquals(10, $field->getAttribute('cols'));
     }
 
     /** @test */
-    public function can_render_a_textarea(){
+    public function can_render_a_textarea()
+    {
         $field = new TextArea('bim');
-        $this->assertContains('<textarea class="form_control" id="bim" name="bim"></textarea>',$field->render()->render());
+        $this->assertContains('<textarea class="form-control" id="bim" name="bim"> </textarea>', $this->renderField($field));
         $field->setValue("Eggs & Sausage");
-        $this->assertContains('<textarea class="form_control" id="bim" name="bim">Eggs &amp; Sausage</textarea>',$field->render()->render());
+        $this->assertContains('<textarea class="form-control" id="bim" name="bim"> Eggs &amp; Sausage </textarea>', $this->renderField($field));
     }
 
 }

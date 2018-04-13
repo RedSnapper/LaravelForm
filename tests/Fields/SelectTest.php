@@ -43,12 +43,12 @@ class SelectTest extends AbstractFieldTest
         ]);
         $field->setValue('bim');
 
-        $this->assertContains('<select class="form_control" id="bim" name="bim">',
-          $field->render()->render());
+        $this->assertContains('<select class="form-control" id="bim" name="bim">',
+          $this->renderField($field));
         $this->assertContains('<option value="foo" >bar</option>',
-          $field->render()->render());
+          $this->renderField($field));
         $this->assertContains('<option value="bim" selected="selected">baz</option>',
-          $field->render()->render());
+          $this->renderField($field));
     }
 
     /** @test */
@@ -62,14 +62,14 @@ class SelectTest extends AbstractFieldTest
         $field->multiple(true);
         $field->setValue(['bim','wibble']);
 
-        $this->assertContains('<select class="form_control" id="bim[]" multiple="multiple" name="bim[]">',
-          $field->render()->render());
+        $this->assertContains('<select class="form-control" id="bim[]" multiple="multiple" name="bim[]">',
+          $this->renderField($field));
         $this->assertContains('<option value="foo" >bar</option>',
-          $field->render()->render());
+          $this->renderField($field));
         $this->assertContains('<option value="bim" selected="selected">baz</option>',
-          $field->render()->render());
+          $this->renderField($field));
         $this->assertContains('<option value="wibble" selected="selected">wibble</option>',
-          $field->render()->render());
+          $this->renderField($field));
     }
 
     /** @test */
@@ -84,7 +84,7 @@ class SelectTest extends AbstractFieldTest
         ]);
 
         $this->assertContains('<option value="foo" disabled="disabled" data-foo="bar">bar</option>',
-          $field->render()->render());
+          $this->renderField($field));
     }
 
     /** @test */
@@ -96,9 +96,9 @@ class SelectTest extends AbstractFieldTest
         $field->setValue('bar');
 
         $this->assertContains('<option value="bar" selected="selected">bim</option>',
-          $field->render()->render());
+          $this->renderField($field));
         $this->assertContains('<optgroup label="foo">',
-          $field->render()->render());
+          $this->renderField($field));
     }
 
 }

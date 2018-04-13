@@ -418,8 +418,8 @@ class FormletTest extends TestCase
         $fields = $form->fields();
 
         $this->assertObjectHasAttribute('id', $fields->get('items')->getValue()->first());
-        $this->assertContains('<input name="items[]" type="checkbox" checked="checked" value="2"/>',
-          $fields->get('items')->render()->render());
+        $this->assertContains('<input class="form-check-input" name="items[]" type="checkbox" checked="checked" value="2"/>',
+            $this->renderField($fields->get('items')));
     }
 
     /** @test */

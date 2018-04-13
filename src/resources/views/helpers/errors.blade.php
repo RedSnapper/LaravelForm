@@ -1,3 +1,3 @@
 @foreach($errors as $error)
-    <div class="help-block">{{$error}}</div>
+    <div class="invalid-feedback">{{$error}}</div>
 @endforeach

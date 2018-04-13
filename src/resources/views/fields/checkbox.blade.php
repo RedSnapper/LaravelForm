@@ -1,10 +1,12 @@
-<div class="form-group{{count($errors) > 0 ? " has-error" : ""}}">
-    <div class="checkbox">
-        <label>
-            <input class="form_control" @include('form::helpers.attributes') value="{{$value}}"/> {{$label}}
-        </label>
-    </div>
-    @include('form::helpers.errors')
+<div class="form-group">
+	<div class="form-check">
+		<label class="form-check-label">
+			<input class="form-check-input{{count($errors) > 0 ? " is-invalid" : ""}}"
+				   @include('form::helpers.attributes') value="{{$value}}"/>
+			{{$label}}
+		</label>
+	</div>
+	@include('form::helpers.errors')
 </div>
 
 

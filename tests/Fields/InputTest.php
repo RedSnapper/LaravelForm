@@ -43,7 +43,7 @@ class InputTest extends AbstractFieldTest
     public function can_render_attributes(){
         $field = new Input('text','bim');
         $rendered = $field->render()->render();
-        $this->assertContains('<input class="form_control" id="bim" name="bim" type="text" />',$rendered);
+        $this->assertContains('<input class="form-control" id="bim" name="bim" type="text" />',$rendered);
     }
 
     /** @test */
@@ -51,9 +51,7 @@ class InputTest extends AbstractFieldTest
         $field = new Input('text','bim');
         $field->setValue('baz');
         $rendered = $field->render()->render();
-        $this->assertContains('<input class="form_control" id="bim" name="bim" type="text" value="baz"/>',$rendered);
+        $this->assertContains('<input class="form-control" id="bim" name="bim" type="text" value="baz"/>',$rendered);
     }
-
-
 
 }

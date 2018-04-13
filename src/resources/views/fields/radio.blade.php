@@ -1,16 +1,19 @@
-<div @if(count($errors))class="has-error"@endif>
+<div class="form-group">
 
     @if(isset($label))
-        <strong class="control-label">{{$label}}</strong>
+        <label class="control-label">{{$label}}</label>
     @endif
 
-    <div class="radio">
-        @foreach($options as $option)
-            <label>
-                <input @include('form::helpers.attributes',['attributes'=>$option->attributes]) value="{{$option->value}}"/>
+    @foreach($options as $option)
+        <div class="form-check">
+            <label class="form-check-label">
+                <input class="form-check-input{{count($errors) > 0 ? " is-invalid" : ""}}"
+                       @include('form::helpers.attributes',['attributes'=>$option->attributes]) value="{{$option->value}}"/>
                 {{$option->label}}
             </label>
-        @endforeach
-    </div>
+        </div>
+    @endforeach
+
     @include('form::helpers.errors')
+
 </div>
