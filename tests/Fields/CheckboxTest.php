@@ -21,7 +21,7 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertFalse($field->isChecked());
 
         $field->default('bim');
-        $this->assertEquals('bim', $field->getValue());
+        $this->assertEquals('baz', $field->getValue());
         $this->assertTrue($field->isChecked());
 
         $field->setValue('wibble');
@@ -38,10 +38,14 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertEquals('baz', $field->getValue());
         $this->assertEquals('bim', $field->getHTMLValue());
 
+        // Even when a default value is set the value of the checkbox
+        // is still the unchecked value
         $field->default('bim');
-        $this->assertEquals('bim', $field->getValue());
+        $this->assertEquals('baz', $field->getValue());
         $this->assertEquals('bim', $field->getHTMLValue());
 
+        // When any value is set on the checkbox then the
+        // checked value will be returned
         $field->setValue('wibble');
         $this->assertEquals('bim', $field->getValue());
         $this->assertEquals('bim', $field->getHTMLValue());
@@ -91,14 +95,14 @@ class CheckboxTest extends AbstractFieldTest
     }
 
     /** @test */
-    public function a_checkbox_value_depends_on_whether_the_checkbox_is_set()
+    public function a_checkbox_value_depends_on_whether_any_value_has_been_set()
     {
 
         $field = new Checkbox('foo', 'bar', 'bim');
         $this->assertEquals('bim', $field->getValue());
         $this->assertFalse($field->isChecked());
 
-        $field->setValue('foo');
+        $field->setValue('wibble');
         $this->assertEquals('bar',$field->getValue());
         $this->assertTrue($field->isChecked());
 
@@ -118,6 +122,10 @@ class CheckboxTest extends AbstractFieldTest
         $field->setValue(null);
         $rendered = $this->renderField($field);
         $this->assertContains('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
+
+        $field->default(true);
+        $rendered = $this->renderField($field);
+        $this->assertContains('<input class="form-check-input" checked="checked" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
     }
 
     /** @test */
