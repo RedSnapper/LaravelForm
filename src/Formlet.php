@@ -4,17 +4,22 @@ namespace RS\Form;
 
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
+use LogicException;
 use RS\Form\Concerns\{
-  ManagesForm, ManagesPosts, ValidatesForm
+    HasRelationships, ManagesForm, ManagesPosts, ValidatesForm
 };
 use RS\Form\Fields\AbstractField;
 
 abstract class Formlet
 {
-    use ManagesForm, ValidatesForm, ManagesPosts;
+    use ManagesForm,
+        ValidatesForm,
+        ManagesPosts,
+        HasRelationships;
 
     /**
      * @var UrlGenerator
@@ -190,11 +195,11 @@ abstract class Formlet
         $this->populate();
 
         return collect([
-          'form'     => collect([
-            'hidden'     => $this->getHiddenFields(),
-            'attributes' => $this->attributes->sortKeys()
-          ]),
-          'formlet' => $this
+            'form' => collect([
+                'hidden' => $this->getHiddenFields(),
+                'attributes' => $this->attributes->sortKeys()
+            ]),
+            'formlet' => $this
         ]);
     }
 
@@ -275,16 +280,6 @@ abstract class Formlet
         return $formlet;
     }
 
-    public function relation($relation, $formlet)
-    {
-
-        $formlet = $this->addFormlet($relation, $formlet);
-
-        if (isset($this->model) && $this->model->exists) {
-            $formlet->model($this->model->$relation);
-        }
-    }
-
     /**
      * Returns the formlets added to this form
      *
@@ -346,12 +341,10 @@ abstract class Formlet
 
         $this->prepared = true;
 
-        $this->iterateFormlets(function(Formlet $formlet) {
+        $this->iterateFormlets(function (Formlet $formlet) {
             $formlet->populateFields();
         });
     }
-
-
 
     /**
      * Populate formlet field
@@ -384,17 +377,16 @@ abstract class Formlet
             $this->setFieldName($field, $this->instanceName);
         });
 
-        $this->iterateFormlets(function(Formlet $formlet) use ($prefix){
+        $this->iterateFormlets(function (Formlet $formlet) use ($prefix) {
             $formlet->setFieldNames($prefix);
         });
     }
-
 
     /**
      * Set field instance name
      *
      * @param AbstractField $field
-     * @param string|null   $formletInstance
+     * @param string|null $formletInstance
      */
     protected function setFieldName(AbstractField $field, string $formletInstance = null)
     {
@@ -407,9 +399,10 @@ abstract class Formlet
      * Iterate child formlets
      * @param \Closure $closure
      */
-    protected function iterateFormlets(\Closure $closure){
-        $this->formlets->each(function (Collection $forms) use($closure) {
-            $forms->each(function (Formlet $formlet) use($closure) {
+    protected function iterateFormlets(\Closure $closure)
+    {
+        $this->formlets->each(function (Collection $forms) use ($closure) {
+            $forms->each(function (Formlet $formlet) use ($closure) {
                 $closure($formlet);
             });
         });
@@ -497,7 +490,7 @@ abstract class Formlet
      */
     private function setFormletInstance(string $prefix): string
     {
-        if(is_null($this->name)){
+        if (is_null($this->name)) {
             return "";
         }
 

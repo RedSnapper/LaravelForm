@@ -440,12 +440,52 @@ class FormletTest extends TestCase
         $this->assertEquals('bar', $fields->get('name')->getValue());
     }
 
+    /** @test */
+    public function throws_a_logic_exception_when_adding_a_relation_method_that_does_not_exist()
+    {
+        $form = $this->formlet(function (Formlet $form) {
+            $form->relation('fake',ChildFormlet::class);
+        });
+
+        try{
+            $form->model($this->createModel());
+            $form->build();
+        }catch (\LogicException $exception){
+            $this->assertEquals(TestFormlet::class . "::fake method does not exist on the model",$exception->getMessage());
+            $this->assertCount(0,$form->formlets());
+            return;
+        }
+
+        $this->fail("Successfully added a relation even though it did not exist");
+
+    }
+
+    /** @test */
+    public function throws_a_logic_exception_when_adding_a_relation_which_does_not_return_a_relation()
+    {
+        $form = $this->formlet(function (Formlet $form) {
+            $form->relation('relation',ChildFormlet::class);
+        });
+
+        try{
+            $form->model($this->createModel());
+            $form->build();
+        }catch (\LogicException $exception){
+            $this->assertEquals(TestFormlet::class . "::relation must return a relationship instance",$exception->getMessage());
+            $this->assertCount(0,$form->formlets());
+            return;
+        }
+
+        $this->fail("Successfully added a relation the model did not return a relation");
+
+    }
+
     private function formlet(\Closure $closure = null): TestFormlet
     {
         return $this->app->makeWith(TestFormlet::class, ['closure' => $closure]);
     }
 
-    protected function createModel(array $data)
+    protected function createModel(array $data=[])
     {
         return new FormBuilderModelStub($data);
     }
@@ -518,6 +558,8 @@ class FormBuilderModelStub
 {
     protected $data;
 
+    public $exists = true;
+
     public function __construct(array $data = [])
     {
         foreach ($data as $key => $val) {
@@ -536,5 +578,9 @@ class FormBuilderModelStub
     public function __isset($key)
     {
         return isset($this->data[$key]);
+    }
+
+    public function relation(){
+        return null;
     }
 }
