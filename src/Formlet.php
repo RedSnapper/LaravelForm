@@ -4,22 +4,23 @@ namespace RS\Form;
 
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use LogicException;
 use RS\Form\Concerns\{
-    HasRelationships, ManagesForm, ManagesPosts, ValidatesForm
+  HasRelationships, ManagesForm, ManagesPosts, ValidatesForm
 };
 use RS\Form\Fields\AbstractField;
 
 abstract class Formlet
 {
     use ManagesForm,
-        ValidatesForm,
-        ManagesPosts,
-        HasRelationships;
+      ValidatesForm,
+      ManagesPosts,
+      HasRelationships;
 
     /**
      * @var UrlGenerator
@@ -195,11 +196,11 @@ abstract class Formlet
         $this->populate();
 
         return collect([
-            'form' => collect([
-                'hidden' => $this->getHiddenFields(),
-                'attributes' => $this->attributes->sortKeys()
-            ]),
-            'formlet' => $this
+          'form'    => collect([
+            'hidden'     => $this->getHiddenFields(),
+            'attributes' => $this->attributes->sortKeys()
+          ]),
+          'formlet' => $this
         ]);
     }
 
@@ -223,6 +224,16 @@ abstract class Formlet
     {
         $this->model = $model;
         return $this;
+    }
+
+    /**
+     * Get the model instance on the form builder.
+     *
+     * @return Model|null
+     */
+    public function getModel(): ?Model
+    {
+        return $this->model;
     }
 
     /**
@@ -256,29 +267,35 @@ abstract class Formlet
     }
 
     /**
-     * Add a formlet to this form
+     * Add a formlet(s) to form
      *
-     * @param $relation
-     * @param $formlet
+     * @param string $relation
+     * @param string $class
+     * @param int    $count
      * @return Formlet
      */
-    public function addFormlet($relation, $formlet): Formlet
+    public function addFormlet(string $relation, string $class, int $count = 1): Formlet
     {
 
-        $formlet = $formlet instanceof Formlet ? $formlet : app()->make($formlet);
+        foreach (range(1, $count) as $index) {
+            $formlet = app()->make($class);
 
-        $formlet->name($relation);
+            $formlet->name($relation);
 
-        if (!$this->formlets->has($relation)) {
-            $this->formlets->put($relation, collect());
+            if (!$this->formlets->has($relation)) {
+                $this->formlets->put($relation, collect());
+            }
+
+            $formlet->key($this->formlets->get($relation)->count());
+
+            $this->formlets[$relation][] = $formlet;
         }
 
-        $formlet->key($this->formlets->get($relation)->count());
-
-        $this->formlets[$relation][] = $formlet;
-
         return $formlet;
+
     }
+
+
 
     /**
      * Returns the formlets added to this form
@@ -326,7 +343,6 @@ abstract class Formlet
         $this->populateFields();
 
         $this->populateErrors();
-
     }
 
     /**
@@ -387,7 +403,7 @@ abstract class Formlet
      * Set field instance name
      *
      * @param AbstractField $field
-     * @param string|null $formletInstance
+     * @param string|null   $formletInstance
      */
     protected function setFieldName(AbstractField $field, string $formletInstance = null)
     {
@@ -398,6 +414,7 @@ abstract class Formlet
 
     /**
      * Iterate child formlets
+     *
      * @param \Closure $closure
      */
     protected function iterateFormlets(\Closure $closure)

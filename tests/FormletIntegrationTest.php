@@ -4,8 +4,10 @@ namespace Tests;
 
 use Illuminate\Support\Facades\Route;
 use Tests\Fixtures\Formlets\UserFormlet;
+use Tests\Fixtures\Formlets\UserPostsFormlet;
 use Tests\Fixtures\Formlets\UserProfileFormlet;
 use Tests\Fixtures\Formlets\UserRoleFormlet;
+use Tests\Fixtures\Models\Post;
 use Tests\Fixtures\Models\Role;
 use Tests\Fixtures\Models\User;
 
@@ -124,8 +126,83 @@ class FormletIntegrationTest extends TestCase
           'email'   => 'james@example.com',
           'profile' => [['name' => 'James']]
         ])->assertStatus(200);
-        $this->assertDatabaseHas('users', ['id' => 1, 'email' => 'james@example.com']);
-        $this->assertDatabaseHas('profiles', ['user_id' => 1, 'name' => 'James','active'=>false]);
+
+        tap($user->fresh(),function(User $user){
+            $this->assertEquals("james@example.com",$user->email);
+            $this->assertEquals("James",$user->profile->name);
+        });
+    }
+
+    /** @test */
+    public function has_many_relation()
+    {
+
+        $user = User::create(['email' => 'john@example.com']);
+        $postA = $user->posts()->create(['name'=>'Post A']);
+        $postB = $user->posts()->create(['name'=>'Post B']);
+
+        $formlet = app(UserPostsFormlet::class);
+        $formlet->model($user)->build();
+
+        $this->assertCount(2,$formlet->formlets('posts'));
+        $this->assertEquals($postA->name,$formlet->formlets('posts')->get(0)->field('name')->getValue());
+        $this->assertEquals($postB->name,$formlet->formlets('posts')->get(1)->field('name')->getValue());
+
+    }
+
+    /** @test */
+    public function has_many_create_method()
+    {
+
+        Route::post('/users', function (User $user, UserPostsFormlet $formlet) {
+            return $formlet->model($user)->store();
+        });
+
+        $this->post('/users', [
+          'email'   => 'john@example.com',
+          'posts' => [
+            ['name' => 'Post A'],
+            ['name' => 'Post B']
+          ]
+        ])->assertStatus(200);
+
+        tap(User::first(),function(User $user){
+            $this->assertEquals("john@example.com",$user->email);
+            $posts = $user->posts;
+            $this->assertCount(2,$posts);
+            $this->assertEquals("Post A",$posts->first()->name);
+            $this->assertEquals("Post B",$posts->get(1)->name);
+        });
+    }
+
+    /** @test */
+    public function has_many_relation_update_method()
+    {
+
+        $user = User::create(['email' => 'john@example.com']);
+        $user->posts()->create(['name'=>'Post A']);
+        $user->posts()->create(['name'=>'Post B']);
+
+        Route::put('/users/{user}', function ($user, UserPostsFormlet $formlet) {
+            $user = User::find($user);
+            return $formlet->model($user)->update();
+        });
+
+        $this->put('/users/1', [
+          'email'   => 'james@example.com',
+          'posts' => [
+            ['name' => 'Post A Updated'],
+            ['name' => 'Post B Updated']
+          ]
+        ])->assertStatus(200);
+
+        tap($user->fresh(),function(User $user){
+            $this->assertEquals("james@example.com",$user->email);
+            $posts = $user->posts;
+            $this->assertCount(2,$posts);
+            $this->assertEquals("Post A Updated",$posts->first()->name);
+            $this->assertEquals("Post B Updated",$posts->get(1)->name);
+        });
     }
 
 }

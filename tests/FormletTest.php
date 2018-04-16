@@ -161,8 +161,7 @@ class FormletTest extends TestCase
     {
         $form = $this->formlet(function (Formlet $form) {
             $form->add(new Input('text', 'foo'));
-            $form->addFormlet('child', ChildFormlet::class);
-            $form->addFormlet('child', ChildFormlet::class);
+            $form->addFormlet('child', ChildFormlet::class,2);
         });
 
         $form->build();

@@ -4,7 +4,7 @@ namespace Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Profile extends Model
+class Post extends Model
 {
     /**
      * The attributes that aren't mass assignable.
@@ -12,8 +12,6 @@ class Profile extends Model
      * @var array
      */
     protected $guarded = [];
-
-    protected $primaryKey = "user_id";
 
 
 }
