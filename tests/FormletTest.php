@@ -205,9 +205,9 @@ class FormletTest extends TestCase
 
         $form->build();
 
-        $this->assertInstanceOf(ChildFormlet::class,$form->child->first());
-        $this->assertInstanceOf(ChildFormlet::class,$form->name->first());
-        $this->assertInstanceOf(GrandChildFormlet::class,$form->formlet('child')->grandchild->first());
+        $this->assertInstanceOf(ChildFormlet::class, $form->child->first());
+        $this->assertInstanceOf(ChildFormlet::class, $form->name->first());
+        $this->assertInstanceOf(GrandChildFormlet::class, $form->formlet('child')->grandchild->first());
     }
 
     /** @test */
@@ -353,6 +353,18 @@ class FormletTest extends TestCase
     }
 
     /** @test */
+    public function a_false_value_in_the_model_should_be_reflected_by_the_field_value()
+    {
+        $form = $this->formlet(function ($form) {
+            $form->add(new Checkbox('foo',false,true));
+        });
+        $form->model(['foo' => false])->build();
+
+        $this->assertFalse($form->field('foo')->getValue());
+
+    }
+
+    /** @test */
     public function can_repopulate_checkbox_group()
     {
         $this->setOldInput([
@@ -419,7 +431,7 @@ class FormletTest extends TestCase
 
         $this->assertObjectHasAttribute('id', $fields->get('items')->getValue()->first());
         $this->assertContains('<input class="form-check-input" name="items[]" type="checkbox" checked="checked" value="2"/>',
-            $this->renderField($fields->get('items')));
+          $this->renderField($fields->get('items')));
     }
 
     /** @test */
@@ -444,40 +456,40 @@ class FormletTest extends TestCase
     public function throws_a_logic_exception_when_adding_a_relation_method_that_does_not_exist()
     {
         $form = $this->formlet(function (Formlet $form) {
-            $form->relation('fake',ChildFormlet::class);
+            $form->relation('fake', ChildFormlet::class);
         });
 
-        try{
+        try {
             $form->model($this->createModel());
             $form->build();
-        }catch (\LogicException $exception){
-            $this->assertEquals(TestFormlet::class . "::fake method does not exist on the model",$exception->getMessage());
-            $this->assertCount(0,$form->formlets());
+        } catch (\LogicException $exception) {
+            $this->assertEquals(TestFormlet::class . "::fake method does not exist on the model",
+              $exception->getMessage());
+            $this->assertCount(0, $form->formlets());
             return;
         }
 
         $this->fail("Successfully added a relation even though it did not exist");
-
     }
 
     /** @test */
     public function throws_a_logic_exception_when_adding_a_relation_which_does_not_return_a_relation()
     {
         $form = $this->formlet(function (Formlet $form) {
-            $form->relation('relation',ChildFormlet::class);
+            $form->relation('relation', ChildFormlet::class);
         });
 
-        try{
+        try {
             $form->model($this->createModel());
             $form->build();
-        }catch (\LogicException $exception){
-            $this->assertEquals(TestFormlet::class . "::relation must return a relationship instance",$exception->getMessage());
-            $this->assertCount(0,$form->formlets());
+        } catch (\LogicException $exception) {
+            $this->assertEquals(TestFormlet::class . "::relation must return a relationship instance",
+              $exception->getMessage());
+            $this->assertCount(0, $form->formlets());
             return;
         }
 
         $this->fail("Successfully added a relation the model did not return a relation");
-
     }
 
     private function formlet(\Closure $closure = null): TestFormlet
@@ -485,7 +497,7 @@ class FormletTest extends TestCase
         return $this->app->makeWith(TestFormlet::class, ['closure' => $closure]);
     }
 
-    protected function createModel(array $data=[])
+    protected function createModel(array $data = [])
     {
         return new FormBuilderModelStub($data);
     }
@@ -580,7 +592,8 @@ class FormBuilderModelStub
         return isset($this->data[$key]);
     }
 
-    public function relation(){
+    public function relation()
+    {
         return null;
     }
 }

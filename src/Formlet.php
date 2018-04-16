@@ -353,8 +353,9 @@ abstract class Formlet
      */
     protected function populateField(AbstractField $field): void
     {
+        $value = $this->getValueAttribute($field->getInstanceName(), $field->getName());
 
-        if ($value = $this->getValueAttribute($field->getInstanceName(), $field->getName())) {
+        if (!is_null($value)) {
             $field->setValue($value);
         }
         $this->populateFieldErrors($field);
