@@ -450,7 +450,8 @@ abstract class Formlet
             return $old;
         }
 
-        if ($request = $this->request($name)) {
+        $request = $this->request($name);
+        if (!is_null($request)) {
             return $request;
         }
 

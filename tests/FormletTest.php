@@ -289,6 +289,34 @@ class FormletTest extends TestCase
     }
 
     /** @test */
+    public function a_false_value_in_the_model_should_be_reflected_by_the_field_value()
+    {
+        $form = $this->formlet(function ($form) {
+            $form->add(new Checkbox('foo',false,true));
+        });
+        $form->model(['foo' => false])->build();
+
+        $this->assertFalse($form->field('foo')->getValue());
+
+    }
+
+    /** @test */
+    public function a_false_value_in_the_session_should_be_reflected_by_the_field_value()
+    {
+        $this->request->merge([
+          'foo'   => '0'
+        ]);
+
+        $form = $this->formlet(function ($form) {
+            $form->add(new Select('foo',[0=>"Zero",1=>"One"]));
+        });
+        $form->build();
+
+        $this->assertSame("0",$form->field('foo')->getValue());
+
+    }
+
+    /** @test */
     public function form_can_repopulate_from_arrays_and_objects()
     {
         $form = $this->formlet(function ($form) {
@@ -350,18 +378,6 @@ class FormletTest extends TestCase
 
         $this->assertFalse($fields->get('checkbox')->getValue());
         $this->assertEquals('yes', $fields->get('check[key]')->getValue());
-    }
-
-    /** @test */
-    public function a_false_value_in_the_model_should_be_reflected_by_the_field_value()
-    {
-        $form = $this->formlet(function ($form) {
-            $form->add(new Checkbox('foo',false,true));
-        });
-        $form->model(['foo' => false])->build();
-
-        $this->assertFalse($form->field('foo')->getValue());
-
     }
 
     /** @test */
