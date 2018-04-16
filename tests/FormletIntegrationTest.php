@@ -4,9 +4,11 @@ namespace Tests;
 
 use Illuminate\Support\Facades\Route;
 use Tests\Fixtures\Formlets\UserFormlet;
+use Tests\Fixtures\Formlets\UserPermissionForm;
 use Tests\Fixtures\Formlets\UserPostsFormlet;
 use Tests\Fixtures\Formlets\UserProfileFormlet;
 use Tests\Fixtures\Formlets\UserRoleFormlet;
+use Tests\Fixtures\Models\Permission;
 use Tests\Fixtures\Models\Post;
 use Tests\Fixtures\Models\Role;
 use Tests\Fixtures\Models\User;
@@ -203,6 +205,34 @@ class FormletIntegrationTest extends TestCase
             $this->assertEquals("Post A Updated",$posts->first()->name);
             $this->assertEquals("Post B Updated",$posts->get(1)->name);
         });
+    }
+
+    /** @test */
+    public function many_to_many_relation()
+    {
+
+        $user = User::create(['email' => 'john@example.com']);
+        $permissionA = Permission::create(['name'=>'Permission A']);
+        $permissionB =  Permission::create(['name'=>'Permission B']);
+
+        $user->permissions()->attach($permissionA->id,['color'=>'Red']);
+
+        $formlet = app(UserPermissionForm::class);
+        $formlet->model($user)->build();
+
+        $formlets = $formlet->formlets('permissions');
+
+        $this->assertCount(2, $formlets);
+        $this->assertEquals($permissionA->name, $formlets->first()->getRelated()->name);
+        $this->assertEquals($permissionB->name, $formlets->get(1)->getRelated()->name);
+
+        $this->assertEquals("Red", $formlets->first()->getModel()->pivot->color);
+        $this->assertNull($formlets->get(1)->getModel());
+
+        $this->assertTrue($formlets->first()->field('id')->isChecked());
+        $this->assertEquals('Red',$formlets->first()->field('color')->getValue());
+        $this->assertFalse($formlets->get(1)->field('id')->isChecked());
+
     }
 
 }

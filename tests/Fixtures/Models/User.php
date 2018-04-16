@@ -28,6 +28,11 @@ class User extends Model
         return $this->belongsToMany(Role::class);
     }
 
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class)->withPivot('color');
+    }
+
     public function assignProfile($attributes)
     {
         return $this->profile()->create($attributes);

@@ -5,11 +5,9 @@ namespace RS\Form;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
-use LogicException;
 use RS\Form\Concerns\{
   HasRelationships, ManagesForm, ManagesPosts, ValidatesForm
 };
@@ -292,10 +290,7 @@ abstract class Formlet
         }
 
         return $formlet;
-
     }
-
-
 
     /**
      * Returns the formlets added to this form
@@ -498,7 +493,14 @@ abstract class Formlet
      */
     protected function getModelValueAttribute($model, $name)
     {
-        return data_get($model, $this->transformKey($name));
+        $data = data_get($model, $this->transformKey($name));
+
+        if(!is_null($data)){
+            return $data;
+        }
+
+        return $this->hasPivotColumns() ? data_get($model, $this->getPivotAccessor() . "." . $this->transformKey($name)) : null;
+
     }
 
     /**
