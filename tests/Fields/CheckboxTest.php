@@ -25,6 +25,10 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertTrue($field->isChecked());
 
         $field->setValue('wibble');
+        $this->assertEquals('baz',$field->getValue());
+        $this->assertFalse($field->isChecked());
+
+        $field->setValue('bim');
         $this->assertEquals('bim',$field->getValue());
         $this->assertTrue($field->isChecked());
 
@@ -43,13 +47,6 @@ class CheckboxTest extends AbstractFieldTest
         $field->default('bim');
         $this->assertEquals('baz', $field->getValue());
         $this->assertEquals('bim', $field->getHTMLValue());
-
-        // When any value is set on the checkbox then the
-        // checked value will be returned
-        $field->setValue('wibble');
-        $this->assertEquals('bim', $field->getValue());
-        $this->assertEquals('bim', $field->getHTMLValue());
-
 
     }
 
@@ -92,20 +89,6 @@ class CheckboxTest extends AbstractFieldTest
         $field = new Checkbox('foo', 'bar', 'bim');
         $this->assertEquals('bar', $field->getCheckedValue());
         $this->assertEquals('bim', $field->getUnCheckedValue());
-    }
-
-    /** @test */
-    public function a_checkbox_value_depends_on_whether_any_value_has_been_set()
-    {
-
-        $field = new Checkbox('foo', 'bar', 'bim');
-        $this->assertEquals('bim', $field->getValue());
-        $this->assertFalse($field->isChecked());
-
-        $field->setValue('wibble');
-        $this->assertEquals('bar',$field->getValue());
-        $this->assertTrue($field->isChecked());
-
     }
 
     /** @test */

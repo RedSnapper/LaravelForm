@@ -30,7 +30,10 @@ class Checkbox extends AbstractField
 
     public function getValue()
     {
-        return is_null($this->value) ? $this->unchecked : $this->checked;
+
+        $checked =  !is_null($this->value) && (string)$this->value === (string)$this->checked;
+
+        return $checked ? $this->checked : $this->unchecked;
     }
 
     public function getHTMLValue()
@@ -54,7 +57,13 @@ class Checkbox extends AbstractField
      */
     public function isChecked(): bool
     {
-        return !is_null($this->value) || !is_null($this->default);
+        $value = is_null($this->value) ? $this->default : $this->value;
+
+        if(is_null($value)){
+            return false;
+        }
+
+        return (string)$value === (string)$this->checked;
     }
 
     protected function data(): Collection

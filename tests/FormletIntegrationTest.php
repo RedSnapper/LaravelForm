@@ -101,7 +101,7 @@ class FormletIntegrationTest extends TestCase
 
         $this->post('/users', [
           'email'   => 'john@example.com',
-          'profile' => [['name' => 'John', 'active' => "foo"]]
+          'profile' => [['name' => 'John', 'active' => "1"]]
         ])->assertStatus(200);
         $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
         $this->assertDatabaseHas('profiles', ['user_id' => 1, 'name' => 'John', 'active' => true]);
