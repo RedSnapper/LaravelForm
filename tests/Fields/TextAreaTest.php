@@ -43,9 +43,10 @@ class TextAreaTest extends AbstractFieldTest
     public function can_render_a_textarea()
     {
         $field = new TextArea('bim');
-        $this->assertContains('<textarea class="form-control" id="bim" name="bim"> </textarea>', $this->renderField($field));
+        // Text Areas should not have any extra space characters which have not been set from the value
+        $this->assertContains('<textarea class="form-control" id="bim" name="bim"></textarea>', $field->render()->render());
         $field->setValue("Eggs & Sausage");
-        $this->assertContains('<textarea class="form-control" id="bim" name="bim"> Eggs &amp; Sausage </textarea>', $this->renderField($field));
+        $this->assertContains('<textarea class="form-control" id="bim" name="bim">Eggs &amp; Sausage</textarea>', $field->render()->render());
     }
 
 }

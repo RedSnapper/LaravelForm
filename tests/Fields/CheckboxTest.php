@@ -109,6 +109,10 @@ class CheckboxTest extends AbstractFieldTest
         $field->default(true);
         $rendered = $this->renderField($field);
         $this->assertContains('<input class="form-check-input" checked="checked" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
+
+        $field->setValue(false);
+        $rendered = $this->renderField($field);
+        $this->assertContains('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
     }
 
     /** @test */
