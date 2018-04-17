@@ -27,7 +27,7 @@ class FormServiceProvider extends ServiceProvider
 
 		$this->publishes([
 		  __DIR__.'/resources/views' => resource_path('views/vendor/form'),
-		]);
+		],'form');
 
         $this->addBladeDirectives();
 
