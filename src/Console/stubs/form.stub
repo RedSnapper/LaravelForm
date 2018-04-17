@@ -11,7 +11,7 @@ class DummyClass extends Formlet{
     *
     * @return void
     */
-   public function prepare() {
+   public function prepare():void {
 
    }
 
