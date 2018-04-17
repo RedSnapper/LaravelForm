@@ -223,7 +223,7 @@ class FormletIntegrationTest extends TestCase
         $formlets = $formlet->formlets('permissions');
 
         $this->assertCount(2, $formlets);
-        $this->assertEquals($permissionA->name, $formlets->first()->getRelated()->name);
+        $this->assertEquals($permissionA->name, $formlets->get(0)->getRelated()->name);
         $this->assertEquals($permissionB->name, $formlets->get(1)->getRelated()->name);
 
         $this->assertEquals("Red", $formlets->first()->getModel()->pivot->color);
@@ -232,6 +232,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertTrue($formlets->first()->field('id')->isChecked());
         $this->assertEquals('Red',$formlets->first()->field('color')->getValue());
         $this->assertFalse($formlets->get(1)->field('id')->isChecked());
+        $this->assertNull($formlets->get(1)->field('color')->getValue());
 
     }
 
@@ -260,7 +261,38 @@ class FormletIntegrationTest extends TestCase
             $this->assertCount(1,$permissions);
             $this->assertEquals("Permission A",$permissions->first()->name);
             $this->assertEquals("Red",$permissions->first()->pivot->color);
+        });
 
+    }
+
+    /** @test */
+    public function many_to_many_relation_update()
+    {
+        $user = User::create(['email' => 'john@example.com']);
+        $permissionA = Permission::create(['name'=>'Permission A']);
+        $permissionB =  Permission::create(['name'=>'Permission B']);
+
+        $user->permissions()->attach($permissionA->id,['color'=>'Red']);
+
+        Route::put('/users/{user}', function ($user, UserPermissionForm $formlet) {
+            $user = User::find($user);
+            return $formlet->model($user)->update();
+        });
+
+        $this->put('/users/1', [
+          'email'   => 'james@example.com',
+          'permissions' => [
+            ['color'=>'Red'],
+            ['id' => '2','color'=>'Blue']
+          ]
+        ])->assertStatus(200);
+
+        tap($user->fresh(),function(User $user){
+            $this->assertEquals("james@example.com",$user->email);
+            $permissions = $user->permissions;
+            $this->assertCount(1,$permissions);
+            $this->assertEquals("Permission B",$permissions->first()->name);
+            $this->assertEquals("Blue",$permissions->first()->pivot->color);
         });
 
     }

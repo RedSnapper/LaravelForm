@@ -17,6 +17,14 @@ class UserPermissionForm extends Formlet
 
     }
 
+    public function edit()
+    {
+        $user = parent::edit();
+
+        $user->permissions()->sync($this->subscriptionData('permissions'));
+
+    }
+
     public function persist()
     {
         $user = parent::persist();

@@ -114,25 +114,21 @@ trait HasRelationships
      */
     protected function belongsToMany(BelongsToMany $relation, string $relationKey, string $class, int $count)
     {
-
-        if ($this->model->exists) {
-
-            $subscribed = $relation->getResults();
+            // Get subscribed models
+            $subscribed = $this->model->exists ? $relation->getResults() : false;
 
             foreach ($relation->getRelated()->get() as $model) {
 
-                $formlet = $this->addRelationFormlet($relation,$relationKey, $class);
-                $formlet->related = $model;
-                $formlet->model($subscribed->firstWhere($model->getKeyName(), $model->getKey()));
-            }
-        }else{
+                $formlet = $this->addRelationFormlet($relation, $relationKey, $class);
 
-            foreach ($relation->getRelated()->get() as $model) {
-
-                $formlet = $this->addRelationFormlet($relation,$relationKey, $class);
+                // Related model can be used in the subscriber formlet
                 $formlet->related = $model;
+
+                // Set the model for any subscribed models
+                if($subscribed){
+                    $formlet->model($subscribed->firstWhere($model->getKeyName(), $model->getKey()));
+                }
             }
-        }
     }
 
     protected function addRelationFormlet(Relation $relation, string $relationKey, string $class)
