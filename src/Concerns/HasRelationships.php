@@ -76,7 +76,7 @@ trait HasRelationships
 
         if ($this->model->exists) {
 
-            $formlet = $this->addFormlet($relationKey, $class);
+            $formlet = $this->addRelationFormlet($relation,$relationKey, $class);
             $formlet->model($relation->getResults());
         } else {
             $this->addFormlet($relationKey, $class);
@@ -95,8 +95,8 @@ trait HasRelationships
     {
 
         if ($this->model->exists) {
-            $relation->getResults()->each(function (Model $model) use ($relationKey, $class) {
-                $formlet = $this->addFormlet($relationKey, $class);
+            $relation->getResults()->each(function (Model $model) use ($relation,$relationKey, $class) {
+                $formlet = $this->addRelationFormlet($relation,$relationKey, $class);
                 $formlet->model($model);
             });
         } else {
@@ -121,12 +121,25 @@ trait HasRelationships
 
             foreach ($relation->getRelated()->get() as $model) {
 
-                $formlet = $this->addFormlet($relationKey, $class);
+                $formlet = $this->addRelationFormlet($relation,$relationKey, $class);
                 $formlet->related = $model;
-                $formlet->relation = $relation;
                 $formlet->model($subscribed->firstWhere($model->getKeyName(), $model->getKey()));
             }
+        }else{
+
+            foreach ($relation->getRelated()->get() as $model) {
+
+                $formlet = $this->addRelationFormlet($relation,$relationKey, $class);
+                $formlet->related = $model;
+            }
         }
+    }
+
+    protected function addRelationFormlet(Relation $relation, string $relationKey, string $class)
+    {
+        $formlet = $this->addFormlet($relationKey, $class);
+        $formlet->relation = $relation;
+        return $formlet;
     }
 
     /**
@@ -158,11 +171,21 @@ trait HasRelationships
         return $relation;
     }
 
+    /**
+     * Does the formlet have pivot columns
+     *
+     * @return bool
+     */
     protected function hasPivotColumns(): bool
     {
         return !is_null($this->relation) && $this->relation instanceof BelongsToMany;
     }
 
+    /**
+     * Get the pivot accessor for this formlet
+     *
+     * @return string
+     */
     protected function getPivotAccessor(): string
     {
         return $this->relation->getPivotAccessor();

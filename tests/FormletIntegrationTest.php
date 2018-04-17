@@ -235,6 +235,60 @@ class FormletIntegrationTest extends TestCase
 
     }
 
+    /** @test */
+    public function many_to_many_relation_store()
+    {
+        $this->withoutExceptionHandling();
+        Permission::create(['name'=>'Permission A']);
+        Permission::create(['name'=>'Permission B']);
+
+        Route::post('/users', function (User $user, UserPermissionForm $formlet) {
+            return $formlet->model($user)->store();
+        });
+
+        $this->post('/users', [
+          'email'   => 'john@example.com',
+          'permissions' => [
+            ['id' => '1','color'=>'Red'],
+            ['color'=>'Blue']
+          ]
+        ])->assertStatus(200);
+
+        tap(User::first(),function(User $user){
+            $this->assertEquals("john@example.com",$user->email);
+            $permissions = $user->permissions;
+            $this->assertCount(1,$permissions);
+            $this->assertEquals("Permission A",$permissions->first()->name);
+            $this->assertEquals("Red",$permissions->first()->pivot->color);
+
+        });
+
+    }
+
+    /** @test */
+    public function retrieve_subscription_data()
+    {
+
+        app()->request->merge([
+          'email'   => 'john@example.com',
+          'permissions' => [
+            ['id' => '1','color'=>'Red'],
+            ['color'=>'Blue']
+          ]
+        ]);
+
+        Permission::create(['name'=>'Permission A']);
+        Permission::create(['name'=>'Permission B']);
+
+        $form = app(UserPermissionForm::class);
+        $user = new User();
+
+        $form->model($user)->build();
+
+        $this->assertEquals([1=>['color'=>"Red"]],$form->subscriptionData('permissions'));
+
+    }
+
 }
 
 

@@ -49,6 +49,34 @@ trait ManagesPosts
     }
 
     /**
+     * Returns subscription data for a group of formlets
+     *
+     * @param string $name
+     * @return array
+     */
+    public function subscriptionData(string $name): array
+    {
+
+        $this->populate();
+
+        $formlets = $this->formlets($name);
+
+        if ($formlets->count() == 0) {
+            return [];
+        }
+
+        $keyName = $formlets->first()->related->getKeyName();
+
+        return $this->allPostData()->get($name)
+          ->filter(function ($item) use ($keyName) {
+              return $item->get($keyName) !== false;
+          })
+          ->keyBy($keyName)
+          ->map->except($keyName)
+          ->toArray();
+    }
+
+    /**
      * Method called when storing
      */
     public function persist()
