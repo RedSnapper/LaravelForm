@@ -6,15 +6,23 @@ use RS\Form\Formlet;
 
 class DummyClass extends Formlet{
 
-   public $formView = "";
-
    /**
     * Prepare the form with fields
     *
     * @return void
     */
-   public function prepareForm() {
+   public function prepare() {
 
+   }
+
+   /**
+    * Validation rules that apply to the form.
+    *
+    * @return array
+    */
+   public function rules(): array
+   {
+       return [];
    }
 
 }

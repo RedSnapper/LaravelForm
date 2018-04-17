@@ -495,12 +495,12 @@ abstract class Formlet
     {
         $data = data_get($model, $this->transformKey($name));
 
-        if(!is_null($data)){
+        if (!is_null($data)) {
             return $data;
         }
 
-        return $this->hasPivotColumns() ? data_get($model, $this->getPivotAccessor() . "." . $this->transformKey($name)) : null;
-
+        return $this->hasPivotColumns() ? data_get($model,
+          $this->getPivotAccessor() . "." . $this->transformKey($name)) : null;
     }
 
     /**
