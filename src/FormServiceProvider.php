@@ -51,14 +51,20 @@ class FormServiceProvider extends ServiceProvider
 
             $vars = explode(',', $expression);
 
+            if($vars[0] == ""){
+                $vars = [];
+            }
+
             if (count($vars) == 2) {
                 list($form, $field) = $vars;
 
                 $accessor = "['formlet']->formlet($form)->field($field)";
 
-            } else {
+            } elseif((count($vars) == 1)) {
                 list($field) = $vars;
                 $accessor = "['formlet']->field({$field})";
+            } else {
+                $accessor = "['field']";
             }
 
             return "<?php echo \array_except(get_defined_vars(), array('__data', '__path')){$accessor}->render(); ?>";

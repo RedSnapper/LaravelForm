@@ -18,7 +18,7 @@ class FormletRenderTest extends TestCase
 
     public function getFormViews()
     {
-        return [['form'],['formlet'],['fields']];
+        return [['form'],['formlet'],['fields'],['field']];
     }
 
     /**
