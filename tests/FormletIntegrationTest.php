@@ -3,8 +3,10 @@
 namespace Tests;
 
 use Illuminate\Support\Facades\Route;
+use RS\Form\Formlet;
 use Tests\Fixtures\Formlets\UserFormlet;
 use Tests\Fixtures\Formlets\UserPermissionForm;
+use Tests\Fixtures\Formlets\UserPermissionFormlet;
 use Tests\Fixtures\Formlets\UserPostsFormlet;
 use Tests\Fixtures\Formlets\UserProfileFormlet;
 use Tests\Fixtures\Formlets\UserRoleFormlet;
@@ -208,6 +210,24 @@ class FormletIntegrationTest extends TestCase
     }
 
     /** @test */
+    public function has_many_relation_restriction()
+    {
+        $user = User::create(['email' => 'john@example.com']);
+        $user->posts()->create(['name'=>'Post A']);
+        $user->posts()->create(['name'=>'Post B']);
+
+        $formlet = $this->formlet(function(Formlet $formlet){
+            $formlet->relation('posts',\Tests\Fixtures\Formlets\PostFormlet::class,function($query){
+                $query->limit(1);
+            });
+        });
+
+        $formlet->model($user)->build();
+
+        $this->assertCount(1,$formlet->formlets('posts'));
+    }
+
+    /** @test */
     public function many_to_many_relation()
     {
 
@@ -298,6 +318,25 @@ class FormletIntegrationTest extends TestCase
     }
 
     /** @test */
+    public function many_to_many_restriction()
+    {
+
+        Permission::create(['name'=>'Permission A']);
+        Permission::create(['name'=>'Permission B']);
+
+        $formlet = $this->formlet(function(Formlet $formlet){
+            $formlet->relation('permissions',UserPermissionFormlet::class,function($query){
+                $query->limit(1);
+            });
+        });
+
+        $formlet->model(new User)->build();
+
+        $this->assertCount(1,$formlet->formlets('permissions'));
+
+    }
+
+    /** @test */
     public function retrieve_subscription_data()
     {
 
@@ -320,6 +359,33 @@ class FormletIntegrationTest extends TestCase
         $this->assertEquals([1=>['color'=>"Red"]],$form->subscriptionData('permissions'));
 
     }
+
+    private function formlet(\Closure $closure = null): Formlet
+    {
+        return $this->app->makeWith(IntegrationFormlet::class, ['closure' => $closure]);
+    }
+
+
+}
+
+class IntegrationFormlet extends Formlet
+{
+
+    protected $closure;
+
+    public function __construct(\Closure $closure = null)
+    {
+        $this->closure = $closure;
+    }
+
+    public function prepare(): void
+    {
+        $closure = $this->closure;
+        if (!is_null($closure)) {
+            $closure($this);
+        }
+    }
+
 
 }
 

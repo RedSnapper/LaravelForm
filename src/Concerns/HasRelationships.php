@@ -39,7 +39,7 @@ trait HasRelationships
      * @param string $formlet
      * @param int    $count
      */
-    public function relation(string $relationKey, string $formlet, int $count = 1)
+    public function relation(string $relationKey, string $formlet, \Closure $closure = null, int $count = 1)
     {
 
         if (!isset($this->model)) {
@@ -49,7 +49,7 @@ trait HasRelationships
         $relation = $this->getRelationshipFromMethod($relationKey);
 
         if ($method = @$this->relationsMap[get_class($relation)]) {
-            $this->$method($relation, $relationKey, $formlet, $count);
+            $this->$method($relation, $relationKey, $formlet, $closure, $count);
         }
     }
 
@@ -64,19 +64,19 @@ trait HasRelationships
     }
 
     /**
-     * HasOne Relation
+     * Has One Relation
      *
-     * @param hasOne $relation
-     * @param string $relationKey
-     * @param string $class
-     * @param int    $count
+     * @param HasOne        $relation
+     * @param string        $relationKey
+     * @param string        $class
+     * @param \Closure|null $closure
      */
-    protected function hasOne(HasOne $relation, string $relationKey, string $class, int $count)
+    protected function hasOne(HasOne $relation, string $relationKey, string $class, \Closure $closure = null)
     {
 
         if ($this->model->exists) {
 
-            $formlet = $this->addRelationFormlet($relation,$relationKey, $class);
+            $formlet = $this->addRelationFormlet($relation, $relationKey, $class);
             $formlet->model($relation->getResults());
         } else {
             $this->addFormlet($relationKey, $class);
@@ -86,17 +86,26 @@ trait HasRelationships
     /**
      * HasMany relation
      *
-     * @param HasMany $relation
-     * @param string  $relationKey
-     * @param string  $class
-     * @param int     $count
+     * @param HasMany       $relation
+     * @param string        $relationKey
+     * @param string        $class
+     * @param \Closure|null $closure
+     * @param int           $count
      */
-    protected function hasMany(HasMany $relation, string $relationKey, string $class, int $count)
-    {
+    protected function hasMany(
+      HasMany $relation,
+      string $relationKey,
+      string $class,
+      \Closure $closure = null,
+      int $count
+    ) {
 
         if ($this->model->exists) {
-            $relation->getResults()->each(function (Model $model) use ($relation,$relationKey, $class) {
-                $formlet = $this->addRelationFormlet($relation,$relationKey, $class);
+
+            $query = $this->applyRelationScopes($relation, $closure);
+
+            $query->get()->each(function (Model $model) use ($relation, $relationKey, $class) {
+                $formlet = $this->addRelationFormlet($relation, $relationKey, $class);
                 $formlet->model($model);
             });
         } else {
@@ -110,25 +119,31 @@ trait HasRelationships
      * @param BelongsToMany $relation
      * @param string        $relationKey
      * @param string        $class
-     * @param int           $count
+     * @param \Closure|null $closure
      */
-    protected function belongsToMany(BelongsToMany $relation, string $relationKey, string $class, int $count)
-    {
-            // Get subscribed models
-            $subscribed = $this->model->exists ? $relation->getResults() : false;
+    protected function belongsToMany(
+      BelongsToMany $relation,
+      string $relationKey,
+      string $class,
+      \Closure $closure = null
+    ) {
+        // Get subscribed models
+        $subscribed = $this->model->exists ? $relation->getResults() : false;
 
-            foreach ($relation->getRelated()->get() as $model) {
+        $query = $this->applyRelationScopes($relation->getRelated()->newQuery(), $closure);
 
-                $formlet = $this->addRelationFormlet($relation, $relationKey, $class);
+        foreach ($query->get() as $model) {
 
-                // Related model can be used in the subscriber formlet
-                $formlet->related = $model;
+            $formlet = $this->addRelationFormlet($relation, $relationKey, $class);
 
-                // Set the model for any subscribed models
-                if($subscribed){
-                    $formlet->model($subscribed->firstWhere($model->getKeyName(), $model->getKey()));
-                }
+            // Related model can be used in the subscriber formlet
+            $formlet->related = $model;
+
+            // Set the model for any subscribed models
+            if ($subscribed) {
+                $formlet->model($subscribed->firstWhere($model->getKeyName(), $model->getKey()));
             }
+        }
     }
 
     protected function addRelationFormlet(Relation $relation, string $relationKey, string $class)
@@ -185,6 +200,22 @@ trait HasRelationships
     protected function getPivotAccessor(): string
     {
         return $this->relation->getPivotAccessor();
+    }
+
+    /**
+     * Apply any scopes provided by the developer
+     *
+     * @param $query
+     * @param $closure
+     * @return mixed
+     */
+    protected function applyRelationScopes($query, $closure)
+    {
+        if (!is_null($closure)) {
+            $closure($query);
+        }
+
+        return $query;
     }
 
 }

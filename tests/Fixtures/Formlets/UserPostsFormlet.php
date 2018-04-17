@@ -11,7 +11,7 @@ class UserPostsFormlet extends Formlet
     public function prepare(): void
     {
         $this->add(new Input('email','email'));
-        $this->relation('posts',PostFormlet::class,2);
+        $this->relation('posts',PostFormlet::class,null,2);
     }
 
     public function persist(){
