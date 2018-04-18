@@ -84,7 +84,7 @@ trait ManagesForm
      * @param bool   $absolute
      * @return Formlet
      */
-    public function route(string $name, array $parameters = [], $absolute = true): Formlet
+    public function route(string $name, $parameters = [], $absolute = true): Formlet
     {
         $this->setAttribute('action', $this->url->route($name, $parameters, $absolute));
 
