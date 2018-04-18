@@ -74,7 +74,7 @@ trait HasRelationships
     protected function hasOne(HasOne $relation, string $relationKey, string $class, \Closure $closure = null)
     {
 
-        if ($this->model->exists) {
+        if ($this->modelExists()) {
 
             $formlet = $this->addRelationFormlet($relation, $relationKey, $class);
             $formlet->model($relation->getResults());
@@ -100,7 +100,7 @@ trait HasRelationships
       int $count
     ) {
 
-        if ($this->model->exists) {
+        if ($this->modelExists()) {
 
             $query = $this->applyRelationScopes($relation, $closure);
 
@@ -128,7 +128,7 @@ trait HasRelationships
       \Closure $closure = null
     ) {
         // Get subscribed models
-        $subscribed = $this->model->exists ? $relation->getResults() : false;
+        $subscribed = $this->modelExists() ? $relation->getResults() : false;
 
         $query = $this->applyRelationScopes($relation->getRelated()->newQuery(), $closure);
 

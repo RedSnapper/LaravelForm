@@ -235,6 +235,16 @@ abstract class Formlet
     }
 
     /**
+     * Does this model exist.
+     *
+     * @return bool
+     */
+    public function modelExists(): bool
+    {
+        return !is_null($this->model) && $this->model->exists;
+    }
+
+    /**
      * Return fields for this formlet
      *
      * @param null|string|array $name

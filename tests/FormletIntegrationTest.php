@@ -27,6 +27,21 @@ class FormletIntegrationTest extends TestCase
     }
 
     /** @test */
+    public function a_formlet_may_have_an_existing_model()
+    {
+        $formlet = $this->formlet();
+        $formlet->build();
+
+        $this->assertFalse($formlet->modelExists());
+
+        $user = factory(User::class)->create();
+
+        $formlet->model($user);
+        $this->assertTrue($formlet->modelExists());
+
+    }
+
+    /** @test */
     public function test_store_method()
     {
         Route::post('/users', function (UserFormlet $formlet, User $model) {
