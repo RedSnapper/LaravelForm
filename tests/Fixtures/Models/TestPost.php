@@ -4,7 +4,7 @@ namespace Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Post extends Model
+class TestPost extends Model
 {
     /**
      * The attributes that aren't mass assignable.
@@ -12,6 +12,8 @@ class Post extends Model
      * @var array
      */
     protected $guarded = [];
+
+    protected $table ="posts";
 
 
 }

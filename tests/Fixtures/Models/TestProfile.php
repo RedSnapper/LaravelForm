@@ -4,7 +4,7 @@ namespace Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Permission extends Model
+class TestProfile extends Model
 {
     /**
      * The attributes that aren't mass assignable.
@@ -13,9 +13,9 @@ class Permission extends Model
      */
     protected $guarded = [];
 
-    public function user()
-    {
-        return $this->belongsToMany(User::class);
-    }
+    protected $table="profiles";
+
+    protected $primaryKey = "user_id";
+
 
 }

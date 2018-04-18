@@ -1,8 +1,8 @@
 <?php
 use Faker\Generator as Faker;
-use Tests\Fixtures\Models\User;
+use Tests\Fixtures\Models\TestUser;
 
-$factory->define(User::class, function (Faker $faker) {
+$factory->define(TestUser::class, function (Faker $faker) {
     return [
       'email'    => $faker->email
     ];

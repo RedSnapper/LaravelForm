@@ -5,13 +5,13 @@ namespace Tests\Fixtures\Formlets;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
 
-class UserProfileFormlet extends Formlet
+class TestUserProfileFormlet extends Formlet
 {
 
     public function prepare(): void
     {
         $this->add(new Input('email','email'));
-        $this->relation('profile',ProfileFormlet::class);
+        $this->relation('profile',TestProfileFormlet::class);
     }
 
     public function persist()

@@ -5,15 +5,15 @@ namespace Tests\Fixtures\Formlets;
 use RS\Form\Fields\CheckboxGroup;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
-use Tests\Fixtures\Models\Role;
+use Tests\Fixtures\Models\TestRole;
 
-class UserPermissionForm extends Formlet
+class TestUserPermissionForm extends Formlet
 {
 
     public function prepare(): void
     {
         $this->add(new Input('email', 'email'));
-        $this->relation('permissions',UserPermissionFormlet::class);
+        $this->relation('permissions',TestUserPermissionFormlet::class);
 
     }
 

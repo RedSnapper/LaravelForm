@@ -4,7 +4,7 @@ namespace Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Role extends Model
+class TestRole extends Model
 {
     /**
      * The attributes that aren't mass assignable.
@@ -12,6 +12,8 @@ class Role extends Model
      * @var array
      */
     protected $guarded = [];
+
+    protected $table="roles";
 
 
 }

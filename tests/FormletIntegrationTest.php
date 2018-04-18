@@ -4,16 +4,16 @@ namespace Tests;
 
 use Illuminate\Support\Facades\Route;
 use RS\Form\Formlet;
-use Tests\Fixtures\Formlets\UserFormlet;
-use Tests\Fixtures\Formlets\UserPermissionForm;
-use Tests\Fixtures\Formlets\UserPermissionFormlet;
-use Tests\Fixtures\Formlets\UserPostsFormlet;
-use Tests\Fixtures\Formlets\UserProfileFormlet;
-use Tests\Fixtures\Formlets\UserRoleFormlet;
-use Tests\Fixtures\Models\Permission;
-use Tests\Fixtures\Models\Post;
-use Tests\Fixtures\Models\Role;
-use Tests\Fixtures\Models\User;
+use Tests\Fixtures\Formlets\TestUserFormlet;
+use Tests\Fixtures\Formlets\TestUserPermissionForm;
+use Tests\Fixtures\Formlets\TestUserPermissionFormlet;
+use Tests\Fixtures\Formlets\TestUserPostsFormlet;
+use Tests\Fixtures\Formlets\TestUserProfileFormlet;
+use Tests\Fixtures\Formlets\TestUserRoleFormlet;
+use Tests\Fixtures\Models\TestPermission;
+use Tests\Fixtures\Models\TestPost;
+use Tests\Fixtures\Models\TestRole;
+use Tests\Fixtures\Models\TestUser;
 
 class FormletIntegrationTest extends TestCase
 {
@@ -34,7 +34,7 @@ class FormletIntegrationTest extends TestCase
 
         $this->assertFalse($formlet->modelExists());
 
-        $user = factory(User::class)->create();
+        $user = factory(TestUser::class)->create();
 
         $formlet->model($user);
         $this->assertTrue($formlet->modelExists());
@@ -44,7 +44,7 @@ class FormletIntegrationTest extends TestCase
     /** @test */
     public function test_store_method()
     {
-        Route::post('/users', function (UserFormlet $formlet, User $model) {
+        Route::post('/users', function (TestUserFormlet $formlet, TestUser $model) {
             return $formlet->model($model)->store();
         });
 
@@ -58,12 +58,12 @@ class FormletIntegrationTest extends TestCase
     public function test_update_method()
     {
 
-        User::create(['email' => 'john@example.com']);
+        TestUser::create(['email' => 'john@example.com']);
 
         $this->assertDatabaseHas('users', ['id' => 1, 'email' => 'john@example.com']);
 
-        Route::put('/users/{user}', function ($user, UserFormlet $formlet) {
-            $user = User::find($user);
+        Route::put('/users/{user}', function ($user, TestUserFormlet $formlet) {
+            $user = TestUser::find($user);
             return $formlet->model($user)->update();
         });
 
@@ -77,11 +77,11 @@ class FormletIntegrationTest extends TestCase
     public function test_many_to_many_associations_store()
     {
         $this->withoutExceptionHandling();
-        $adminRole = Role::create(['name' => 'Admin']);
-        $userRole = Role::create(['name' => 'User']);
-        $editorRole = Role::create(['name' => 'Editor']);
+        $adminRole = TestRole::create(['name' => 'Admin']);
+        $userRole = TestRole::create(['name' => 'User']);
+        $editorRole = TestRole::create(['name' => 'Editor']);
 
-        Route::post('/users', function (UserRoleFormlet $formlet, User $user) {
+        Route::post('/users', function (TestUserRoleFormlet $formlet, TestUser $user) {
             return $formlet->model($user)->store();
         });
 
@@ -98,10 +98,10 @@ class FormletIntegrationTest extends TestCase
     public function formlet_has_one_relation()
     {
 
-        $user = User::create(['email' => 'john@example.com']);
+        $user = TestUser::create(['email' => 'john@example.com']);
         $user->assignProfile(['name' => 'John', 'active' => false]);
 
-        $form = app(UserProfileFormlet::class);
+        $form = app(TestUserProfileFormlet::class);
         $form->model($user)->build();
 
         $fields = $form->fields();
@@ -116,7 +116,7 @@ class FormletIntegrationTest extends TestCase
     public function formlet_has_one_relation_store_method()
     {
         $this->withoutExceptionHandling();
-        Route::post('/users', function (UserProfileFormlet $formlet, User $model) {
+        Route::post('/users', function (TestUserProfileFormlet $formlet, TestUser $model) {
             return $formlet->model($model)->store();
         });
 
@@ -133,11 +133,11 @@ class FormletIntegrationTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
-        $user = User::create(['email' => 'john@example.com']);
+        $user = TestUser::create(['email' => 'john@example.com']);
         $user->assignProfile(['name' => 'John']);
 
-        Route::put('/users/{user}', function ($user, UserProfileFormlet $formlet) {
-            $user = User::find($user);
+        Route::put('/users/{user}', function ($user, TestUserProfileFormlet $formlet) {
+            $user = TestUser::find($user);
             return $formlet->model($user)->update();
         });
 
@@ -146,7 +146,7 @@ class FormletIntegrationTest extends TestCase
           'profile' => [['name' => 'James']]
         ])->assertStatus(200);
 
-        tap($user->fresh(),function(User $user){
+        tap($user->fresh(),function(TestUser $user){
             $this->assertEquals("james@example.com",$user->email);
             $this->assertEquals("James",$user->profile->name);
         });
@@ -156,11 +156,11 @@ class FormletIntegrationTest extends TestCase
     public function has_many_relation()
     {
 
-        $user = User::create(['email' => 'john@example.com']);
+        $user = TestUser::create(['email' => 'john@example.com']);
         $postA = $user->posts()->create(['name'=>'Post A']);
         $postB = $user->posts()->create(['name'=>'Post B']);
 
-        $formlet = app(UserPostsFormlet::class);
+        $formlet = app(TestUserPostsFormlet::class);
         $formlet->model($user)->build();
 
         $this->assertCount(2,$formlet->formlets('posts'));
@@ -173,7 +173,7 @@ class FormletIntegrationTest extends TestCase
     public function has_many_create_method()
     {
 
-        Route::post('/users', function (User $user, UserPostsFormlet $formlet) {
+        Route::post('/users', function (TestUser $user, TestUserPostsFormlet $formlet) {
             return $formlet->model($user)->store();
         });
 
@@ -185,7 +185,7 @@ class FormletIntegrationTest extends TestCase
           ]
         ])->assertStatus(200);
 
-        tap(User::first(),function(User $user){
+        tap(TestUser::first(),function(TestUser $user){
             $this->assertEquals("john@example.com",$user->email);
             $posts = $user->posts;
             $this->assertCount(2,$posts);
@@ -198,12 +198,12 @@ class FormletIntegrationTest extends TestCase
     public function has_many_relation_update_method()
     {
 
-        $user = User::create(['email' => 'john@example.com']);
+        $user = TestUser::create(['email' => 'john@example.com']);
         $user->posts()->create(['name'=>'Post A']);
         $user->posts()->create(['name'=>'Post B']);
 
-        Route::put('/users/{user}', function ($user, UserPostsFormlet $formlet) {
-            $user = User::find($user);
+        Route::put('/users/{user}', function ($user, TestUserPostsFormlet $formlet) {
+            $user = TestUser::find($user);
             return $formlet->model($user)->update();
         });
 
@@ -215,7 +215,7 @@ class FormletIntegrationTest extends TestCase
           ]
         ])->assertStatus(200);
 
-        tap($user->fresh(),function(User $user){
+        tap($user->fresh(),function(TestUser $user){
             $this->assertEquals("james@example.com",$user->email);
             $posts = $user->posts;
             $this->assertCount(2,$posts);
@@ -227,12 +227,12 @@ class FormletIntegrationTest extends TestCase
     /** @test */
     public function has_many_relation_restriction()
     {
-        $user = User::create(['email' => 'john@example.com']);
+        $user = TestUser::create(['email' => 'john@example.com']);
         $user->posts()->create(['name'=>'Post A']);
         $user->posts()->create(['name'=>'Post B']);
 
         $formlet = $this->formlet(function(Formlet $formlet){
-            $formlet->relation('posts',\Tests\Fixtures\Formlets\PostFormlet::class,function($query){
+            $formlet->relation('posts',\Tests\Fixtures\Formlets\TestPostFormlet::class,function($query){
                 $query->limit(1);
             });
         });
@@ -246,13 +246,13 @@ class FormletIntegrationTest extends TestCase
     public function many_to_many_relation()
     {
 
-        $user = User::create(['email' => 'john@example.com']);
-        $permissionA = Permission::create(['name'=>'Permission A']);
-        $permissionB =  Permission::create(['name'=>'Permission B']);
+        $user = TestUser::create(['email' => 'john@example.com']);
+        $permissionA = TestPermission::create(['name' =>'Permission A']);
+        $permissionB =  TestPermission::create(['name' =>'Permission B']);
 
         $user->permissions()->attach($permissionA->id,['color'=>'Red']);
 
-        $formlet = app(UserPermissionForm::class);
+        $formlet = app(TestUserPermissionForm::class);
         $formlet->model($user)->build();
 
         $formlets = $formlet->formlets('permissions');
@@ -275,10 +275,10 @@ class FormletIntegrationTest extends TestCase
     public function many_to_many_relation_store()
     {
         $this->withoutExceptionHandling();
-        Permission::create(['name'=>'Permission A']);
-        Permission::create(['name'=>'Permission B']);
+        TestPermission::create(['name' =>'Permission A']);
+        TestPermission::create(['name' =>'Permission B']);
 
-        Route::post('/users', function (User $user, UserPermissionForm $formlet) {
+        Route::post('/users', function (TestUser $user, TestUserPermissionForm $formlet) {
             return $formlet->model($user)->store();
         });
 
@@ -290,7 +290,7 @@ class FormletIntegrationTest extends TestCase
           ]
         ])->assertStatus(200);
 
-        tap(User::first(),function(User $user){
+        tap(TestUser::first(),function(TestUser $user){
             $this->assertEquals("john@example.com",$user->email);
             $permissions = $user->permissions;
             $this->assertCount(1,$permissions);
@@ -303,14 +303,14 @@ class FormletIntegrationTest extends TestCase
     /** @test */
     public function many_to_many_relation_update()
     {
-        $user = User::create(['email' => 'john@example.com']);
-        $permissionA = Permission::create(['name'=>'Permission A']);
-        $permissionB =  Permission::create(['name'=>'Permission B']);
+        $user = TestUser::create(['email' => 'john@example.com']);
+        $permissionA = TestPermission::create(['name' =>'Permission A']);
+        $permissionB =  TestPermission::create(['name' =>'Permission B']);
 
         $user->permissions()->attach($permissionA->id,['color'=>'Red']);
 
-        Route::put('/users/{user}', function ($user, UserPermissionForm $formlet) {
-            $user = User::find($user);
+        Route::put('/users/{user}', function ($user, TestUserPermissionForm $formlet) {
+            $user = TestUser::find($user);
             return $formlet->model($user)->update();
         });
 
@@ -322,7 +322,7 @@ class FormletIntegrationTest extends TestCase
           ]
         ])->assertStatus(200);
 
-        tap($user->fresh(),function(User $user){
+        tap($user->fresh(),function(TestUser $user){
             $this->assertEquals("james@example.com",$user->email);
             $permissions = $user->permissions;
             $this->assertCount(1,$permissions);
@@ -336,16 +336,16 @@ class FormletIntegrationTest extends TestCase
     public function many_to_many_restriction()
     {
 
-        Permission::create(['name'=>'Permission A']);
-        Permission::create(['name'=>'Permission B']);
+        TestPermission::create(['name' =>'Permission A']);
+        TestPermission::create(['name' =>'Permission B']);
 
         $formlet = $this->formlet(function(Formlet $formlet){
-            $formlet->relation('permissions',UserPermissionFormlet::class,function($query){
+            $formlet->relation('permissions',TestUserPermissionFormlet::class,function($query){
                 $query->limit(1);
             });
         });
 
-        $formlet->model(new User)->build();
+        $formlet->model(new TestUser)->build();
 
         $this->assertCount(1,$formlet->formlets('permissions'));
 
@@ -363,11 +363,11 @@ class FormletIntegrationTest extends TestCase
           ]
         ]);
 
-        Permission::create(['name'=>'Permission A']);
-        Permission::create(['name'=>'Permission B']);
+        TestPermission::create(['name' =>'Permission A']);
+        TestPermission::create(['name' =>'Permission B']);
 
-        $form = app(UserPermissionForm::class);
-        $user = new User();
+        $form = app(TestUserPermissionForm::class);
+        $user = new TestUser();
 
         $form->model($user)->build();
 

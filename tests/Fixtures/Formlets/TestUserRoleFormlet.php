@@ -5,15 +5,15 @@ namespace Tests\Fixtures\Formlets;
 use RS\Form\Fields\CheckboxGroup;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
-use Tests\Fixtures\Models\Role;
+use Tests\Fixtures\Models\TestRole;
 
-class UserRoleFormlet extends Formlet
+class TestUserRoleFormlet extends Formlet
 {
 
     public function prepare(): void
     {
         $this->add(new Input('email', 'email'));
-        $this->add(new CheckboxGroup('roles', Role::pluck('name', 'id')));
+        $this->add(new CheckboxGroup('roles', TestRole::pluck('name', 'id')));
     }
 
     public function persist()

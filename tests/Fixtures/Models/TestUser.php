@@ -4,8 +4,10 @@ namespace Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
+class TestUser extends Model
 {
+
+    protected $table = "users";
     /**
      * The attributes that aren't mass assignable.
      *
@@ -15,22 +17,22 @@ class User extends Model
 
     public function profile()
     {
-        return $this->hasOne(Profile::class);
+        return $this->hasOne(TestProfile::class,'user_id');
     }
 
     public function posts()
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(TestPost::class,'user_id');
     }
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class);
+        return $this->belongsToMany(TestRole::class,'role_user','user_id','role_id');
     }
 
     public function permissions()
     {
-        return $this->belongsToMany(Permission::class)->withPivot('color');
+        return $this->belongsToMany(TestPermission::class,'permission_user','user_id','permission_id')->withPivot('color');
     }
 
     public function assignProfile($attributes)
