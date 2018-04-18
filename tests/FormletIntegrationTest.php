@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use RS\Form\Formlet;
 use Tests\Fixtures\Formlets\TestUserFormlet;
@@ -247,7 +248,7 @@ class FormletIntegrationTest extends TestCase
     {
 
         $user = TestUser::create(['email' => 'john@example.com']);
-        $permissionA = TestPermission::create(['name' =>'Permission A']);
+        $permissionA = TestPermission::create(['name' =>'Permission A','color'=>'Blue']);
         $permissionB =  TestPermission::create(['name' =>'Permission B']);
 
         $user->permissions()->attach($permissionA->id,['color'=>'Red']);
@@ -261,11 +262,12 @@ class FormletIntegrationTest extends TestCase
         $this->assertEquals($permissionA->name, $formlets->get(0)->getRelated()->name);
         $this->assertEquals($permissionB->name, $formlets->get(1)->getRelated()->name);
 
-        $this->assertEquals("Red", $formlets->first()->getModel()->pivot->color);
+        $this->assertInstanceOf(Model::class, $formlets->first()->getModel());
         $this->assertNull($formlets->get(1)->getModel());
 
         $this->assertTrue($formlets->first()->field('id')->isChecked());
         $this->assertEquals('Red',$formlets->first()->field('color')->getValue());
+
         $this->assertFalse($formlets->get(1)->field('id')->isChecked());
         $this->assertNull($formlets->get(1)->field('color')->getValue());
 

@@ -503,14 +503,19 @@ abstract class Formlet
      */
     protected function getModelValueAttribute($model, $name)
     {
-        $data = data_get($model, $this->transformKey($name));
+
+        // If the model has pivot columns we should check them first
+        // Before checking the model attributes
+        // This is important as the we many have the same attribute
+        // on the pivot and the related model
+        $data = $this->hasPivotColumns() ? data_get($model,
+          $this->getPivotAccessor() . "." . $this->transformKey($name)) : null;
 
         if (!is_null($data)) {
             return $data;
         }
 
-        return $this->hasPivotColumns() ? data_get($model,
-          $this->getPivotAccessor() . "." . $this->transformKey($name)) : null;
+        return data_get($model, $this->transformKey($name));
     }
 
     /**
