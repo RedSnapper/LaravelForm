@@ -17,6 +17,11 @@ class Choice extends AbstractField {
 	protected $options;
 
     /**
+     * @var Collection
+     */
+    protected $optionList;
+
+    /**
      * String used for selected values options/radios
      * @var string
      */
@@ -27,11 +32,14 @@ class Choice extends AbstractField {
 
 		$this->attributes = collect([]);
         $this->setName($name);
-		$this->options = $this->setOptions($list);
+		$this->optionList = collect($list);
 	}
 
-    protected function data() : Collection {
-        $data = parent::data();
+    public function build() : Collection {
+
+	    $data = parent::build();
+
+        $this->options = $this->setOptions($this->optionList);
 
         return $data->merge(['options'=>$this->getOptionsWithValues()]);
     }
@@ -149,5 +157,7 @@ class Choice extends AbstractField {
     {
         return collect($this->getDefaultOptionAttributes())->merge($attributes);
     }
+
+
 
 }

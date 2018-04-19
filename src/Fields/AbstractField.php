@@ -328,7 +328,7 @@ abstract class AbstractField {
 
 
 	public function render():View{
-	    return view($this->getView(),$this->data());
+	    return view($this->getView(),$this->build());
     }
 
     public function guarded(bool $value = true){
@@ -344,7 +344,7 @@ abstract class AbstractField {
 	    return $this->guarded;
     }
 
-    protected function data(): Collection {
+    public function build(): Collection {
 
         return collect([
             'attributes'=> $this->attributes()->sortKeys(),

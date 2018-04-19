@@ -11,10 +11,11 @@ class CheckboxGroup extends Choice
 
     protected $multiple = true;
 
-    protected function getDefaultOptionAttributes():array{
+    protected function getDefaultOptionAttributes(): array
+    {
         return [
-          'name'=> $this->getAttribute('name'),
-            'type'=> 'checkbox'
+          'name' => $this->getAttribute('name'),
+          'type' => 'checkbox'
         ];
     }
 

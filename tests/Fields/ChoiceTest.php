@@ -31,6 +31,8 @@ class ChoiceTest extends AbstractFieldTest
             ]
         ]);
 
+        $field->build();
+
         $options = $field->getOptions();
 
         $this->assertCount(2, $options);
@@ -59,6 +61,8 @@ class ChoiceTest extends AbstractFieldTest
             'baz' => 'wibble'
         ]);
 
+        $field->build();
+
         $option = $field->getOptions()->first();
 
         $this->assertEquals('bar', $option->value);
@@ -83,6 +87,8 @@ class ChoiceTest extends AbstractFieldTest
                 ],
             ]
         ]);
+
+        $field->build();
 
         $option = $field->getOptions()->first();
         $optGroupOptions = $option->options;
@@ -110,6 +116,8 @@ class ChoiceTest extends AbstractFieldTest
             ]
         ]);
 
+        $field->build();
+
         $option = $field->getOptions()->first();
         $optGroupOptions = $option->options;
 
@@ -134,6 +142,7 @@ class ChoiceTest extends AbstractFieldTest
         ]);
 
         $field->setValue('foo');
+        $field->build();
         $options = $field->getOptionsWithValues();
         $this->assertEquals("selected", $options->first()->attributes->get('selected'));
         $this->assertNull($options->get(1)->attributes->get('selected'));

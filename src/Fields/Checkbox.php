@@ -66,11 +66,11 @@ class Checkbox extends AbstractField
         return (string)$value === (string)$this->checked;
     }
 
-    protected function data(): Collection
+    public function build(): Collection
     {
         $this->isChecked() ? $this->setAttribute('checked', 'checked') : $this->removeAttribute('checked');
 
-        return parent::data();
+        return parent::build();
     }
 
 }

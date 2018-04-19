@@ -11,7 +11,7 @@ class Radio extends Choice
 
     protected function getDefaultOptionAttributes():array{
         return [
-            'name'=> $this->getAttribute('name'),
+            'name'=> $this->getInstanceName(),
             'type'=> 'radio'
         ];
     }

@@ -64,6 +64,12 @@ class CheckboxGroupTest extends AbstractFieldTest
             $this->renderField($field));
         $this->assertContains('baz',
             $this->renderField($field));
+
+        $field->setInstanceName("foo[0]bim");
+
+        $this->assertContains('<input class="form-check-input" name="foo[0]bim[]" type="checkbox" checked="checked" value="bar"/>',
+          $this->renderField($field));
+
     }
 
     /** @test */

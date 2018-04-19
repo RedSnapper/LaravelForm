@@ -18,6 +18,7 @@ class SelectTest extends AbstractFieldTest
     {
         $field = new Select('text');
         $field->placeholder('bim');
+        $field->build();
         $option = $field->getOptions()->first();
 
         $this->assertEquals('bim', $option->label);
