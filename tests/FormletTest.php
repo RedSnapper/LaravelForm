@@ -194,6 +194,20 @@ class FormletTest extends TestCase
     }
 
     /** @test */
+    public function can_retrieve_parent_model_from_child_formlet()
+    {
+        $form = $this->formlet(function (Formlet $form) {
+            $form->addFormlet('child', ChildFormlet::class);
+        });
+
+        $model = $this->createModel(['name'=>'Foo']);
+
+        $form->model($model)->build();
+
+        $this->assertEquals("Foo",$form->formlet('child')->getParent()->name);
+    }
+
+    /** @test */
     public function can_get_formlets_as_properties_of_the_formlet()
     {
         $form = $this->formlet(function (Formlet $form) {

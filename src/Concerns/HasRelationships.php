@@ -26,6 +26,13 @@ trait HasRelationships
     protected $related;
 
     /**
+     * The parent model instance.
+     *
+     * @var Model
+     */
+    protected $parent;
+
+    /**
      * The relation.
      *
      * @var Relation
@@ -56,11 +63,21 @@ trait HasRelationships
     /**
      * Get the related model
      *
-     * @return Model|null
+     * @return Model|null|mixed
      */
-    public function getRelated(): ?Model
+    public function getRelated()
     {
         return $this->related;
+    }
+
+    /**
+     * Get the parent model
+     *
+     * @return Model|null|mixed
+     */
+    public function getParent()
+    {
+        return $this->parent;
     }
 
     /**

@@ -261,6 +261,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertCount(2, $formlets);
         $this->assertEquals($permissionA->name, $formlets->get(0)->getRelated()->name);
         $this->assertEquals($permissionB->name, $formlets->get(1)->getRelated()->name);
+        $this->assertEquals("john@example.com", $formlets->get(0)->getParent()->email);
 
         $this->assertInstanceOf(Model::class, $formlets->first()->getModel());
         $this->assertNull($formlets->get(1)->getModel());

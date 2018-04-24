@@ -227,9 +227,9 @@ abstract class Formlet
     /**
      * Get the model instance on the form builder.
      *
-     * @return Model|null
+     * @return Model|null|mixed
      */
-    public function getModel(): ?Model
+    public function getModel()
     {
         return $this->model;
     }
@@ -287,6 +287,7 @@ abstract class Formlet
 
         foreach (range(1, $count) as $index) {
             $formlet = app()->make($class);
+            $formlet->parent = $this->getModel();
 
             $formlet->name($relation);
 
