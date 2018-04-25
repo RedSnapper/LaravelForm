@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace RS\Form\Tests;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;

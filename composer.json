@@ -13,7 +13,7 @@
 	},
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "RS\\Form\\Tests\\": "tests/"
         }
     },
 	"authors": [{

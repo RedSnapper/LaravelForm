@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Fixtures\Formlets;
+namespace RS\Form\Tests\Fixtures\Formlets;
 
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;

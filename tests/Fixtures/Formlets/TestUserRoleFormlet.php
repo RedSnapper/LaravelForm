@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Fixtures\Formlets;
+namespace RS\Form\Tests\Fixtures\Formlets;
 
 use RS\Form\Fields\CheckboxGroup;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
-use Tests\Fixtures\Models\TestRole;
+use RS\Form\Tests\Fixtures\Models\TestRole;
 
 class TestUserRoleFormlet extends Formlet
 {

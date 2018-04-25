@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace RS\Form\Tests;
 
 use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Http\Request;

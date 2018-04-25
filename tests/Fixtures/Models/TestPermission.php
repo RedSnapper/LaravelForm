@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Fixtures\Models;
+namespace RS\Form\Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

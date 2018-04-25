@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Fields;
+namespace RS\Form\Tests\Fields;
 
 trait RendersErrors
 {

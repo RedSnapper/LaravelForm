@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace RS\Form\Tests;
 
 use RS\Form\Fields\AbstractField;
 use RS\Form\FormServiceProvider;

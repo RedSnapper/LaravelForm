@@ -1,9 +1,9 @@
 <?php
 
-namespace Tests\Fields;
+namespace RS\Form\Tests\Fields;
 
 use RS\Form\Fields\AbstractField;
-use Tests\TestCase;
+use RS\Form\Tests\TestCase;
 
 class AbstractFieldTest extends TestCase
 {

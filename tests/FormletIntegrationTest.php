@@ -1,20 +1,20 @@
 <?php
 
-namespace Tests;
+namespace RS\Form\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use RS\Form\Formlet;
-use Tests\Fixtures\Formlets\TestUserFormlet;
-use Tests\Fixtures\Formlets\TestUserPermissionForm;
-use Tests\Fixtures\Formlets\TestUserPermissionFormlet;
-use Tests\Fixtures\Formlets\TestUserPostsFormlet;
-use Tests\Fixtures\Formlets\TestUserProfileFormlet;
-use Tests\Fixtures\Formlets\TestUserRoleFormlet;
-use Tests\Fixtures\Models\TestPermission;
-use Tests\Fixtures\Models\TestPost;
-use Tests\Fixtures\Models\TestRole;
-use Tests\Fixtures\Models\TestUser;
+use RS\Form\Tests\Fixtures\Formlets\TestPostFormlet;
+use RS\Form\Tests\Fixtures\Formlets\TestUserFormlet;
+use RS\Form\Tests\Fixtures\Formlets\TestUserPermissionForm;
+use RS\Form\Tests\Fixtures\Formlets\TestUserPermissionFormlet;
+use RS\Form\Tests\Fixtures\Formlets\TestUserPostsFormlet;
+use RS\Form\Tests\Fixtures\Formlets\TestUserProfileFormlet;
+use RS\Form\Tests\Fixtures\Formlets\TestUserRoleFormlet;
+use RS\Form\Tests\Fixtures\Models\TestPermission;
+use RS\Form\Tests\Fixtures\Models\TestRole;
+use RS\Form\Tests\Fixtures\Models\TestUser;
 
 class FormletIntegrationTest extends TestCase
 {
@@ -233,7 +233,7 @@ class FormletIntegrationTest extends TestCase
         $user->posts()->create(['name'=>'Post B']);
 
         $formlet = $this->formlet(function(Formlet $formlet){
-            $formlet->relation('posts',\Tests\Fixtures\Formlets\TestPostFormlet::class,function($query){
+            $formlet->relation('posts',TestPostFormlet::class,function($query){
                 $query->limit(1);
             });
         });
