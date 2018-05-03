@@ -42,18 +42,27 @@ trait HasRelationships
     /**
      * Add relation to form
      *
-     * @param string $relationKey
+     * @param string|array $relation
      * @param string $formlet
      * @param int    $count
      */
-    public function relation(string $relationKey, string $formlet, \Closure $closure = null, int $count = 1)
+    public function relation($relation, string $formlet, \Closure $closure = null, int $count = 1)
     {
 
         if (!isset($this->model)) {
             return;
         }
 
-        $relation = $this->getRelationshipFromMethod($relationKey);
+        if(is_string($relation)){
+            $relationKey = $relation;
+            $relation = $this->getRelationshipFromMethod($relationKey);
+        }
+
+        if(is_array($relation)){
+            $relationKey = array_keys($relation)[0];
+            $relation  = $relation[$relationKey];
+        }
+
 
         if ($method = @$this->relationsMap[get_class($relation)]) {
             $this->$method($relation, $relationKey, $formlet, $closure, $count);

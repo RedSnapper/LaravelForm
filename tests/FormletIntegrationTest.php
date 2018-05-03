@@ -244,6 +244,24 @@ class FormletIntegrationTest extends TestCase
     }
 
     /** @test */
+    public function has_many_relation_restriction_using_array_syntax_on_relation()
+    {
+        $user = TestUser::create(['email' => 'john@example.com']);
+        $user->posts()->create(['name'=>'Post A']);
+        $user->posts()->create(['name'=>'Post B']);
+
+        $formlet = $this->formlet(function(Formlet $formlet)use($user){
+            $formlet->relation(['posts'=>$user->posts()],TestPostFormlet::class,function($query){
+                $query->limit(1);
+            });
+        });
+
+        $formlet->model($user)->build();
+
+        $this->assertCount(1,$formlet->formlets('posts'));
+    }
+
+    /** @test */
     public function many_to_many_relation()
     {
 
