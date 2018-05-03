@@ -65,7 +65,7 @@ abstract class Formlet
      *
      * @var mixed
      */
-    protected $model;
+    public $model;
 
     /**
      * All the formlets attached to this form.

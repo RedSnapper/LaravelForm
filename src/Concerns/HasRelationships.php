@@ -23,14 +23,14 @@ trait HasRelationships
      *
      * @var Model
      */
-    protected $related;
+    public $related;
 
     /**
      * The parent model instance.
      *
      * @var Model
      */
-    protected $parent;
+    public $parent;
 
     /**
      * The relation.
