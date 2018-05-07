@@ -33,6 +33,17 @@ class RadioTest extends AbstractFieldTest
     }
 
     /** @test */
+    public function a_field_can_have_a_placeholder()
+    {
+        $field = new Radio('text');
+        $field->placeholder('bim');
+        $field->build();
+        $option = $field->getOptions()->first();
+
+        $this->assertEquals('bim', $option->label);
+    }
+
+    /** @test */
     public function can_render_radio_attributes()
     {
         $field = new Radio('bim', [

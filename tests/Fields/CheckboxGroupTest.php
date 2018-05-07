@@ -100,4 +100,15 @@ class CheckboxGroupTest extends AbstractFieldTest
             $this->renderField($field));
     }
 
+    /** @test */
+    public function a_field_can_have_a_placeholder()
+    {
+        $field = new CheckboxGroup('text');
+        $field->placeholder('bim');
+        $field->build();
+        $option = $field->getOptions()->first();
+
+        $this->assertEquals('bim', $option->label);
+    }
+
 }

@@ -14,18 +14,7 @@ class SelectTest extends AbstractFieldTest
     }
 
     /** @test */
-    public function a_select_can_set_a_placeholder()
-    {
-        $field = new Select('text');
-        $field->placeholder('bim');
-        $field->build();
-        $option = $field->getOptions()->first();
-
-        $this->assertEquals('bim', $option->label);
-    }
-
-    /** @test */
-    public function a_field_can_have_a_placeholder()
+    public function can_be_a_multi_select()
     {
         $field = $this->getTestField();
         $this->assertNull($field->getAttribute('multiple'));
@@ -33,6 +22,17 @@ class SelectTest extends AbstractFieldTest
         $this->assertEquals('multiple', $field->getAttribute('multiple'));
         $field->multiple(false);
         $this->assertNull($field->getAttribute('multiple'));
+    }
+
+    /** @test */
+    public function a_field_can_have_a_placeholder()
+    {
+        $field = new Select('text');
+        $field->placeholder('bim');
+        $field->build();
+        $option = $field->getOptions()->first();
+
+        $this->assertEquals('bim', $option->label);
     }
 
     /** @test */
