@@ -1,1 +1,1 @@
-@if($value)value="{{$value}}"@endif
+@if(!is_null($value))value="{{$value}}"@endif
