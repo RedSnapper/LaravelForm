@@ -101,6 +101,7 @@ class AbstractFieldTest extends TestCase
         $field->default('bim');
         $this->assertEquals('bar', $field->getValue());
         $this->assertEquals('bar', $field->getHTMLValue());
+
     }
 
 
