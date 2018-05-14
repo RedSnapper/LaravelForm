@@ -3,6 +3,7 @@
 namespace RS\Form\Concerns;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -13,7 +14,8 @@ trait HasRelationships
 {
 
     protected $relationsMap = [
-      HasOne::class        => "hasOne",
+      HasOne::class        => "oneToOne",
+      BelongsTo::class     => "oneToOne",
       HasMany::class       => "hasMany",
       BelongsToMany::class => "belongsToMany"
     ];
@@ -43,8 +45,8 @@ trait HasRelationships
      * Add relation to form
      *
      * @param string|array $relation
-     * @param string $formlet
-     * @param int    $count
+     * @param string       $formlet
+     * @param int          $count
      */
     public function relation($relation, string $formlet, \Closure $closure = null, int $count = 1)
     {
@@ -53,16 +55,15 @@ trait HasRelationships
             return;
         }
 
-        if(is_string($relation)){
+        if (is_string($relation)) {
             $relationKey = $relation;
             $relation = $this->getRelationshipFromMethod($relationKey);
         }
 
-        if(is_array($relation)){
+        if (is_array($relation)) {
             $relationKey = array_keys($relation)[0];
-            $relation  = $relation[$relationKey];
+            $relation = $relation[$relationKey];
         }
-
 
         if ($method = @$this->relationsMap[get_class($relation)]) {
             $this->$method($relation, $relationKey, $formlet, $closure, $count);
@@ -90,14 +91,14 @@ trait HasRelationships
     }
 
     /**
-     * Has One Relation
+     * Has One| Belong to Relation
      *
-     * @param HasOne        $relation
+     * @param Relation      $relation
      * @param string        $relationKey
      * @param string        $class
      * @param \Closure|null $closure
      */
-    protected function hasOne(HasOne $relation, string $relationKey, string $class, \Closure $closure = null)
+    protected function oneToOne(Relation $relation, string $relationKey, string $class, \Closure $closure = null)
     {
 
         if ($this->modelExists()) {

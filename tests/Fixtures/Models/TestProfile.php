@@ -13,9 +13,12 @@ class TestProfile extends Model
      */
     protected $guarded = [];
 
-    protected $table="profiles";
+    protected $table = "profiles";
 
     protected $primaryKey = "user_id";
 
-
+    public function user()
+    {
+        return $this->belongsTo(TestUser::class);
+    }
 }

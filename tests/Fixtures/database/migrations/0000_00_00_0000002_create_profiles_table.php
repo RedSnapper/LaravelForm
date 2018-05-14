@@ -12,12 +12,11 @@ class CreateProfilesTable extends Migration{
     public function up()
     {
         Schema::create('profiles', function ($table) {
-            $table->integer('user_id')->unsigned();
+            $table->increments('id');
+            $table->integer('user_id')->unsigned()->nullable();
             $table->string('name');
             $table->boolean('active')->default(true);
             $table->timestamps();
-
-            $table->primary(['user_id']);
         });
     }
 }
