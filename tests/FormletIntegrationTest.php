@@ -46,11 +46,12 @@ class FormletIntegrationTest extends TestCase
     /** @test */
     public function test_store_method()
     {
+        $this->withoutExceptionHandling();
         Route::post('/users', function (TestUserForm $formlet, TestUser $model) {
             return $formlet->model($model)->store();
         });
 
-        $this->post('/users', ['email' => 'john@example.com'])
+        $this->post('/users', ['prefix:email' => 'john@example.com'])
           ->assertStatus(201);
 
         $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
@@ -69,7 +70,7 @@ class FormletIntegrationTest extends TestCase
             return $formlet->model($user)->update();
         });
 
-        $this->put('/users/1', ['email' => 'james@example.com'])
+        $this->put('/users/1', ['prefix:email' => 'james@example.com'])
           ->assertStatus(200);
 
         $this->assertDatabaseHas('users', ['id' => 1, 'email' => 'james@example.com']);
@@ -187,7 +188,7 @@ class FormletIntegrationTest extends TestCase
         $this->post('/profiles', [
           'name'   => 'John',
           'active' => "1",
-          'user'   => [['email' => 'john@example.com']]
+          'user'   => [['prefix:email' => 'john@example.com']]
         ])->assertStatus(200);
         $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
         $this->assertDatabaseHas('profiles', ['user_id' => 1, 'name' => 'John', 'active' => true]);
@@ -212,7 +213,7 @@ class FormletIntegrationTest extends TestCase
 
         $this->put('/profiles/1', [
           'name' => 'James',
-          'user' => [['email'   => 'james@example.com',]]
+          'user' => [['prefix:email'   => 'james@example.com',]]
         ])->assertStatus(200);
 
         tap($profile->fresh(), function (TestProfile $profile) {

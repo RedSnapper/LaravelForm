@@ -10,6 +10,7 @@ class TestUserForm extends Formlet
 
     public function prepare(): void
     {
+        $this->prefix="prefix";
         $this->add(new Input('email','email'));
     }
 

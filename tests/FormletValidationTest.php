@@ -64,7 +64,6 @@ class FormletValidationTest extends TestCase
         $this->assertFalse($childForm->isValid());
         $this->assertCount(1, $errors);
         $this->assertEquals(["The country field is required."], $errors->get('country'));
-
     }
 
     /** @test */
@@ -116,10 +115,10 @@ class FormletValidationTest extends TestCase
           'child.0.country' => ['Country error']
         ]);
 
-        $viewBag->put('default',$errorBag);
+        $viewBag->put('default', $errorBag);
 
         $this->session([
-          'errors' =>$viewBag
+          'errors' => $viewBag
         ]);
 
         $form = $this->form();
@@ -129,7 +128,6 @@ class FormletValidationTest extends TestCase
         $fields = $form->fields();
         $childFormlet = $form->formlet('child');
 
-
         $this->assertEquals(["Session error"], $errors->get('name'));
         $this->assertEquals(["Session error"], $fields->get('name')->getErrors()->toArray());
 
@@ -138,14 +136,11 @@ class FormletValidationTest extends TestCase
 
         $this->assertEquals(["Session error"], $form->error('name'));
         $this->assertEquals(["Country error"], $childFormlet->error('country'));
-
     }
 
     /** @test */
     public function can_populate_formlets_with_session_errors()
     {
-
-
 
         Route::post('/user', function () {
             $form = $this->form();
@@ -157,15 +152,14 @@ class FormletValidationTest extends TestCase
             return $form->build();
         });
 
-        $formlet  = $this->from('/user')
-                        ->followingRedirects()
-                        ->post('/user')
-                        ->getOriginalContent()->get('formlet');
+        $formlet = $this->from('/user')
+          ->followingRedirects()
+          ->post('/user')
+          ->getOriginalContent()->get('formlet');
 
-        $this->assertEquals(["The name field is required."],$formlet->error('name'));
-        $this->assertEquals(["An Email Address is needed."],$formlet->error('email'));
-        $this->assertEquals(["The country field is required."],$formlet->formlet('child')->error('country'));
-
+        $this->assertEquals(["The name field is required."], $formlet->error('name'));
+        $this->assertEquals(["An Email Address is needed."], $formlet->error('email'));
+        $this->assertEquals(["The country field is required."], $formlet->formlet('child')->error('country'));
     }
 
     /** @test */
@@ -188,9 +182,80 @@ class FormletValidationTest extends TestCase
           ->assertSessionHasErrors(['name']);
     }
 
+    /** @test */
+    public function form_with_prefix_passes_validation()
+    {
+        $this->request->merge($this->validPrefixPost());
+        $form = $this->prefixForm();
+
+        $form->validate(false);
+
+        $this->assertTrue($form->isValid());
+        $this->assertCount(0, $form->errors());
+    }
+
+    /** @test */
+    public function prefix_form_fails_validation()
+    {
+        $form = $this->prefixForm();
+
+        $form->validate(false);
+
+        $this->assertFalse($form->isAllValid());
+
+        $errors = $form->allErrors();
+
+        $this->assertCount(1, $errors);
+        $this->assertEquals(["Countries are needed."], $errors->get('country'));
+    }
+
+    /** @test */
+    public function it_can_automatically_redirect_after_failing_validation_prefix_form()
+    {
+
+        Route::post('/test', function () {
+            $form = $this->prefixForm();
+            $form->validate();
+        });
+
+        $this->from('/test')
+          ->post('/test', [])
+          ->assertRedirect('/test')
+          ->assertSessionHasErrors(['country']);
+    }
+
+    /** @test */
+    public function can_retrieve_errors_from_session_using_a_different_error_bag()
+    {
+        $viewBag = new ViewErrorBag();
+        $errorBag = new MessageBag([
+          'country' => ['Session error'],
+        ]);
+
+        $viewBag->put('prefix', $errorBag);
+
+        $this->session([
+          'errors' => $viewBag
+        ]);
+
+        $form = $this->prefixForm();
+        $form->build();
+
+        $errors = $form->allErrors();
+        $fields = $form->fields();
+
+        $this->assertEquals(["Session error"], $errors->get('country'));
+        $this->assertEquals(["Session error"], $fields->get('country')->getErrors()->toArray());
+    }
+
     private function form(\Closure $closure = null): Formlet
     {
         return $this->app->makeWith(ValidationFormlet::class, ['closure' => $closure]);
+    }
+
+    private function prefixForm(\Closure $closure = null): Formlet
+    {
+        return $this->app->makeWith(PrefixFormlet::class, ['closure' => $closure]);
     }
 
     protected function validPost()
@@ -202,6 +267,11 @@ class FormletValidationTest extends TestCase
             ['country' => 'England']
           ]
         ];
+    }
+
+    protected function validPrefixPost()
+    {
+        return ['prefix:country' => 'England'];
     }
 
 }
@@ -262,6 +332,44 @@ class ChildValidationFormlet extends Formlet
     {
         return [
           'country' => 'required'
+        ];
+    }
+}
+
+class PrefixFormlet extends Formlet
+{
+
+    /**
+     * PrefixFormlet constructor.
+     */
+    public function __construct()
+    {
+        $this->prefix = "prefix";
+    }
+
+    public function prepare(): void
+    {
+        $this->add(new Input('text', 'country'));
+    }
+
+    public function rules(): array
+    {
+        return [
+          'country' => 'required'
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+          'country.required' => ':attribute are needed.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+          'country' => 'Countries'
         ];
     }
 }

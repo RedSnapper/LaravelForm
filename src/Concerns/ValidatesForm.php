@@ -70,7 +70,6 @@ trait ValidatesForm
         }
     }
 
-
     /**
      * Is the current formlet valid
      *
@@ -121,6 +120,7 @@ trait ValidatesForm
 
     /**
      * Returns errors for a particular field
+     *
      * @param string $name
      * @return array|null
      */
@@ -141,14 +141,14 @@ trait ValidatesForm
      * Validates the current formlet
      * and all child formlets
      */
-    protected function validateFormlet():void{
+    protected function validateFormlet(): void
+    {
 
         $this->errors = $this->validateRequest();
 
-        $this->iterateFormlets(function(Formlet $formlet){
+        $this->iterateFormlets(function (Formlet $formlet) {
             $formlet->validateFormlet();
         });
-
     }
 
     /**
@@ -159,7 +159,8 @@ trait ValidatesForm
      * @param MessageBag $errorBag
      * @return MessageBag
      */
-    protected function validateMapFormlet(MessageBag $errorBag):MessageBag{
+    protected function validateMapFormlet(MessageBag $errorBag): MessageBag
+    {
         $array = $this->mapErrorsToInstances();
 
         $errorBag = $errorBag->merge($array);
@@ -168,32 +169,32 @@ trait ValidatesForm
     }
 
     /**
-     *
      * @param MessageBag $errorBag
      * @return MessageBag
      */
-    protected function validateMapFormlets(MessageBag $errorBag):MessageBag{
+    protected function validateMapFormlets(MessageBag $errorBag): MessageBag
+    {
 
-        foreach($this->formlets as $forms){
-            foreach($forms as $formlet){
+        foreach ($this->formlets as $forms) {
+            foreach ($forms as $formlet) {
                 $errorBag = $formlet->validateMapFormlet($errorBag);
             }
         }
 
         return $errorBag;
-
     }
 
     /**
      * @return array
      */
-    protected function mapErrorsToInstances():array{
+    protected function mapErrorsToInstances(): array
+    {
 
-        if(is_null($this->instanceName)){
+        if (is_null($this->instanceName)) {
             return $this->errors->messages();
         }
 
-        return collect($this->errors->messages())->mapWithKeys(function($error, $key){
+        return collect($this->errors->messages())->mapWithKeys(function ($error, $key) {
             return ["{$this->transformKey($this->instanceName)}.{$key}" => $error];
         })->all();
     }
@@ -206,7 +207,7 @@ trait ValidatesForm
     protected function validateRequest(): MessageBag
     {
 
-        $request = $this->request($this->instanceName) ?? [];
+        $request = $this->mapRequest();
 
         $this->validator = $this->getValidationFactory()->make(
           $request,
@@ -251,7 +252,7 @@ trait ValidatesForm
      */
     protected function populateFieldErrors(AbstractField $field): void
     {
-        $key = $this->transformKey($field->getInstanceName());
+        $key = $this->transformKey($this->stripPrefix($field->getInstanceName()));
 
         $errors = $this->allErrors();
         if ($error = $errors->get($key)) {
@@ -265,24 +266,27 @@ trait ValidatesForm
      * Uses the formlets rules method to find
      * which errors should be added to the formlet
      */
-    protected function populateErrors(){
+    protected function populateErrors()
+    {
 
         $formletKey = $this->transformKey($this->instanceName);
 
-        $mappedRules = collect($this->rules())->keys()->mapWithKeys(function($rule) use($formletKey){
+        $mappedRules = collect($this->rules())->keys()->mapWithKeys(function ($rule) use ($formletKey) {
             return [$formletKey == "" ? $rule : "$formletKey.$rule" => $rule];
         });
 
-        $errors = collect($this->allErrors()->messages())->only($mappedRules->keys())->mapWithKeys(function($value,$key) use($mappedRules){
+        $errors = collect($this->allErrors()->messages())->only($mappedRules->keys())->mapWithKeys(function (
+          $value,
+          $key
+        ) use ($mappedRules) {
             return [$mappedRules->get($key) => $value];
         });
 
         $this->errors = $this->errors->merge($errors->all());
 
-        $this->iterateFormlets(function(Formlet $formlet){
+        $this->iterateFormlets(function (Formlet $formlet) {
             $formlet->populateErrors();
         });
-
     }
 
     /**
@@ -301,6 +305,47 @@ trait ValidatesForm
           ->withErrors($this->allErrors->toArray());
     }
 
+    /**
+     * Map the current request for validation
+     * for this formlet
+     *
+     * @return array
+     */
+    protected function mapRequest(): array
+    {
+        // Get the request for this formlet instance
+        $request = $this->request($this->instanceName) ?? [];
 
+        // Remove the prefix from the form post before validating
+        if (!is_null($this->prefix)) {
+            $request = collect($request)->mapWithKeys(function ($value, $key) {
+                return [
+                  $this->stripPrefix($key) => $value
+                ];
+            })->all();
+        }
+        return $request;
+    }
+
+    /**
+     * Get the error bag name for the form
+     *
+     * @return string
+     */
+    protected function getErrorBagName(): string
+    {
+        return $this->prefix ?? "default";
+    }
+
+    /**
+     * Remove the formlet prefix from a string
+     *
+     * @param string $name
+     * @return string
+     */
+    private function stripPrefix(string $name):string
+    {
+        return $this->prefix ? str_replace_first("{$this->prefix}:", "", $name) : $name;
+    }
 
 }

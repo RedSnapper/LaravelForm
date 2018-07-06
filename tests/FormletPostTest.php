@@ -21,10 +21,11 @@ class FormletPostTest extends TestCase
         $this->request = $this->app['request'];
 
         $this->request->merge([
-          'name'  => 'foo',
-          'agree' => 'Yes',
-          'cb'    => [1, 2],
-          'child' => [['foo' => 'bar']]
+          'name'           => 'foo',
+          'agree'          => 'Yes',
+          'cb'             => [1, 2],
+          'child'          => [['foo' => 'bar']],
+          'prefix:country' => 'England'
         ]);
     }
 
@@ -53,10 +54,10 @@ class FormletPostTest extends TestCase
           'cb'    => [1, 2],
         ], $form->postData()->all());
 
-        $this->assertEquals('foo',$form->postData('name'));
+        $this->assertEquals('foo', $form->postData('name'));
 
         $this->assertEquals([
-          'foo'=>'bar'
+          'foo' => 'bar'
         ], $form->formlet('child')->postData()->all());
 
         $this->assertEquals([
@@ -68,7 +69,27 @@ class FormletPostTest extends TestCase
         ], $form->allPostData()->toArray());
     }
 
+    /** @test */
+    public function can_retrieve_posted_values_for_a_prefixed_form()
+    {
 
+        $form = $this->formlet(function (Formlet $form) {
+            $form->prefix = "prefix";
+            $form->add(new Input('text', 'country'));
+        });
+
+        $form->build();
+
+        $this->assertEquals([
+          'country' => 'England'
+        ], $form->postData()->all());
+
+        $this->assertEquals('England', $form->postData('country'));
+
+        $this->assertEquals([
+          'country' => 'England'
+        ], $form->allPostData()->toArray());
+    }
 
     /** @test */
     public function can_store_with_a_valid_post()

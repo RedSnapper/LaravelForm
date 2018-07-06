@@ -194,6 +194,20 @@ class FormletTest extends TestCase
     }
 
     /** @test */
+    public function a_formlet_can_set_a_prefix()
+    {
+        $form = $this->formlet(function (Formlet $form) {
+            $form->prefix = "prefix";
+            $form->add(new Input('text', 'foo'));
+        });
+
+        $form->build();
+
+        $this->assertEquals('prefix:foo', $form->field('foo')->getInstanceName());
+
+    }
+
+    /** @test */
     public function can_retrieve_parent_model_from_child_formlet()
     {
         $form = $this->formlet(function (Formlet $form) {
@@ -270,6 +284,24 @@ class FormletTest extends TestCase
 
         $this->assertEquals('sessionVal', $form->field('name')->getValue());
         $this->assertEquals('bar', $form->field('name.with.dots')->getValue());
+    }
+
+    /** @test */
+    public function should_populate_from_session_with_prefix()
+    {
+        // Takes precedence over request value
+        $this->setOldInput([
+          'prefix:name' => 'sessionVal'
+        ]);
+
+        $form = $this->formlet(function ($form) {
+            $form->prefix = "prefix";
+            $form->add(new Input('text', 'name'));
+        });
+        $form->build();
+
+        $this->assertEquals('sessionVal', $form->field('name')->getValue());
+
     }
 
     /** @test */

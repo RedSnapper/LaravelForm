@@ -47,6 +47,14 @@ abstract class Formlet
     protected $name;
 
     /**
+     * The formlet prefix
+     * Use this to prefix form fields
+     *
+     * @var string|null
+     */
+    public $prefix;
+
+    /**
      * The formlet instance name
      *
      * @var string
@@ -97,7 +105,7 @@ abstract class Formlet
         $this->attributes->put('action', $this->url->current());
         $this->fields = collect();
         $this->formlets = collect();
-        $this->allErrors = optional($this->session->get('errors'))->getBag('default') ?? new MessageBag();
+        $this->allErrors = optional($this->session->get('errors'))->getBag($this->getErrorBagName()) ?? new MessageBag();
         $this->errors = new MessageBag();
     }
 
@@ -397,7 +405,7 @@ abstract class Formlet
         $prefix = $this->setFormletInstance($prefix);
 
         $this->fields()->each(function (AbstractField $field) {
-            $this->setFieldName($field, $this->instanceName);
+            $this->setFieldName($field);
         });
 
         $this->iterateFormlets(function (Formlet $formlet) use ($prefix) {
@@ -409,13 +417,16 @@ abstract class Formlet
      * Set field instance name
      *
      * @param AbstractField $field
-     * @param string|null   $formletInstance
      */
-    protected function setFieldName(AbstractField $field, string $formletInstance = null)
+    protected function setFieldName(AbstractField $field)
     {
-        if (!is_null($formletInstance)) {
-            $field->setInstanceName($formletInstance . "[" . $field->getName() . "]");
+        $name = is_null($this->prefix) ? $field->getName() : "{$this->prefix}:{$field->getName()}";
+
+        if (!is_null($this->instanceName)) {
+            $name = $this->instanceName . "[" . $name . "]";
         }
+
+        $field->setInstanceName($name);
     }
 
     /**
