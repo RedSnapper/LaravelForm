@@ -221,8 +221,9 @@ class FormletValidationTest extends TestCase
         $this->from('/test')
           ->post('/test', [])
           ->assertRedirect('/test')
-          ->assertSessionHasErrors(['country']);
+          ->assertSessionHasErrors(['country'],null,'prefix');
     }
+
 
     /** @test */
     public function can_retrieve_errors_from_session_using_a_different_error_bag()

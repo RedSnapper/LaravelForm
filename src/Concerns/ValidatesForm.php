@@ -302,7 +302,7 @@ trait ValidatesForm
 
         return redirect()->to($this->getRedirectUrl())
           ->withInput($this->request->input())
-          ->withErrors($this->allErrors->toArray());
+          ->withErrors($this->allErrors->toArray(),$this->getErrorBagName());
     }
 
     /**
