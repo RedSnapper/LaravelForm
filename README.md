@@ -141,7 +141,7 @@ The create method is creating our form view for us. We are passing a route by na
 @enform
 
 ```
-We are using a couple of custom blade directives to render our form. The form directive requires the form key which has been passed to the view.
+We are using a couple of custom blade directives to render our form. The form directive requires the form key which has been passed to the view. The formlet directive will render the fields.
 
 ### Handling the post
 
