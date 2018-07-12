@@ -221,9 +221,8 @@ class FormletValidationTest extends TestCase
         $this->from('/test')
           ->post('/test', [])
           ->assertRedirect('/test')
-          ->assertSessionHasErrors(['country'],null,'prefix');
+          ->assertSessionHasErrors(['country'], null, 'prefix');
     }
-
 
     /** @test */
     public function can_retrieve_errors_from_session_using_a_different_error_bag()
@@ -247,6 +246,25 @@ class FormletValidationTest extends TestCase
 
         $this->assertEquals(["Session error"], $errors->get('country'));
         $this->assertEquals(["Session error"], $fields->get('country')->getErrors()->toArray());
+    }
+
+    /** @test */
+    public function can_configure_the_validator_instance_for_this_formlet()
+    {
+        // We can use the withValidator method to configure our validator instance
+
+        $this->request->merge(['prefix:country' => 3]);
+        $form = $this->prefixForm();
+
+        $form->validate(false);
+
+        $this->assertFalse($form->isValid());
+        $errors = $form->allErrors();
+
+        $this->assertCount(1, $errors);
+        $this->assertEquals(["The Countries must be a string."], $errors->get('country'));
+
+
     }
 
     private function form(\Closure $closure = null): Formlet
@@ -364,6 +382,7 @@ class PrefixFormlet extends Formlet
     {
         return [
           'country.required' => ':attribute are needed.',
+          'country.string' => 'The :attribute must be a string.',
         ];
     }
 
@@ -373,4 +392,16 @@ class PrefixFormlet extends Formlet
           'country' => 'Countries'
         ];
     }
+
+    /**
+     * Configure the validator instance.
+     *
+     * @param  \Illuminate\Validation\Validator $validator
+     * @return void
+     */
+    public function withValidator($validator)
+    {
+        $validator->addRules(['country' => 'string']);
+    }
+
 }

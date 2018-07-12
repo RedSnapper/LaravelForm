@@ -206,17 +206,9 @@ trait ValidatesForm
      */
     protected function validateRequest(): MessageBag
     {
+        $validator = $this->getValidatorInstance();
 
-        $request = $this->mapRequest();
-
-        $this->validator = $this->getValidationFactory()->make(
-          $request,
-          $this->rules(),
-          $this->messages(),
-          $this->attributes()
-        );
-
-        return $this->validator->messages();
+        return $validator->messages();
     }
 
     /**
@@ -227,6 +219,27 @@ trait ValidatesForm
     protected function getValidationFactory(): \Illuminate\Contracts\Validation\Factory
     {
         return app(\Illuminate\Contracts\Validation\Factory::class);
+    }
+
+    /**
+     * Get the validator instance for the request.
+     *
+     * @return \Illuminate\Contracts\Validation\Validator
+     */
+    protected function getValidatorInstance()
+    {
+        $validator = $this->getValidationFactory()->make(
+          $this->mapRequest(),
+          $this->rules(),
+          $this->messages(),
+          $this->attributes()
+        );
+
+        if (method_exists($this, 'withValidator')) {
+            $this->withValidator($validator);
+        }
+
+        return $validator;
     }
 
     /**
@@ -270,8 +283,9 @@ trait ValidatesForm
     {
 
         $formletKey = $this->transformKey($this->instanceName);
+        $rules = $this->getValidatorInstance()->getRules();
 
-        $mappedRules = collect($this->rules())->keys()->mapWithKeys(function ($rule) use ($formletKey) {
+        $mappedRules = collect($rules)->keys()->mapWithKeys(function ($rule) use ($formletKey) {
             return [$formletKey == "" ? $rule : "$formletKey.$rule" => $rule];
         });
 
@@ -302,7 +316,7 @@ trait ValidatesForm
 
         return redirect()->to($this->getRedirectUrl())
           ->withInput($this->request->input())
-          ->withErrors($this->allErrors->toArray(),$this->getErrorBagName());
+          ->withErrors($this->allErrors->toArray(), $this->getErrorBagName());
     }
 
     /**
@@ -343,7 +357,7 @@ trait ValidatesForm
      * @param string $name
      * @return string
      */
-    private function stripPrefix(string $name):string
+    private function stripPrefix(string $name): string
     {
         return $this->prefix ? str_replace_first("{$this->prefix}:", "", $name) : $name;
     }
