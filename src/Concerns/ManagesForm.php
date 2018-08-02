@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use RS\Form\Fields\AbstractField;
 use RS\Form\Fields\Hidden;
+use RS\Form\Fields\HoneyPot;
 use RS\Form\Formlet;
 
 trait ManagesForm
@@ -23,9 +24,9 @@ trait ManagesForm
      * @var Collection
      */
     protected $attributes = [
-      'method' => 'POST',
+      'method'         => 'POST',
       'accept-charset' => 'UTF-8',
-      'enctype' => 'multipart/form-data'
+      'enctype'        => 'multipart/form-data'
     ];
 
     /**
@@ -35,6 +36,19 @@ trait ManagesForm
      */
     protected $spoofedMethods = ['DELETE', 'PATCH', 'PUT'];
 
+    /**
+     * Honeypot name
+     *
+     * @var string
+     */
+    public $honeyPotName = "_formlet";
+
+    /**
+     * Add honeypot to form
+     *
+     * @var bool
+     */
+    protected $honeypot = true;
 
     public function getAttribute(string $name)
     {
@@ -49,6 +63,7 @@ trait ManagesForm
 
     /**
      * Set the method for the form
+     *
      * @param string $name
      * @return Formlet
      */
@@ -60,25 +75,40 @@ trait ManagesForm
 
         // If the method is a spoofed method then we need to set the attribute
         // to be a POST
-        if(in_array($method,$this->spoofedMethods)){
+        if (in_array($method, $this->spoofedMethods)) {
             $method = "POST";
         }
 
-        $this->setAttribute('method',$method);
+        $this->setAttribute('method', $method);
 
         return $this;
     }
 
     /**
+     * Set the honeypot to be active or inactive
+     *
+     * @param bool $active
+     * @return $this
+     */
+    public function honeypot(bool $active = true): Formlet
+    {
+        $this->honeypot = $active;
+        return $this;
+    }
+
+    /**
      * Returns the current method of the form
+     *
      * @return string
      */
-    protected function getMethod():string{
+    protected function getMethod(): string
+    {
         return $this->method;
     }
 
     /**
      * Set the route for the form
+     *
      * @param string $name
      * @param array  $parameters
      * @param bool   $absolute
@@ -99,6 +129,7 @@ trait ManagesForm
 
     /**
      * Returns the hidden fields for the form
+     *
      * @return Collection
      */
     protected function getHiddenFields(): Collection
@@ -116,11 +147,16 @@ trait ManagesForm
             $hidden->put('method', (new Hidden('_method'))->setValue($method));
         }
 
+        if ($this->honeypot) {
+            $hidden->put($this->honeyPotName, (new HoneyPot($this->honeyPotName)));
+        }
+
         return $hidden;
     }
 
     /**
      * CSRF field
+     *
      * @return AbstractField
      */
     protected function token(): AbstractField

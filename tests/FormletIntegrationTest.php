@@ -98,6 +98,52 @@ class FormletIntegrationTest extends TestCase
     }
 
     /** @test */
+    public function persist_is_not_called_if_honeypot_fails()
+    {
+        Route::post('/users', function (TestUserForm $formlet, TestUser $model) {
+            return $formlet->model($model)->honeypot(false)->store();
+        });
+
+        $this->post('/users', ['prefix:email' => 'john@example.com','_formlet'=>'foo'])
+          ->assertStatus(201);
+
+        $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
+    }
+
+    /** @test */
+    public function persist_not_called_if_honeypot_is_not_set()
+    {
+        Route::post('/users', function (TestUserForm $formlet, TestUser $model) {
+            return $formlet->model($model)->honeypot()->store();
+        });
+
+        $this->post('/users', ['prefix:email' => 'john@example.com','_formlet'=>'foo'])
+          ->assertStatus(302);
+
+        $this->assertDatabaseMissing('users', ['email' => 'john@example.com']);
+    }
+
+    /** @test */
+    public function edit_is_not_called_if_honeypot_fails()
+    {
+
+        TestUser::create(['email' => 'john@example.com']);
+
+        $this->assertDatabaseHas('users', ['id' => 1, 'email' => 'john@example.com']);
+
+        Route::put('/users/{user}', function ($user, TestUserForm $formlet) {
+            $user = TestUser::find($user);
+            return $formlet->model($user)->honeypot()->update();
+        });
+
+        $this->put('/users/1', ['prefix:email' => 'james@example.com','_formlet'=>'foo'])
+          ->assertStatus(302);
+
+        $this->assertDatabaseHas('users', ['id' => 1, 'email' => 'john@example.com']);
+    }
+
+
+    /** @test */
     public function formlet_has_one_relation()
     {
 

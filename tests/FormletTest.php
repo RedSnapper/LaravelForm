@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use RS\Form\Fields\Checkbox;
 use RS\Form\Fields\CheckboxGroup;
 use RS\Form\Fields\Hidden;
+use RS\Form\Fields\HoneyPot;
 use RS\Form\Fields\Input;
 use RS\Form\Fields\Radio;
 use RS\Form\Fields\Select;
@@ -128,6 +129,18 @@ class FormletTest extends TestCase
         } else {
             $this->assertNull($field);
         }
+    }
+
+    /** @test */
+    public function adds_a_honeypot_field_to_the_field_if_required()
+    {
+        $form = $this->formlet();
+        $form->honeypot(true);
+        $data = $form->build();
+
+        $field = $data->get('form')->get('hidden')->get('_foo');
+        $this->assertInstanceOf(HoneyPot::class, $field);
+        $this->assertEquals('_foo', $field->getName());
     }
 
     /** @test */
@@ -583,6 +596,7 @@ class FormletTest extends TestCase
 
 class TestFormlet extends Formlet
 {
+    public $honeyPotName = "_foo";
 
     protected $closure;
 
