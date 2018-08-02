@@ -44,3 +44,17 @@ public function withValidator($validator)
     });
 }
 ```
+
+## Honeypot
+
+By default there is a honeypot field added to every form. The default name is _formlet. The view for the honeypot field can be overridden. If the honeypot field fails a `HoneyPotException` is thrown which will by default be handled by laravel and redirect back to the page.
+
+There is also a method which you can call to disable the honeypot on any given form.
+
+```php
+
+public function create(UserForm $form)
+{
+   $form->honeypot(false)->build();
+}
+```
