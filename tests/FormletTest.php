@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Route;
 use RS\Form\Fields\Checkbox;
 use RS\Form\Fields\CheckboxGroup;
 use RS\Form\Fields\Hidden;
-use RS\Form\Fields\HoneyPot;
 use RS\Form\Fields\Input;
 use RS\Form\Fields\Radio;
 use RS\Form\Fields\Select;
@@ -138,9 +137,21 @@ class FormletTest extends TestCase
         $form->honeypot(true);
         $data = $form->build();
 
-        $field = $data->get('form')->get('hidden')->get('_foo');
-        $this->assertInstanceOf(HoneyPot::class, $field);
-        $this->assertEquals('_foo', $field->getName());
+        $field1 = $data->get('form')->get('hidden')->get('honeypot1');
+        $field2 = $data->get('form')->get('hidden')->get('honeypot2');
+        $this->assertEquals('formlet-terms', $field1->getName());
+        $this->assertEquals('formlet-email', $field2->getName());
+    }
+
+    /** @test */
+    public function does_not_add_a_honeypot_field_if_not_required()
+    {
+        $form = $this->formlet();
+        $form->honeypot(false);
+        $data = $form->build();
+
+        $this->assertNull($data->get('form')->get('hidden')->get('honeypot1'));
+        $this->assertNull($data->get('form')->get('hidden')->get('honeypot2'));
     }
 
     /** @test */
@@ -596,7 +607,6 @@ class FormletTest extends TestCase
 
 class TestFormlet extends Formlet
 {
-    public $honeyPotName = "_foo";
 
     protected $closure;
 

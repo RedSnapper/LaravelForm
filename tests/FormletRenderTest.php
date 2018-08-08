@@ -39,14 +39,15 @@ class FormletRenderTest extends TestCase
         $this->get('/users/1/edit')
           ->assertStatus(200)
           ->assertSee('<form class="form" accept-charset="UTF-8" action="http://localhost/users/1" enctype="multipart/form-data" method="POST" >')
-          ->assertSee('<input autocomplete="off" name="_formlet" type="text" />')
+          ->assertSee('<input autocomplete="off" id="formlet-email" name="formlet-email" type="text" />')
+          ->assertSee('<input id="formlet-terms" name="formlet-terms" type="checkbox" value="1"/>')
           ->assertSee('<input autocomplete="off" name="_method" type="hidden" value="PUT"/>')
           ->assertSee('<input autocomplete="off" name="_token" type="hidden" value="' . app('session')->token() . '"/>')
           ->assertSee('<input class="form-control" id="name" name="name" type="text" />')
           ->assertSee('<input class="form-control" id="email" name="email" type="email" />')
           ->assertSee('<input class="form-control" id="child[0][name]" name="child[0][name]" type="text" />')
-            ->assertSee('<input class="form-control" id="child[0][multi][0][foo]" name="child[0][multi][0][foo]" type="text" />')
-            ->assertSee('<input class="form-control" id="child[0][multi][1][foo]" name="child[0][multi][1][foo]" type="text" />');
+          ->assertSee('<input class="form-control" id="child[0][multi][0][foo]" name="child[0][multi][0][foo]" type="text" />')
+          ->assertSee('<input class="form-control" id="child[0][multi][1][foo]" name="child[0][multi][1][foo]" type="text" />');
     }
 
 }

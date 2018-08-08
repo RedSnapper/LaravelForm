@@ -3,7 +3,6 @@
 namespace RS\Form\Concerns;
 
 use Illuminate\Support\Collection;
-use RS\Form\Exceptions\HoneyPotException;
 use RS\Form\Fields\AbstractField;
 use RS\Form\Formlet;
 
@@ -104,7 +103,6 @@ trait ManagesPosts
      * Store method for the form request
      *
      * @return mixed
-     * @throws HoneyPotException
      */
     public function store()
     {
@@ -113,8 +111,6 @@ trait ManagesPosts
 
         $this->populate();
 
-        $this->checkHoneyPot();
-
         return $this->persist();
     }
 
@@ -122,7 +118,6 @@ trait ManagesPosts
      * Update method for the form request
      *
      * @return mixed
-     * @throws HoneyPotException
      */
     public function update()
     {
@@ -130,8 +125,6 @@ trait ManagesPosts
         $this->validate();
 
         $this->populate();
-
-        $this->checkHoneyPot();
 
         return $this->edit();
     }
@@ -158,16 +151,5 @@ trait ManagesPosts
         return $values->merge($this->formletsPost());
     }
 
-    /**
-     * Check if the honeypot has been filled
-     *
-     * @throws HoneyPotException
-     */
-    protected function checkHoneyPot(){
-
-        if($this->honeypot && !is_null($this->request->get($this->honeyPotName))){
-            throw new HoneyPotException();
-        }
-    }
 
 }

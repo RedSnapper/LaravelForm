@@ -5,8 +5,9 @@ namespace RS\Form\Concerns;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
 use RS\Form\Fields\AbstractField;
+use RS\Form\Fields\Checkbox;
 use RS\Form\Fields\Hidden;
-use RS\Form\Fields\HoneyPot;
+use RS\Form\Fields\Input;
 use RS\Form\Formlet;
 
 trait ManagesForm
@@ -35,13 +36,6 @@ trait ManagesForm
      * @var array
      */
     protected $spoofedMethods = ['DELETE', 'PATCH', 'PUT'];
-
-    /**
-     * Honeypot name
-     *
-     * @var string
-     */
-    public $honeyPotName = "_formlet";
 
     /**
      * Add honeypot to form
@@ -148,7 +142,12 @@ trait ManagesForm
         }
 
         if ($this->honeypot) {
-            $hidden->put($this->honeyPotName, (new HoneyPot($this->honeyPotName)));
+            $hidden->put('honeypot1', (new Checkbox('formlet-terms'))
+              ->view('form::fields.checkbox-honeypot')
+            );
+            $hidden->put('honeypot2', (new Input('text', 'formlet-email'))
+              ->autocomplete('off')
+              ->view('form::fields.input-honeypot'));
         }
 
         return $hidden;

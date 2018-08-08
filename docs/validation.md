@@ -47,7 +47,7 @@ public function withValidator($validator)
 
 ## Honeypot
 
-By default there is a honeypot field added to every form. The default name is _formlet. The view for the honeypot field can be overridden. If the honeypot field fails a `HoneyPotException` is thrown which will by default be handled by laravel and redirect back to the page.
+By default there are two honeypot fields added to every form. The names are formlet-terms and formlet-email. The view for the honeypot fields can be overridden. 
 
 There is also a method which you can call to disable the honeypot on any given form.
 
@@ -58,3 +58,5 @@ public function create(UserForm $form)
    $form->honeypot(false)->build();
 }
 ```
+
+There is a middleware `RS\Form\Middleware\Honeypot` which can be applied to any routes which are public facing.
