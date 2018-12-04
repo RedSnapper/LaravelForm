@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "f4e32642e975b5e05aa40a6a010d9af7",
+    "content-hash": "aa35f10f0a77a7d1894eb40f54fba4a8",
     "packages": [
         {
             "name": "doctrine/inflector",
@@ -282,16 +282,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "5.6.x-dev",
+            "version": "v5.6.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "d64e500037a198e804ad83d3adeee6708cf36659"
+                "reference": "fcdbc791bc3e113ada38ab0a1147141fb9ec2b16"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/d64e500037a198e804ad83d3adeee6708cf36659",
-                "reference": "d64e500037a198e804ad83d3adeee6708cf36659",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/fcdbc791bc3e113ada38ab0a1147141fb9ec2b16",
+                "reference": "fcdbc791bc3e113ada38ab0a1147141fb9ec2b16",
                 "shasum": ""
             },
             "require": {
@@ -356,6 +356,7 @@
                 "aws/aws-sdk-php": "~3.0",
                 "doctrine/dbal": "~2.6",
                 "filp/whoops": "^2.1.4",
+                "league/flysystem-cached-adapter": "~1.0",
                 "mockery/mockery": "~1.0",
                 "moontoast/math": "^1.1",
                 "orchestra/testbench-core": "3.6.*",
@@ -374,7 +375,7 @@
                 "guzzlehttp/guzzle": "Required to use the Mailgun and Mandrill mail drivers and the ping methods on schedules (~6.0).",
                 "laravel/tinker": "Required to use the tinker console command (~1.0).",
                 "league/flysystem-aws-s3-v3": "Required to use the Flysystem S3 driver (~1.0).",
-                "league/flysystem-cached-adapter": "Required to use Flysystem caching (~1.0).",
+                "league/flysystem-cached-adapter": "Required to use the Flysystem cache (~1.0).",
                 "league/flysystem-rackspace": "Required to use the Flysystem Rackspace driver (~1.0).",
                 "league/flysystem-sftp": "Required to use the Flysystem SFTP driver (~1.0).",
                 "nexmo/client": "Required to use the Nexmo transport (~1.0).",
@@ -416,7 +417,7 @@
                 "framework",
                 "laravel"
             ],
-            "time": "2018-03-16 13:18:27"
+            "time": "2018-04-09T16:07:04+00:00"
         },
         {
             "name": "league/flysystem",
@@ -2021,7 +2022,7 @@
             "keywords": [
                 "test"
             ],
-            "time": "2018-02-24T08:30:36+00:00"
+            "time": "2018-02-24 08:30:36"
         },
         {
             "name": "mockery/mockery",
@@ -2087,7 +2088,7 @@
                 "test double",
                 "testing"
             ],
-            "time": "2018-03-07T06:00:02+00:00"
+            "time": "2018-03-07 06:00:02"
         },
         {
             "name": "myclabs/deep-copy",
