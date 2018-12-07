@@ -1,12 +1,15 @@
 @form(['form'=>$form,'attributes'=>'class="form"'])
 
-    @field('email')
-    @field('name')
-    @field('child','name')
+	@field('email')
+	@field('name')
 
-    @foreach($formlet->formlet('child')->multi as $formlet)
-        @field('foo')
-    @endforeach
+	@foreach($formlet->child as $childFormlet)
+		@field('childFormlet','name')
+	@endforeach
+
+	@foreach($formlet->formlet('child')->multi as $formlet)
+		@field('foo')
+	@endforeach
 
 
 

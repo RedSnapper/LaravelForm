@@ -56,9 +56,9 @@ class FormServiceProvider extends ServiceProvider
             }
 
             if (count($vars) == 2) {
-                list($form, $field) = $vars;
+                list($formlet, $field) = $vars;
 
-                $accessor = "['formlet']->formlet($form)->field($field)";
+                $accessor = "[$formlet]->field($field)";
 
             } elseif((count($vars) == 1)) {
                 list($field) = $vars;
@@ -76,7 +76,7 @@ class FormServiceProvider extends ServiceProvider
                 $accessor = "['formlet']";
             } else {
                 list($name) = explode(',', $expression);
-                $accessor = "['formlet']->formlet($name)";
+                $accessor = "[$name]";
             }
 
             return "<?php foreach(array_except(get_defined_vars(), array('__data', '__path')){$accessor}->fields() as \$field){

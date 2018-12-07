@@ -1,7 +1,9 @@
 @form(['form'=>$form,'attributes'=>'class="form"'])
 
     @formlet()
-    @formlet('child')
+	@foreach($formlet->child as $childFormlet)
+		@formlet('childFormlet')
+	@endforeach
 
     @foreach($formlet->formlet('child')->multi as $formlet)
         @formlet()
