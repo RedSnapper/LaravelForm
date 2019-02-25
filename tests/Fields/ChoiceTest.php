@@ -68,6 +68,9 @@ class ChoiceTest extends AbstractFieldTest
                 'label' => "foo",
                 'value' => "bar",
                 'attributes' => ['disabled', ['data-foo' => 'bar']],
+                'extras'=> [
+                  'foo'=>'bar'
+                ]
             ],
             'baz' => 'wibble'
         ]);
@@ -80,6 +83,7 @@ class ChoiceTest extends AbstractFieldTest
         $this->assertEquals('foo', $option->label);
         $this->assertEquals('disabled', $option->attributes->get('disabled'));
         $this->assertEquals('bar', $option->attributes->get('data-foo'));
+        $this->assertEquals(['foo'=>'bar'], $option->extras);
 
         $option = $field->getOptions()->last();
         $this->assertEquals('baz', $option->value);

@@ -24,6 +24,7 @@ class Choice extends AbstractField
 
     /**
      * String used for selected values options/radios
+     *
      * @var string
      */
     protected $selectedOption = "selected";
@@ -87,12 +88,13 @@ class Choice extends AbstractField
         })->values();
     }
 
-    protected function option($value, $display, $attributes = []): \stdClass
+    protected function option($value, $display, $attributes = [], $extras = []): \stdClass
     {
         $option = new \stdClass();
         $option->label = $display;
         $option->value = $value;
         $option->attributes = $this->getOptionAttributes($attributes);
+        $option->extras = $extras;
         return $option;
     }
 
@@ -113,9 +115,10 @@ class Choice extends AbstractField
         }
 
         return $this->option(
-            $item['value'],
-            $item['label'],
-            $this->optionAttributes(@$item['attributes'] ?? [])
+          $item['value'],
+          $item['label'],
+          $this->optionAttributes(@$item['attributes'] ?? []),
+          @$item['extras']
         );
     }
 
@@ -163,7 +166,7 @@ class Choice extends AbstractField
     /**
      * Determine if the value is selected.
      *
-     * @param  string $value
+     * @param string $option
      * @return bool
      */
     protected function isSelected($option): bool
