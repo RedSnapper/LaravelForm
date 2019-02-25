@@ -3,17 +3,22 @@
 namespace RS\Form\Tests;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
 use RS\Form\Fields\Checkbox;
 use RS\Form\Fields\CheckboxGroup;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
+use Symfony\Component\HttpFoundation\FileBag;
 
 class FormletPostTest extends TestCase
 {
 
     /** @var Request */
     protected $request;
+
+    /** @var UploadedFile */
+    protected $file;
 
     protected function setUp()
     {
@@ -26,6 +31,12 @@ class FormletPostTest extends TestCase
           'cb'             => [1, 2],
           'child'          => [['foo' => 'bar']],
           'prefix:country' => 'England'
+        ]);
+        $this->file = UploadedFile::fake()->create('test');
+
+        $this->request->files = new FileBag([
+          'child'=>[['file'=>$this->file]],
+          'file' => $this->file
         ]);
     }
 
@@ -42,6 +53,7 @@ class FormletPostTest extends TestCase
               2 => 2,
               3 => 3
             ]));
+            $form->add(new Input('file','file'));
             $form->addFormlet('child', ChildPostFormlet::class);
         });
 
@@ -52,12 +64,14 @@ class FormletPostTest extends TestCase
           'agree' => 'Yes',
           'foo'   => 'No',
           'cb'    => [1, 2],
+          'file'=> $this->file
         ], $form->postData()->all());
 
         $this->assertEquals('foo', $form->postData('name'));
 
         $this->assertEquals([
-          'foo' => 'bar'
+          'foo' => 'bar',
+          'file'=> $this->file
         ], $form->formlet('child')->postData()->all());
 
         $this->assertEquals([
@@ -65,7 +79,8 @@ class FormletPostTest extends TestCase
           'agree' => 'Yes',
           'foo'   => 'No',
           'cb'    => [1, 2],
-          'child' => [['foo' => 'bar']]
+          'child' => [['foo' => 'bar','file'  => $this->file]],
+          'file'=> $this->file
         ], $form->allPostData()->toArray());
     }
 
@@ -199,6 +214,7 @@ class ChildPostFormlet extends Formlet
     public function prepare(): void
     {
         $this->add(new Input('text', 'foo'));
+        $this->add(new Input('file', 'file'));
     }
 
 }

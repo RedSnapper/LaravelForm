@@ -327,8 +327,7 @@ trait ValidatesForm
      */
     protected function mapRequest(): array
     {
-        // Get the request for this formlet instance
-        $request = $this->request($this->instanceName) ?? [];
+        $request = $this->getFormletRequest();
 
         // Remove the prefix from the form post before validating
         if (!is_null($this->prefix)) {
@@ -339,6 +338,24 @@ trait ValidatesForm
             })->all();
         }
         return $request;
+    }
+
+    /**
+     * Get the request which relates to this formlet
+     *
+     * @return array
+     */
+    protected function getFormletRequest():array
+    {
+
+        if($this->instanceName == ""){
+            return $this->request->all();
+        }
+
+        // Get the key for this formlet instance
+        $key = $this->transformKey($this->instanceName);
+
+        return data_get($this->request->all($key), $key) ?? [];
     }
 
     /**
@@ -361,5 +378,6 @@ trait ValidatesForm
     {
         return $this->prefix ? str_replace_first("{$this->prefix}:", "", $name) : $name;
     }
+
 
 }

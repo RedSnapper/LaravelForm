@@ -452,7 +452,8 @@ abstract class Formlet
     protected function request($name)
     {
         $key = is_null($name) ? null : $this->transformKey($name);
-        return $this->request->input($key);
+
+        return $this->request->input($key) ?? $this->request->file($key);
     }
 
     /**

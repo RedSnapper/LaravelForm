@@ -4,12 +4,14 @@ namespace RS\Form\Tests;
 
 use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
+use Symfony\Component\HttpFoundation\FileBag;
 
 class FormletValidationTest extends TestCase
 {
@@ -21,10 +23,19 @@ class FormletValidationTest extends TestCase
     /** @var Request */
     protected $request;
 
+    /** @var UploadedFile */
+    protected $file;
+
     protected function setUp()
     {
         parent::setUp();
         $this->request = $this->app['request'];
+        $this->file = UploadedFile::fake()->create('test');
+
+        $this->request->files = new FileBag([
+          'file' => $this->file,
+          'child'=>[['file'=>$this->file]]
+        ]);
     }
 
     /** @test */
@@ -42,6 +53,8 @@ class FormletValidationTest extends TestCase
     /** @test */
     public function it_fails_validation()
     {
+        $this->request->files = new FileBag();
+
         $form = $this->form();
 
         $form->validate(false);
@@ -50,20 +63,22 @@ class FormletValidationTest extends TestCase
 
         $errors = $form->allErrors();
 
-        $this->assertCount(3, $errors);
+        $this->assertCount(5, $errors);
         $this->assertEquals(["The name field is required."], $errors->get('name'));
         $this->assertEquals(["The country field is required."], $errors->get('child.0.country'));
+        $this->assertEquals(["The file field is required."], $errors->get('child.0.file'));
 
         $errors = $form->errors();
         $this->assertFalse($form->isValid());
-        $this->assertCount(2, $errors);
+        $this->assertCount(3, $errors);
         $this->assertEquals(["The name field is required."], $errors->get('name'));
 
         $childForm = $form->formlet('child');
         $errors = $childForm->errors();
         $this->assertFalse($childForm->isValid());
-        $this->assertCount(1, $errors);
+        $this->assertCount(2, $errors);
         $this->assertEquals(["The country field is required."], $errors->get('country'));
+        $this->assertEquals(["The file field is required."], $errors->get('file'));
     }
 
     /** @test */
@@ -89,8 +104,7 @@ class FormletValidationTest extends TestCase
             $form = $this->form();
             $form->validate();
         });
-
-        $this->post('/test', $this->validPost())
+        $this->post('/test', $this->validPost(true))
           ->assertStatus(200)
           ->assertSessionMissing('errors');
     }
@@ -263,8 +277,6 @@ class FormletValidationTest extends TestCase
 
         $this->assertCount(1, $errors);
         $this->assertEquals(["The Countries must be a string."], $errors->get('country'));
-
-
     }
 
     private function form(\Closure $closure = null): Formlet
@@ -277,15 +289,24 @@ class FormletValidationTest extends TestCase
         return $this->app->makeWith(PrefixFormlet::class, ['closure' => $closure]);
     }
 
-    protected function validPost()
+    protected function validPost($includeFile = false)
     {
-        return [
+
+        $data =  [
           'name'  => 'John',
           'email' => 'john@example.com',
           'child' => [
             ['country' => 'England']
           ]
         ];
+
+        if($includeFile){
+            $data['file'] = $this->file;
+            $data['child'][0]['file'] = $this->file;
+        }
+
+        return $data;
+
     }
 
     protected function validPrefixPost()
@@ -312,6 +333,7 @@ class ValidationFormlet extends Formlet
     public function prepare(): void
     {
         $this->add(new Input('text', 'name'));
+        $this->add(new Input('file', 'file'));
         $this->addFormlet('child', ChildValidationFormlet::class);
     }
 
@@ -319,7 +341,8 @@ class ValidationFormlet extends Formlet
     {
         return [
           'name'  => 'required',
-          'email' => 'required'
+          'email' => 'required',
+          'file'  => 'required'
         ];
     }
 
@@ -345,12 +368,14 @@ class ChildValidationFormlet extends Formlet
     public function prepare(): void
     {
         $this->add(new Input('text', 'country'));
+        $this->add(new Input('file', 'file'));
     }
 
     public function rules(): array
     {
         return [
-          'country' => 'required'
+          'country' => 'required',
+          'file'=> 'required'
         ];
     }
 }
@@ -382,7 +407,7 @@ class PrefixFormlet extends Formlet
     {
         return [
           'country.required' => ':attribute are needed.',
-          'country.string' => 'The :attribute must be a string.',
+          'country.string'   => 'The :attribute must be a string.',
         ];
     }
 
