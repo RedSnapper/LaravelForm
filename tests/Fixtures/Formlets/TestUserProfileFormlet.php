@@ -18,7 +18,6 @@ class TestUserProfileFormlet extends Formlet
     {
         
         $user = $this->model->create($this->postData()->all());
-
         $user->assignProfile($this->formlet('profile')->postData()->all());
 
     }

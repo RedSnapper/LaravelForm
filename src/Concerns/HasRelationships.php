@@ -65,8 +65,11 @@ trait HasRelationships
             $relation = $relation[$relationKey];
         }
 
-        if ($method = @$this->relationsMap[get_class($relation)]) {
-            $this->$method($relation, $relationKey, $formlet, $closure, $count);
+        foreach($this->relationsMap as $class=>$method){
+
+            if($relation instanceof $class){
+                $this->$method($relation, $relationKey, $formlet, $closure, $count);
+            }
         }
     }
 
