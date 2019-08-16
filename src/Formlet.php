@@ -520,9 +520,15 @@ abstract class Formlet
         // If the model has pivot columns we should check them first
         // Before checking the model attributes
         // This is important as the we many have the same attribute
-        // on the pivot and the related model
-        $data = $this->hasPivotColumns() ? data_get($model,
-          $this->getPivotAccessor() . "." . $this->transformKey($name)) : null;
+        // on the pivot and the related model. If the name is the same
+        // as the related key name then we should get the model rather
+        // than the pivot as this is the subscription value
+
+        $data = null;
+
+        if($this->hasPivotColumns() && $this->related->getKeyName() !== $name){
+            $data = data_get($model, $this->getPivotAccessor() . "." . $this->transformKey($name));
+        }
 
         if (!is_null($data)) {
             return $data;

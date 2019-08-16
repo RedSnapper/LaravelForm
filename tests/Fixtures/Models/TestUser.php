@@ -33,7 +33,7 @@ class TestUser extends Model
 
     public function permissions()
     {
-        return $this->belongsToMany(TestPermission::class,'permission_user','user_id','permission_id')->withPivot('color');
+        return $this->belongsToMany(TestPermission::class,'permission_user','user_id','permission_id')->withPivot('color','id');
     }
 
     public function assignProfile($attributes)

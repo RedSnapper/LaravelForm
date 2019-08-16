@@ -359,6 +359,25 @@ class FormletIntegrationTest extends TestCase
         $this->assertNull($formlets->get(1)->field('color')->getValue());
     }
 
+
+    /** @test */
+    public function many_to_many_where_subscriber_field_exists_also_on_the_pivot_table()
+    {
+        $user = TestUser::create(['email' => 'john@example.com']);
+        $permissionA = TestPermission::create(['name' => 'Permission A']);
+        $permissionB = TestPermission::create(['name' => 'Permission B']);
+
+        $user->permissions()->attach($permissionA->id, ['id' => 9999]);
+
+        $formlet = app(TestUserPermissionForm::class);
+        $formlet->model($user)->build();
+
+        $formlets = $formlet->formlets('permissions');
+        $this->assertTrue($formlets->first()->field('id')->isChecked());
+        $this->assertFalse($formlets->get(1)->field('id')->isChecked());
+
+    }
+
     /** @test */
     public function many_to_many_relation_store()
     {

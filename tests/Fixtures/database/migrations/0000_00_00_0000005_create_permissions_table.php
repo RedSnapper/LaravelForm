@@ -23,6 +23,7 @@ class CreatePermissionsTable extends Migration{
             $table->integer('permission_id')->unsigned()->index();
             $table->integer('user_id')->unsigned()->index();
             $table->string('color')->nullable();
+            $table->integer('id')->unsigned()->nullable();
             $table->foreign('user_id')
               ->references('id')
               ->on('users')
