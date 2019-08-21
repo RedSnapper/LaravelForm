@@ -2,29 +2,43 @@
 
 namespace RS\Form\Fields;
 
-class Input extends AbstractField {
+class Input extends AbstractField
+{
 
-	protected $view = "form::fields.input";
+    protected $view = "form::fields.input";
 
     /**
      * The types of inputs to not fill values on by default.
      *
      * @var array
      */
-	protected  $skipValueTypes = ['password','file'];
+    protected $skipValueTypes = ['password', 'file'];
 
-	public function __construct(string $type, string $name) {
+    public function __construct(string $type, string $name)
+    {
 
-	    $this->attributes = collect(['type'=>$type]);
+        $this->attributes = collect(['type' => $type]);
 
-		if(in_array($type,$this->skipValueTypes)){
-		    $this->guarded = true;
+        if (in_array($type, $this->skipValueTypes)) {
+            $this->guarded = true;
         }
 
         $this->setName($name);
-	}
+    }
 
-
-
+    /**
+     * Multi select
+     *
+     * @param  boolean  $multiple
+     * @return AbstractField
+     */
+    public function multiple($multiple = true): AbstractField
+    {
+        if ($this->getAttribute("type") == "file") {
+            $multiple ? $this->setAttribute('multiple')
+              : $this->removeAttribute("multiple");
+        }
+        return parent::multiple();
+    }
 
 }
