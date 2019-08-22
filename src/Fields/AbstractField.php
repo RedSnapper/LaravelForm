@@ -93,6 +93,13 @@ abstract class AbstractField {
     protected $guarded = false;
 
     /**
+     * Has this field had a value set
+     *
+     * @var bool
+     */
+    protected $dirty = false;
+
+    /**
      * @param string $type
      * @return AbstractField
      */
@@ -139,7 +146,18 @@ abstract class AbstractField {
 	 */
 	public function setValue($value):AbstractField {
 		$this->value = $value;
+        $this->dirty = true;
 		return $this;
+	}
+
+    /**
+     * Has a value been set
+     *
+     * @return bool
+     */
+    public function isDirty():bool
+    {
+        return $this->dirty;
 	}
 
 	/**

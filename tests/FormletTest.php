@@ -341,6 +341,18 @@ class FormletTest extends TestCase
     }
 
     /** @test */
+    public function field_is_not_populated_from_model_if_value_has_already_been_set()
+    {
+        $form = $this->formlet(function ($form) {
+            $form->add(with(new Input('text', 'field'))->setValue('bar'));
+        });
+        $form->model(['field' => 'foo'])->build();
+        $fields = $form->fields();
+
+        $this->assertEquals('bar', $fields->get('field')->getValue());
+    }
+
+    /** @test */
     public function form_is_populated_from_session_before_model()
     {
 
