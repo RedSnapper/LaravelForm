@@ -334,12 +334,11 @@ abstract class Formlet
      */
     protected function populateField(AbstractField $field): void
     {
-        if (!$field->isDirty()) {
-            $value = $this->getValueAttribute($field->getInstanceName(), $field->getName());
 
-            if (!is_null($value)) {
-                $field->setValue($value);
-            }
+        $value = $this->getValueAttribute($field);
+
+        if (!is_null($value)) {
+            $field->setValue($value);
         }
 
         $this->populateFieldErrors($field);
@@ -355,8 +354,10 @@ abstract class Formlet
      * @param  string  $modelKey
      * @return mixed
      */
-    protected function getValueAttribute(string $name, string $modelKey)
+    protected function getValueAttribute(AbstractField $field)
     {
+        $name = $field->getInstanceName();
+        $modelKey = $field->getName();
 
         $old = $this->old($name);
         if (!is_null($old)) {
@@ -368,7 +369,7 @@ abstract class Formlet
             return $request;
         }
 
-        if ($this->model && $this->request->isMethod('GET')) {
+        if ($this->model && $this->request->isMethod('GET') && !$field->isDirty()) {
             return $this->getModelValueAttribute($this->model, $modelKey);
         }
 

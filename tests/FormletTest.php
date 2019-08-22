@@ -370,6 +370,23 @@ class FormletTest extends TestCase
     }
 
     /** @test */
+    public function form_is_populated_from_session_even_if_value_is_set()
+    {
+
+        $this->setOldInput([
+          'foo' => 'bim'
+        ]);
+
+        $form = $this->formlet(function ($form) {
+            $form->add(with(new Input('text', 'foo'))->setValue('baz'));
+        });
+        $form->model(['foo' => ['bar']])->build();
+        $fields = $form->fields();
+
+        $this->assertEquals('bim', $fields->get('foo')->getValue());
+    }
+
+    /** @test */
     public function a_false_value_in_the_model_should_be_reflected_by_the_field_value()
     {
         $form = $this->formlet(function ($form) {
