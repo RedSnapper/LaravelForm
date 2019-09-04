@@ -67,7 +67,7 @@ class FormServiceProvider extends ServiceProvider
                 $accessor = "['field']";
             }
 
-            return "<?php echo \array_except(get_defined_vars(), array('__data', '__path')){$accessor}->render(); ?>";
+            return "<?php echo \Illuminate\Support\Arr::except(get_defined_vars(), array('__data', '__path')){$accessor}->render(); ?>";
         });
 
         Blade::directive('formlet', function ($expression) {
@@ -79,7 +79,7 @@ class FormServiceProvider extends ServiceProvider
                 $accessor = "[$name]";
             }
 
-            return "<?php foreach(array_except(get_defined_vars(), array('__data', '__path')){$accessor}->fields() as \$field){
+            return "<?php foreach(\Illuminate\Support\Arr::except(get_defined_vars(), array('__data', '__path')){$accessor}->fields() as \$field){
                 echo \$field->render(); 
             } ?>";
         });
