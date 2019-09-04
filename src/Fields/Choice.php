@@ -8,6 +8,7 @@
 
 namespace RS\Form\Fields;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 class Choice extends AbstractField
@@ -124,7 +125,7 @@ class Choice extends AbstractField
 
     protected function isExplicitOption($item): bool
     {
-        return array_has($item, 'label') && array_has($item, 'value');
+        return Arr::has($item, 'label') && Arr::has($item, 'value');
     }
 
     private function optionAttributes(array $attributes)
