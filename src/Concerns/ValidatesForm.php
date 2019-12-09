@@ -65,8 +65,10 @@ trait ValidatesForm
 
         $this->allErrors = $this->validateMapFormlet(new MessageBag());
 
+
         if (!$this->isAllValid() && $redirect) {
-            throw (new ValidationException($this->validator, $this->buildFailedValidationResponse()));
+
+            $this->failedValidation();
         }
     }
 
@@ -304,19 +306,18 @@ trait ValidatesForm
     }
 
     /**
-     * Create the response for when a request fails validation.
+     * Handle a failed validation attempt.
      *
-     * @return Response
+     * @return void
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
-    protected function buildFailedValidationResponse(): Response
+    protected function failedValidation():void
     {
-        if ($this->request->expectsJson()) {
-            return new JsonResponse($this->allErrors->toArray(), 422);
-        }
-
-        return redirect()->to($this->getRedirectUrl())
-          ->withInput($this->request->input())
-          ->withErrors($this->allErrors->toArray(), $this->getErrorBagName());
+        throw (new ValidationException(null))
+          ->withMessages($this->allErrors->messages())
+          ->errorBag($this->getErrorBagName())
+          ->redirectTo($this->getRedirectUrl());
     }
 
     /**

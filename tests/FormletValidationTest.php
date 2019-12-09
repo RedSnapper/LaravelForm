@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
+use Illuminate\Validation\ValidationException;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
 use Symfony\Component\HttpFoundation\FileBag;
@@ -82,6 +83,14 @@ class FormletValidationTest extends TestCase
     }
 
     /** @test */
+    public function throws_a_validation_exception_when_validation_fails()
+    {
+        $this->withoutExceptionHandling();
+        $this->expectException(ValidationException::class);
+        $this->form()->validate();
+    }
+
+    /** @test */
     public function it_can_automatically_redirect_after_failing_validation()
     {
 
@@ -94,6 +103,7 @@ class FormletValidationTest extends TestCase
           ->post('/test', [])
           ->assertRedirect('/test')
           ->assertSessionHasErrors(['name']);
+        
     }
 
     /** @test */
