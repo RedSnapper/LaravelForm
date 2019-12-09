@@ -5,6 +5,7 @@ namespace RS\Form\Fields;
 
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 abstract class AbstractField {
 
@@ -225,7 +226,7 @@ abstract class AbstractField {
 		    return null;
         }
 
-		return ends_with($this->getInstanceName(),'[]') ? substr($instanceName,0,-2) : $instanceName;
+		return Str::endsWith($this->getInstanceName(),'[]') ? substr($instanceName,0,-2) : $instanceName;
 	}
 
 	public function getErrors():Collection{

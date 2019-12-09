@@ -22,13 +22,13 @@ class RadioTest extends AbstractFieldTest
         ]);
         $field->setValue('bim');
 
-        $this->assertContains('<input class="form-check-input" name="bim" type="radio" value="foo"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="bim" type="radio" value="foo"/>',
           $this->renderField($field));
-        $this->assertContains('<input class="form-check-input" name="bim" type="radio" checked="checked" value="bim"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="bim" type="radio" checked="checked" value="bim"/>',
           $this->renderField($field));
-        $this->assertContains('bar',
+        $this->assertStringContainsString('bar',
           $this->renderField($field));
-        $this->assertContains('baz',
+        $this->assertStringContainsString('baz',
           $this->renderField($field));
     }
 
@@ -54,14 +54,14 @@ class RadioTest extends AbstractFieldTest
           ]
         ]);
 
-        $this->assertContains('<input class="form-check-input" name="bim" type="radio" disabled="disabled" value="foo"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="bim" type="radio" disabled="disabled" value="foo"/>',
           $this->renderField($field));
-        $this->assertContains('bar',
+        $this->assertStringContainsString('bar',
           $this->renderField($field));
 
         $field->setInstanceName("foo[0]bim");
 
-        $this->assertContains('<input class="form-check-input" name="foo[0]bim" type="radio" disabled="disabled" value="foo"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="foo[0]bim" type="radio" disabled="disabled" value="foo"/>',
           $this->renderField($field));
     }
 
@@ -69,10 +69,10 @@ class RadioTest extends AbstractFieldTest
     public function can_render_label()
     {
         $field = new Radio('foo');
-        $this->assertNotContains('My Label',
+        $this->assertStringNotContainsString('My Label',
           $this->renderField($field));
         $field->label('My Label');
-        $this->assertContains('My Label',
+        $this->assertStringContainsString('My Label',
           $this->renderField($field));
     }
 

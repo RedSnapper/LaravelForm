@@ -20,7 +20,7 @@ class FormletPostTest extends TestCase
     /** @var UploadedFile */
     protected $file;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         $this->request = $this->app['request'];

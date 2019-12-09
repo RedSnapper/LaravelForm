@@ -44,11 +44,11 @@ class SelectTest extends AbstractFieldTest
         ]);
         $field->setValue('bim');
 
-        $this->assertContains('<select class="form-control" id="bim" name="bim">',
+        $this->assertStringContainsString('<select class="form-control" id="bim" name="bim">',
           $this->renderField($field));
-        $this->assertContains('<option value="foo" >bar</option>',
+        $this->assertStringContainsString('<option value="foo" >bar</option>',
           $this->renderField($field));
-        $this->assertContains('<option value="bim" selected="selected">baz</option>',
+        $this->assertStringContainsString('<option value="bim" selected="selected">baz</option>',
           $this->renderField($field));
     }
 
@@ -63,13 +63,13 @@ class SelectTest extends AbstractFieldTest
         $field->multiple(true);
         $field->setValue(['bim','wibble']);
 
-        $this->assertContains('<select class="form-control" id="bim[]" multiple="multiple" name="bim[]">',
+        $this->assertStringContainsString('<select class="form-control" id="bim[]" multiple="multiple" name="bim[]">',
           $this->renderField($field));
-        $this->assertContains('<option value="foo" >bar</option>',
+        $this->assertStringContainsString('<option value="foo" >bar</option>',
           $this->renderField($field));
-        $this->assertContains('<option value="bim" selected="selected">baz</option>',
+        $this->assertStringContainsString('<option value="bim" selected="selected">baz</option>',
           $this->renderField($field));
-        $this->assertContains('<option value="wibble" selected="selected">wibble</option>',
+        $this->assertStringContainsString('<option value="wibble" selected="selected">wibble</option>',
           $this->renderField($field));
     }
 
@@ -84,7 +84,7 @@ class SelectTest extends AbstractFieldTest
           ]
         ]);
 
-        $this->assertContains('<option value="foo" disabled="disabled" data-foo="bar">bar</option>',
+        $this->assertStringContainsString('<option value="foo" disabled="disabled" data-foo="bar">bar</option>',
           $this->renderField($field));
     }
 
@@ -96,9 +96,9 @@ class SelectTest extends AbstractFieldTest
         ]);
         $field->setValue('bar');
 
-        $this->assertContains('<option value="bar" selected="selected">bim</option>',
+        $this->assertStringContainsString('<option value="bar" selected="selected">bim</option>',
           $this->renderField($field));
-        $this->assertContains('<optgroup label="foo">',
+        $this->assertStringContainsString('<optgroup label="foo">',
           $this->renderField($field));
     }
 

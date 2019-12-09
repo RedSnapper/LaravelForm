@@ -10,8 +10,8 @@ trait RendersErrors
         $field = $this->getTestField('bim');
         $field->setErrors(collect(['error1', 'error2']));
         $rendered = $this->renderField($field);
-        $this->assertContains('error1', $rendered);
-        $this->assertContains('error2', $rendered);
-        $this->assertContains('is-invalid', $rendered);
+        $this->assertStringContainsString('error1', $rendered);
+        $this->assertStringContainsString('error2', $rendered);
+        $this->assertStringContainsString('is-invalid', $rendered);
     }
 }

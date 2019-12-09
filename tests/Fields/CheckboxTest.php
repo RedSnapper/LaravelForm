@@ -96,23 +96,23 @@ class CheckboxTest extends AbstractFieldTest
     {
         $field = new Checkbox('bim', true);
         $rendered = $this->renderField($field);
-        $this->assertContains('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
+        $this->assertStringContainsString('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
 
         $field->setValue(true);
         $rendered = $this->renderField($field);
-        $this->assertContains('<input class="form-check-input" checked="checked" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
+        $this->assertStringContainsString('<input class="form-check-input" checked="checked" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
 
         $field->setValue(null);
         $rendered = $this->renderField($field);
-        $this->assertContains('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
+        $this->assertStringContainsString('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
 
         $field->default(true);
         $rendered = $this->renderField($field);
-        $this->assertContains('<input class="form-check-input" checked="checked" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
+        $this->assertStringContainsString('<input class="form-check-input" checked="checked" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
 
         $field->setValue(false);
         $rendered = $this->renderField($field);
-        $this->assertContains('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
+        $this->assertStringContainsString('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
     }
 
     /** @test */
@@ -121,7 +121,7 @@ class CheckboxTest extends AbstractFieldTest
         $field = new Checkbox('bim', true);
         $field->label('My Label');
         $rendered = $this->renderField($field);
-        $this->assertContains('My Label', $rendered);
+        $this->assertStringContainsString('My Label', $rendered);
     }
 
 }

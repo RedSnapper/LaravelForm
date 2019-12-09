@@ -22,7 +22,7 @@ class FormletTest extends TestCase
     /** @var Request */
     protected $request;
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         $this->request = $this->app['request'];
@@ -544,7 +544,7 @@ class FormletTest extends TestCase
         $fields = $form->fields();
 
         $this->assertObjectHasAttribute('id', $fields->get('items')->getValue()->first());
-        $this->assertContains('<input class="form-check-input" name="items[]" type="checkbox" checked="checked" value="2"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="items[]" type="checkbox" checked="checked" value="2"/>',
           $this->renderField($fields->get('items')));
     }
 

@@ -5,6 +5,7 @@ namespace RS\Form\Concerns;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 use RS\Form\Fields\AbstractField;
@@ -377,7 +378,7 @@ trait ValidatesForm
      */
     private function stripPrefix(string $name): string
     {
-        return $this->prefix ? str_replace_first("{$this->prefix}:", "", $name) : $name;
+        return $this->prefix ? Str::replaceFirst("{$this->prefix}:", "", $name) : $name;
     }
 
 

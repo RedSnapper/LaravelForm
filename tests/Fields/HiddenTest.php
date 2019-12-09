@@ -37,7 +37,7 @@ class HiddenTest extends AbstractFieldTest
         $field = new Hidden('bim');
         $field->setValue('baz');
         $rendered = $field->render()->render();
-        $this->assertContains('<input autocomplete="off" name="bim" type="hidden" value="baz"/>',$rendered);
+        $this->assertStringContainsString('<input autocomplete="off" name="bim" type="hidden" value="baz"/>',$rendered);
     }
 
 }

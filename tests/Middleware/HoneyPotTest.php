@@ -8,7 +8,7 @@ use RS\Form\Tests\TestCase;
 
 class HoneyPotTest extends TestCase
 {
-    public function setUp()
+    public function setUp():void
     {
         parent::setUp();
 

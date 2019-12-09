@@ -54,20 +54,20 @@ class CheckboxGroupTest extends AbstractFieldTest
         ]);
         $field->setValue(['bim', 'bar']);
 
-        $this->assertContains('<input class="form-check-input" name="bim[]" type="checkbox" value="foo"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" value="foo"/>',
             $this->renderField($field));
-        $this->assertContains('<input class="form-check-input" name="bim[]" type="checkbox" checked="checked" value="bim"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" checked="checked" value="bim"/>',
             $this->renderField($field));
-        $this->assertContains('<input class="form-check-input" name="bim[]" type="checkbox" checked="checked" value="bar"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" checked="checked" value="bar"/>',
             $this->renderField($field));
-        $this->assertContains('bar',
+        $this->assertStringContainsString('bar',
             $this->renderField($field));
-        $this->assertContains('baz',
+        $this->assertStringContainsString('baz',
             $this->renderField($field));
 
         $field->setInstanceName("foo[0]bim");
 
-        $this->assertContains('<input class="form-check-input" name="foo[0]bim[]" type="checkbox" checked="checked" value="bar"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="foo[0]bim[]" type="checkbox" checked="checked" value="bar"/>',
           $this->renderField($field));
 
     }
@@ -83,9 +83,9 @@ class CheckboxGroupTest extends AbstractFieldTest
             ]
         ]);
 
-        $this->assertContains('<input class="form-check-input" name="bim[]" type="checkbox" disabled="disabled" value="foo"/>',
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" disabled="disabled" value="foo"/>',
             $this->renderField($field));
-        $this->assertContains('bar',
+        $this->assertStringContainsString('bar',
             $this->renderField($field));
     }
 
@@ -93,10 +93,10 @@ class CheckboxGroupTest extends AbstractFieldTest
     public function can_render_label()
     {
         $field = new CheckboxGroup('foo');
-        $this->assertNotContains('My Label',
+        $this->assertStringNotContainsString('My Label',
             $this->renderField($field));
         $field->label('My Label');
-        $this->assertContains('My Label',
+        $this->assertStringContainsString('My Label',
             $this->renderField($field));
     }
 

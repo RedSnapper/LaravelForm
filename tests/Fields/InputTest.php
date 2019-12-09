@@ -47,7 +47,7 @@ class InputTest extends AbstractFieldTest
     {
         $field = new Input('text', 'bim');
         $rendered = $field->render()->render();
-        $this->assertContains('<input class="form-control" id="bim" name="bim" type="text" />', $rendered);
+        $this->assertStringContainsString('<input class="form-control" id="bim" name="bim" type="text" />', $rendered);
     }
 
     /** @test */
@@ -56,7 +56,7 @@ class InputTest extends AbstractFieldTest
         $field = new Input('text', 'bim');
         $field->setValue('baz');
         $rendered = $field->render()->render();
-        $this->assertContains('<input class="form-control" id="bim" name="bim" type="text" value="baz"/>', $rendered);
+        $this->assertStringContainsString('<input class="form-control" id="bim" name="bim" type="text" value="baz"/>', $rendered);
     }
 
     /** @test */
@@ -65,7 +65,7 @@ class InputTest extends AbstractFieldTest
         $field = new Input('file', 'bim');
         $field->multiple();
         $rendered = $field->render()->render();
-        $this->assertContains('<input class="form-control" id="bim[]" multiple="multiple" name="bim[]" type="file" />',
+        $this->assertStringContainsString('<input class="form-control" id="bim[]" multiple="multiple" name="bim[]" type="file" />',
           $rendered);
     }
 

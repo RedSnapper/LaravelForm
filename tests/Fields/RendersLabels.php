@@ -10,7 +10,7 @@ trait RendersLabels
         $field = $this->getTestField('bim');
         $field->label('My Label');
         $rendered = $this->renderField($field);
-        $this->assertContains('<label for="bim">My Label</label>',$rendered);
+        $this->assertStringContainsString('<label for="bim">My Label</label>',$rendered);
     }
 
     /** @test */
@@ -18,6 +18,6 @@ trait RendersLabels
     {
         $field = $this->getTestField('bim');
         $rendered = $this->renderField($field);
-        $this->assertNotContains('<label',$rendered);
+        $this->assertStringNotContainsString('<label',$rendered);
     }
 }

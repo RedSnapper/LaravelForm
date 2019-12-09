@@ -10,7 +10,7 @@ use RS\Form\Formlet;
 class FormletRenderTest extends TestCase
 {
 
-    protected function setUp()
+    protected function setUp():void
     {
         parent::setUp();
         View::addLocation(__DIR__ . "/Fixtures/views");

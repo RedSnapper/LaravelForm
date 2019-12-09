@@ -44,9 +44,9 @@ class TextAreaTest extends AbstractFieldTest
     {
         $field = new TextArea('bim');
         // Text Areas should not have any extra space characters which have not been set from the value
-        $this->assertContains('<textarea class="form-control" id="bim" name="bim"></textarea>', $field->render()->render());
+        $this->assertStringContainsString('<textarea class="form-control" id="bim" name="bim"></textarea>', $field->render()->render());
         $field->setValue("Eggs & Sausage");
-        $this->assertContains('<textarea class="form-control" id="bim" name="bim">Eggs &amp; Sausage</textarea>', $field->render()->render());
+        $this->assertStringContainsString('<textarea class="form-control" id="bim" name="bim">Eggs &amp; Sausage</textarea>', $field->render()->render());
     }
 
 }
