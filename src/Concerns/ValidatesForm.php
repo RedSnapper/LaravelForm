@@ -2,7 +2,6 @@
 
 namespace RS\Form\Concerns;
 
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
@@ -10,7 +9,6 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 use RS\Form\Fields\AbstractField;
 use RS\Form\Formlet;
-use Symfony\Component\HttpFoundation\Response;
 
 trait ValidatesForm
 {
@@ -55,7 +53,7 @@ trait ValidatesForm
     /**
      * Validate this form
      *
-     * @param bool $redirect
+     * @param  bool  $redirect
      * @throws \Illuminate\Validation\ValidationException
      */
     public function validate($redirect = true)
@@ -65,7 +63,6 @@ trait ValidatesForm
         $this->validateFormlet();
 
         $this->allErrors = $this->validateMapFormlet(new MessageBag());
-
 
         if (!$this->isAllValid() && $redirect) {
 
@@ -124,7 +121,7 @@ trait ValidatesForm
     /**
      * Returns errors for a particular field
      *
-     * @param string $name
+     * @param  string  $name
      * @return array|null
      */
     public function error(string $name): ?array
@@ -146,6 +143,7 @@ trait ValidatesForm
      */
     protected function validateFormlet(): void
     {
+        $this->prepareForValidation();
 
         $this->errors = $this->validateRequest();
 
@@ -155,11 +153,21 @@ trait ValidatesForm
     }
 
     /**
+     * Prepare the data for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        //
+    }
+
+    /**
      * We need to translate all the errors to their specific instance
      * We can then fill the session with these errors and the map them
      * back to the appropriate formlet
      *
-     * @param MessageBag $errorBag
+     * @param  MessageBag  $errorBag
      * @return MessageBag
      */
     protected function validateMapFormlet(MessageBag $errorBag): MessageBag
@@ -172,7 +180,7 @@ trait ValidatesForm
     }
 
     /**
-     * @param MessageBag $errorBag
+     * @param  MessageBag  $errorBag
      * @return MessageBag
      */
     protected function validateMapFormlets(MessageBag $errorBag): MessageBag
@@ -232,7 +240,7 @@ trait ValidatesForm
     protected function getValidatorInstance()
     {
         $validator = $this->getValidationFactory()->make(
-          $this->mapRequest(),
+          $this->input->all(),
           $this->rules(),
           $this->messages(),
           $this->attributes()
@@ -263,7 +271,7 @@ trait ValidatesForm
     /**
      * Populate field with errors
      *
-     * @param AbstractField $field
+     * @param  AbstractField  $field
      * @return void
      */
     protected function populateFieldErrors(AbstractField $field): void
@@ -310,54 +318,14 @@ trait ValidatesForm
      * Handle a failed validation attempt.
      *
      * @return void
-     *
      * @throws \Illuminate\Validation\ValidationException
      */
-    protected function failedValidation():void
+    protected function failedValidation(): void
     {
         throw (new ValidationException(null))
           ->withMessages($this->allErrors->messages())
           ->errorBag($this->getErrorBagName())
           ->redirectTo($this->getRedirectUrl());
-    }
-
-    /**
-     * Map the current request for validation
-     * for this formlet
-     *
-     * @return array
-     */
-    protected function mapRequest(): array
-    {
-        $request = $this->getFormletRequest();
-
-        // Remove the prefix from the form post before validating
-        if (!is_null($this->prefix)) {
-            $request = collect($request)->mapWithKeys(function ($value, $key) {
-                return [
-                  $this->stripPrefix($key) => $value
-                ];
-            })->all();
-        }
-        return $request;
-    }
-
-    /**
-     * Get the request which relates to this formlet
-     *
-     * @return array
-     */
-    protected function getFormletRequest():array
-    {
-
-        if($this->instanceName == ""){
-            return $this->request->all();
-        }
-
-        // Get the key for this formlet instance
-        $key = $this->transformKey($this->instanceName);
-
-        return data_get($this->request->all($key), $key) ?? [];
     }
 
     /**
@@ -373,13 +341,12 @@ trait ValidatesForm
     /**
      * Remove the formlet prefix from a string
      *
-     * @param string $name
+     * @param  string  $name
      * @return string
      */
     private function stripPrefix(string $name): string
     {
         return $this->prefix ? Str::replaceFirst("{$this->prefix}:", "", $name) : $name;
     }
-
 
 }

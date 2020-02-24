@@ -175,3 +175,29 @@ class UserForm extends Formlet{
 ```
 
 We can overwrite the persist method if required.
+
+## Validation
+
+### Hooks
+Before each form is validated we can manipulate the input for the formlet before it is validated using the prepareForValidation method. This will run for each formlet.
+
+```php
+<?php
+
+namespace App\Http\Formlets;
+
+use RS\Form\Formlet;
+
+class UserForm extends Formlet{
+    
+    public function prepare(): void {
+        // Prepare the fields.
+    }
+    
+    protected  function prepareForValidation()
+    {
+        $this->mergeInput(['name'=>'John']);
+    }
+
+}
+```

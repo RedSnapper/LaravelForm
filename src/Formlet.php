@@ -48,6 +48,12 @@ abstract class Formlet
      */
     protected $request;
     /**
+     * The input for this form
+     *
+     * @var FormletInput
+     */
+    protected $input;
+    /**
      * The formlet name
      *
      * @var string
@@ -95,6 +101,7 @@ abstract class Formlet
         $this->formlets = collect();
         $this->allErrors = optional($this->session->get('errors'))->getBag($this->getErrorBagName()) ?? new MessageBag();
         $this->errors = new MessageBag();
+        $this->input = new FormletInput();
     }
 
     /**
@@ -168,8 +175,8 @@ abstract class Formlet
         $this->populate();
 
         return collect([
-          'form'    => collect([
-            'hidden'     => $this->getHiddenFields(),
+          'form' => collect([
+            'hidden' => $this->getHiddenFields(),
             'attributes' => $this->attributes->sortKeys()
           ]),
           'formlet' => $this
@@ -185,11 +192,34 @@ abstract class Formlet
         if ($this->prepared) {
             return;
         }
+
         $this->setFieldNames();
+
+        $this->setInputs();
 
         $this->populateFields();
 
         $this->populateErrors();
+    }
+
+    /**
+     * Set the input for all the formlets
+     */
+    protected function setInputs()
+    {
+        $this->setInput();
+
+        $this->iterateFormlets(function (Formlet $formlet) {
+            $formlet->setInputs();
+        });
+    }
+
+    /**
+     * Set the input for this formlet from the request
+     */
+    protected function setInput()
+    {
+        $this->input->add($this->mapRequest());
     }
 
     /**
@@ -364,7 +394,8 @@ abstract class Formlet
             return $old;
         }
 
-        $request = $this->request($name);
+        $request = $this->input->get($this->transformKey($modelKey));
+
         if (!is_null($request)) {
             return $request;
         }
@@ -409,6 +440,18 @@ abstract class Formlet
         $key = is_null($name) ? null : $this->transformKey($name);
 
         return $this->request->input($key) ?? $this->request->file($key);
+    }
+
+    /**
+     * Merge new input into the current formlet's input array.
+     *
+     * @param  array  $input
+     * @return $this
+     */
+    protected function mergeInput(array $input): self
+    {
+        $this->input->add($input);
+        return $this;
     }
 
     /**
@@ -552,6 +595,45 @@ abstract class Formlet
     public function formlet(string $name): ?Formlet
     {
         return optional($this->formlets->get($name))->first();
+    }
+
+    /**
+     * Map the current request for validation
+     * for this formlet
+     *
+     * @return array
+     */
+    protected function mapRequest(): array
+    {
+        $request = $this->getFormletRequest();
+
+        // Remove the prefix from the form post before validating
+        if (!is_null($this->prefix)) {
+            $request = collect($request)->mapWithKeys(function ($value, $key) {
+                return [
+                  $this->stripPrefix($key) => $value
+                ];
+            })->all();
+        }
+        return $request;
+    }
+
+    /**
+     * Get the request which relates to this formlet
+     *
+     * @return array
+     */
+    protected function getFormletRequest(): array
+    {
+
+        if ($this->instanceName == "") {
+            return $this->request->all();
+        }
+
+        // Get the key for this formlet instance
+        $key = $this->transformKey($this->instanceName);
+
+        return data_get($this->request->all($key), $key) ?? [];
     }
 
 }

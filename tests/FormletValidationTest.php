@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Validation\ValidationException;
@@ -27,7 +26,7 @@ class FormletValidationTest extends TestCase
     /** @var UploadedFile */
     protected $file;
 
-    protected function setUp():void
+    protected function setUp(): void
     {
         parent::setUp();
         $this->request = $this->app['request'];
@@ -35,7 +34,7 @@ class FormletValidationTest extends TestCase
 
         $this->request->files = new FileBag([
           'file' => $this->file,
-          'child'=>[['file'=>$this->file]]
+          'child' => [['file' => $this->file]]
         ]);
     }
 
@@ -103,7 +102,6 @@ class FormletValidationTest extends TestCase
           ->post('/test', [])
           ->assertRedirect('/test')
           ->assertSessionHasErrors(['name']);
-        
     }
 
     /** @test */
@@ -135,7 +133,7 @@ class FormletValidationTest extends TestCase
     {
         $viewBag = new ViewErrorBag();
         $errorBag = new MessageBag([
-          'name'            => ['Session error'],
+          'name' => ['Session error'],
           'child.0.country' => ['Country error']
         ]);
 
@@ -289,34 +287,46 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["The Countries must be a string."], $errors->get('country'));
     }
 
+    /** @test */
+    public function test_prepareForValidation_runs_before_validation()
+    {
+        $form = $this->createFormlet(HooksFormlet::class);
+        $form->validate();
+        $this->assertTrue(true,"Validation exception not thrown");
+    }
+
     private function form(\Closure $closure = null): Formlet
     {
-        return $this->app->makeWith(ValidationFormlet::class, ['closure' => $closure]);
+        return $this->createFormlet(ValidationFormlet::class, $closure);
     }
 
     private function prefixForm(\Closure $closure = null): Formlet
     {
-        return $this->app->makeWith(PrefixFormlet::class, ['closure' => $closure]);
+        return $this->createFormlet(PrefixFormlet::class, $closure);
+    }
+
+    private function createFormlet(string $class, \Closure $closure = null):Formlet
+    {
+        return $this->app->makeWith($class, ['closure' => $closure]);
     }
 
     protected function validPost($includeFile = false)
     {
 
-        $data =  [
-          'name'  => 'John',
+        $data = [
+          'name' => 'John',
           'email' => 'john@example.com',
           'child' => [
             ['country' => 'England']
           ]
         ];
 
-        if($includeFile){
+        if ($includeFile) {
             $data['file'] = $this->file;
             $data['child'][0]['file'] = $this->file;
         }
 
         return $data;
-
     }
 
     protected function validPrefixPost()
@@ -350,9 +360,9 @@ class ValidationFormlet extends Formlet
     public function rules(): array
     {
         return [
-          'name'  => 'required',
+          'name' => 'required',
           'email' => 'required',
-          'file'  => 'required'
+          'file' => 'required'
         ];
     }
 
@@ -385,7 +395,7 @@ class ChildValidationFormlet extends Formlet
     {
         return [
           'country' => 'required',
-          'file'=> 'required'
+          'file' => 'required'
         ];
     }
 }
@@ -417,7 +427,7 @@ class PrefixFormlet extends Formlet
     {
         return [
           'country.required' => ':attribute are needed.',
-          'country.string'   => 'The :attribute must be a string.',
+          'country.string' => 'The :attribute must be a string.',
         ];
     }
 
@@ -431,7 +441,7 @@ class PrefixFormlet extends Formlet
     /**
      * Configure the validator instance.
      *
-     * @param  \Illuminate\Validation\Validator $validator
+     * @param  \Illuminate\Validation\Validator  $validator
      * @return void
      */
     public function withValidator($validator)
@@ -439,4 +449,24 @@ class PrefixFormlet extends Formlet
         $validator->addRules(['country' => 'string']);
     }
 
+}
+
+class HooksFormlet extends Formlet
+{
+    public function prepare(): void
+    {
+        $this->add(new Input('text', 'name'));
+    }
+
+    public function rules(): array
+    {
+        return [
+          'name' => 'required'
+        ];
+    }
+
+    protected function prepareForValidation()
+    {
+        $this->mergeInput(['name'=>'John']);
+    }
 }
