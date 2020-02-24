@@ -143,23 +143,11 @@ trait ValidatesForm
      */
     protected function validateFormlet(): void
     {
-        $this->prepareForValidation();
-
         $this->errors = $this->validateRequest();
 
         $this->iterateFormlets(function (Formlet $formlet) {
             $formlet->validateFormlet();
         });
-    }
-
-    /**
-     * Prepare the data for validation.
-     *
-     * @return void
-     */
-    protected function prepareForValidation()
-    {
-        //
     }
 
     /**

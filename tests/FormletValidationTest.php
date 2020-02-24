@@ -292,7 +292,7 @@ class FormletValidationTest extends TestCase
     {
         $form = $this->createFormlet(HooksFormlet::class);
         $form->validate();
-        $this->assertTrue(true,"Validation exception not thrown");
+        $this->assertEquals('John',$form->postData('name'));
     }
 
     private function form(\Closure $closure = null): Formlet

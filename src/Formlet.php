@@ -220,6 +220,17 @@ abstract class Formlet
     protected function setInput()
     {
         $this->input->add($this->mapRequest());
+        $this->prepareForValidation();
+    }
+
+    /**
+     * Prepare the data for validation.
+     *
+     * @return void
+     */
+    protected function prepareForValidation()
+    {
+        //
     }
 
     /**
