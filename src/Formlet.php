@@ -172,7 +172,7 @@ abstract class Formlet
     public function build(): Collection
     {
 
-        $this->populate();
+        $this->populate(false);
 
         return collect([
           'form' => collect([
@@ -186,8 +186,10 @@ abstract class Formlet
     /**
      * Populates all the fields
      * Populates the field from the request
+     *
+     * @param  bool  $isPost Is the populate from a post
      */
-    protected function populate(): void
+    protected function populate(bool $isPost = true): void
     {
         if ($this->prepared) {
             return;
@@ -195,7 +197,7 @@ abstract class Formlet
 
         $this->setFieldNames();
 
-        $this->setInputs();
+        $this->setInputs($isPost);
 
         $this->populateFields();
 
@@ -204,23 +206,28 @@ abstract class Formlet
 
     /**
      * Set the input for all the formlets
+     *
+     * @param  bool  $isPost
      */
-    protected function setInputs()
+    protected function setInputs(bool $isPost)
     {
-        $this->setInput();
+        $this->setInput($isPost);
 
-        $this->iterateFormlets(function (Formlet $formlet) {
-            $formlet->setInputs();
+        $this->iterateFormlets(function (Formlet $formlet) use($isPost) {
+            $formlet->setInputs($isPost);
         });
     }
 
     /**
      * Set the input for this formlet from the request
+     * @param bool $isPost
      */
-    protected function setInput()
+    protected function setInput(bool $isPost)
     {
         $this->input->add($this->mapRequest());
-        $this->prepareForValidation();
+        if($isPost){
+            $this->prepareForValidation();
+        }
     }
 
     /**

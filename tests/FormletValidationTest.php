@@ -292,7 +292,16 @@ class FormletValidationTest extends TestCase
     {
         $form = $this->createFormlet(HooksFormlet::class);
         $form->validate();
-        $this->assertEquals('John',$form->postData('name'));
+        $this->assertEquals('John', $form->postData('name'));
+        $this->assertEquals('John', $form->field('name')->getValue());
+    }
+
+    /** @test */
+    public function test_prepareForValidation_does_not_run_when_building_the_form()
+    {
+        $form = $this->createFormlet(HooksFormlet::class);
+        $form->build();
+        $this->assertNull($form->field('name')->getValue());
     }
 
     private function form(\Closure $closure = null): Formlet
@@ -305,7 +314,7 @@ class FormletValidationTest extends TestCase
         return $this->createFormlet(PrefixFormlet::class, $closure);
     }
 
-    private function createFormlet(string $class, \Closure $closure = null):Formlet
+    private function createFormlet(string $class, \Closure $closure = null): Formlet
     {
         return $this->app->makeWith($class, ['closure' => $closure]);
     }
@@ -467,6 +476,6 @@ class HooksFormlet extends Formlet
 
     protected function prepareForValidation()
     {
-        $this->mergeInput(['name'=>'John']);
+        $this->mergeInput(['name' => 'John']);
     }
 }
