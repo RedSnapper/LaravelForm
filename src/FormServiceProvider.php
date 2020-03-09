@@ -30,9 +30,6 @@ class FormServiceProvider extends ServiceProvider
 		  __DIR__.'/resources/views' => resource_path('views/vendor/form'),
 		],'form');
 
-        $this->addBladeDirectives();
-
-
     }
 
     public function register(){
@@ -42,6 +39,8 @@ class FormServiceProvider extends ServiceProvider
 			$formlet->setRequest($app['request']);
             $formlet->initialize();
 		});
+
+        $this->addBladeDirectives();
 	}
 
     protected function addBladeDirectives(): void
