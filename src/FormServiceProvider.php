@@ -4,6 +4,7 @@ namespace RS\Form;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\View\Compilers\BladeCompiler;
 use RS\Form\Console\FormletMakeCommand;
 
 class FormServiceProvider extends ServiceProvider
@@ -45,44 +46,52 @@ class FormServiceProvider extends ServiceProvider
 
     protected function addBladeDirectives(): void
     {
-        Blade::component('form::components.form', 'form');
+        $this->app->afterResolving('blade.compiler', function (BladeCompiler $bladeCompiler) {
 
-        Blade::directive('field', function ($expression) {
+            $bladeCompiler->aliasComponent('form::components.form','form');
 
-            $vars = explode(',', $expression);
+            $bladeCompiler->directive('field', function ($expression) {
+                $vars = explode(',', $expression);
 
-            if($vars[0] == ""){
-                $vars = [];
-            }
+                if($vars[0] == ""){
+                    $vars = [];
+                }
 
-            if (count($vars) == 2) {
-                list($formlet, $field) = $vars;
+                if (count($vars) == 2) {
+                    list($formlet, $field) = $vars;
 
-                $accessor = "[$formlet]->field($field)";
+                    $accessor = "[$formlet]->field($field)";
 
-            } elseif((count($vars) == 1)) {
-                list($field) = $vars;
-                $accessor = "['formlet']->field({$field})";
-            } else {
-                $accessor = "['field']";
-            }
+                } elseif((count($vars) == 1)) {
+                    list($field) = $vars;
+                    $accessor = "['formlet']->field({$field})";
+                } else {
+                    $accessor = "['field']";
+                }
 
-            return "<?php echo \Illuminate\Support\Arr::except(get_defined_vars(), array('__data', '__path')){$accessor}->render(); ?>";
+                return "<?php echo \Illuminate\Support\Arr::except(get_defined_vars(), array('__data', '__path')){$accessor}->render(); ?>";
+            });
+
+            $bladeCompiler->directive('formlet', function ($expression) {
+
+                if ($expression == "") {
+                    $accessor = "['formlet']";
+                } else {
+                    list($name) = explode(',', $expression);
+                    $accessor = "[$name]";
+                }
+
+                return "<?php foreach(\Illuminate\Support\Arr::except(get_defined_vars(), array('__data', '__path')){$accessor}->fields() as \$field){
+                    echo \$field->render();
+                } ?>";
+            });
+
+
         });
 
-        Blade::directive('formlet', function ($expression) {
 
-            if ($expression == "") {
-                $accessor = "['formlet']";
-            } else {
-                list($name) = explode(',', $expression);
-                $accessor = "[$name]";
-            }
 
-            return "<?php foreach(\Illuminate\Support\Arr::except(get_defined_vars(), array('__data', '__path')){$accessor}->fields() as \$field){
-                echo \$field->render(); 
-            } ?>";
-        });
+
 
 
     }
