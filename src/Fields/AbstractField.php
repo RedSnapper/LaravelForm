@@ -341,6 +341,16 @@ abstract class AbstractField
     }
 
     /**
+     * Is this field active for posts
+     *
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        return !$this->isDisabled();
+    }
+
+    /**
      * Set the field to be disabled
      *
      * @param  boolean  $required

@@ -3,9 +3,13 @@
 namespace RS\Form\Concerns;
 
 use Illuminate\Support\Collection;
-use RS\Form\Fields\AbstractField;
 use RS\Form\Formlet;
 
+/**
+ * Trait ManagesPosts
+ *
+ * @mixin Formlet
+ */
 trait ManagesPosts
 {
 
@@ -20,6 +24,7 @@ trait ManagesPosts
      * Returns the posted values for this formlet
      * Only fields set in the view will appear here
      *
+     * @param  string|null  $name
      * @return mixed
      */
     public function postData(string $name = null)
@@ -28,10 +33,14 @@ trait ManagesPosts
         $this->populate();
 
         if (is_null($name)) {
-            return $this->fields()->map->getValue();
+            return $this->activeValues();
         }
 
-        return optional($this->field($name))->getValue();
+        if ($this->field($name) && $this->field($name)->isActive()) {
+            return $this->field($name)->getValue();
+        }
+
+        return null;
     }
 
     /**
@@ -51,7 +60,7 @@ trait ManagesPosts
     /**
      * Returns subscription data for a group of formlets
      *
-     * @param string $name
+     * @param  string  $name
      * @return array
      */
     public function subscriptionData(string $name): array
@@ -147,9 +156,17 @@ trait ManagesPosts
 
     protected function formletPost()
     {
-        $values = $this->fields()->map->getValue();
+        $values = $this->activeValues();
+
         return $values->merge($this->formletsPost());
     }
 
+    /**
+     * @return mixed
+     */
+    protected function activeValues()
+    {
+        return $this->fields()->active()->mapToValues();
+    }
 
 }

@@ -123,12 +123,15 @@ class AbstractFieldTest extends TestCase
         $field = $this->getTestField();
         $this->assertNull($field->getAttribute('disabled'));
         $this->assertFalse($field->isDisabled());
+        $this->assertTrue($field->isActive());
         $field->disabled();
         $this->assertEquals('disabled', $field->getAttribute('disabled'));
         $this->assertTrue($field->isDisabled());
+        $this->assertFalse($field->isActive());
         $field->disabled(false);
         $this->assertNull($field->getAttribute('disabled'));
         $this->assertFalse($field->isDisabled());
+        $this->assertTrue($field->isActive());
     }
 
 

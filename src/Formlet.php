@@ -68,7 +68,7 @@ abstract class Formlet
     /**
      * Fields added to the form
      *
-     * @var Collection
+     * @var FieldCollection
      */
     protected $fields;
     /**
@@ -97,7 +97,7 @@ abstract class Formlet
 
         $this->attributes = collect($this->attributes);
         $this->attributes->put('action', $this->url->current());
-        $this->fields = collect();
+        $this->fields = new FieldCollection();
         $this->formlets = collect();
         $this->allErrors = optional($this->session->get('errors'))->getBag($this->getErrorBagName()) ?? new MessageBag();
         $this->errors = new MessageBag();
@@ -313,9 +313,9 @@ abstract class Formlet
      * Return fields for this formlet
      *
      * @param  null|string|array  $name
-     * @return Collection
+     * @return FieldCollection
      */
-    public function fields($name = null): Collection
+    public function fields($name = null)
     {
         $names = is_array($name) ? $name : func_get_args();
 
@@ -323,9 +323,7 @@ abstract class Formlet
             return $this->fields;
         }
 
-        return $this->fields->filter(function ($value, $key) use ($names) {
-            return in_array($key, $names);
-        });
+        return $this->fields->byName($names);
     }
 
     /**
@@ -507,7 +505,7 @@ abstract class Formlet
      */
     public function add(AbstractField $field): Formlet
     {
-        $this->fields->put($field->getName(), $field);
+        $this->fields->addField($field);
         return $this;
     }
 

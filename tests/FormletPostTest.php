@@ -164,6 +164,35 @@ class FormletPostTest extends TestCase
           ->assertSessionHasErrors(['name']);
     }
 
+    /** @test */
+    public function disabled_input_values_dont_appear_in_post_values()
+    {
+
+        $this->request->merge([
+          'foo'           => 'baz',
+          'bar'          => 'bim',
+        ]);
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add((new Input('text', 'foo'))->disabled());
+            $form->add((new Input('text', 'bar')));
+        });
+
+        $form->build();
+
+        $this->assertEquals([
+          'bar'  => 'bim',
+        ], $form->allPostData()->toArray());
+
+        $this->assertEquals([
+          'bar'  => 'bim',
+        ], $form->postData()->all());
+
+        $this->assertEquals('bim', $form->postData('bar'));
+        $this->assertNull($form->postData('foo'));
+
+    }
+
     private function formlet(\Closure $closure = null): Formlet
     {
         return $this->app->makeWith(PostFormlet::class, ['closure' => $closure]);
