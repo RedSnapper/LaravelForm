@@ -122,11 +122,16 @@ class AbstractFieldTest extends TestCase
     {
         $field = $this->getTestField();
         $this->assertNull($field->getAttribute('disabled'));
+        $this->assertFalse($field->isDisabled());
         $field->disabled();
         $this->assertEquals('disabled', $field->getAttribute('disabled'));
+        $this->assertTrue($field->isDisabled());
         $field->disabled(false);
         $this->assertNull($field->getAttribute('disabled'));
+        $this->assertFalse($field->isDisabled());
     }
+
+
 
     /** @test */
     public function a_field_can_be_required()
@@ -210,6 +215,8 @@ class AbstractFieldTest extends TestCase
         $field->foo('bar');
         $this->assertEquals('bar', $field->getAttribute('foo'));
     }
+
+
 
 }
 

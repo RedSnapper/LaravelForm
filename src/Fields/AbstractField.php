@@ -7,50 +7,52 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-abstract class AbstractField {
+abstract class AbstractField
+{
 
-	/**
-	 * Name of the field.
-	 *
-	 * @var string
-	 */
-	protected $name;
+    /**
+     * Name of the field.
+     *
+     * @var string
+     */
+    protected $name;
 
-	/**
-	 * Instance name of a field.
+    /**
+     * Instance name of a field.
      * User in formlets
-	 *
-	 * @var string
-	 */
-	protected $instanceName;
+     *
+     * @var string
+     */
+    protected $instanceName;
 
-	/**
-	 * Label value
-	 *
-	 * @var string|null
-	 */
-	protected $label;
+    /**
+     * Label value
+     *
+     * @var string|null
+     */
+    protected $label;
 
-	/**
-	 * View for field
-	 *
-	 * @var string
-	 */
-	protected $view;
+    /**
+     * View for field
+     *
+     * @var string
+     */
+    protected $view;
 
-	/**
-	 * Attributes for field
-	 *
-	 * @var Collection
-	 */
-	protected $attributes;
+    /**
+     * Attributes for field
+     *
+     * @var Collection
+     */
+    protected $attributes;
 
     /**
      * Whether or not to include an ID
      * on the field
+     *
      * @var bool
      */
-	protected $includeID = true;
+    protected $includeID = true;
 
     /**
      * Attributes for field
@@ -59,36 +61,38 @@ abstract class AbstractField {
      */
     protected $errors;
 
-	/**
-	 * Value of field
-	 *
-	 * @var mixed
-	 */
-	protected $value;
+    /**
+     * Value of field
+     *
+     * @var mixed
+     */
+    protected $value;
 
-	/**
-	 * What type of field this
-	 *
-	 * @var string
-	 */
-	protected $type;
+    /**
+     * What type of field this
+     *
+     * @var string
+     */
+    protected $type;
 
-	/**
-	 * Default value for field
-	 *
-	 * @var mixed
-	 */
-	protected $default;
+    /**
+     * Default value for field
+     *
+     * @var mixed
+     */
+    protected $default;
 
     /**
      * Is this a multi field
      * Array of values for this field
+     *
      * @var bool
      */
     protected $multiple = false;
 
     /**
      * Should this field be populated
+     *
      * @var bool
      */
     protected $guarded = false;
@@ -101,186 +105,209 @@ abstract class AbstractField {
     protected $dirty = false;
 
     /**
-     * @param string $type
+     * @param  string  $type
      * @return AbstractField
      */
-    public function setType(string $type):AbstractField
+    public function setType(string $type): AbstractField
     {
         $this->type = $type;
         return $this;
     }
 
-	/**
-	 * Return the type of field eg. checkable
-	 *
-	 * @return null|string
-	 */
-	public function getType() : ?string {
-		return $this->type;
-	}
+    /**
+     * Return the type of field eg. checkable
+     *
+     * @return null|string
+     */
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
 
-	/**
-	 * Get value for a field
-	 *
-	 * @return mixed
-	 */
-	public function getValue() {
-		return is_null($this->value) ? $this->default : $this->value;
-	}
+    /**
+     * Get value for a field
+     *
+     * @return mixed
+     */
+    public function getValue()
+    {
+        return is_null($this->value) ? $this->default : $this->value;
+    }
 
     /**
      * Get html value (used for rendering)
+     *
      * @return mixed
      */
-	public function getHTMLValue(){
-	    if($this->isGuarded()){
-	        return $this->default;
+    public function getHTMLValue()
+    {
+        if ($this->isGuarded()) {
+            return $this->default;
         }
         return $this->getValue();
     }
 
-	/**
-	 * Set value for a field
-	 *
-	 * @param $value mixed
-	 * @return AbstractField
-	 */
-	public function setValue($value):AbstractField {
-		$this->value = $value;
+    /**
+     * Set value for a field
+     *
+     * @param $value mixed
+     * @return AbstractField
+     */
+    public function setValue($value): AbstractField
+    {
+        $this->value = $value;
         $this->dirty = true;
-		return $this;
-	}
+        return $this;
+    }
 
     /**
      * Has a value been set
      *
      * @return bool
      */
-    public function isDirty():bool
+    public function isDirty(): bool
     {
         return $this->dirty;
-	}
+    }
 
-	/**
-	 * Get the default value for a field
-	 *
-	 * @return mixed
-	 */
-	public function getDefault() {
-		return $this->default;
-	}
+    /**
+     * Get the default value for a field
+     *
+     * @return mixed
+     */
+    public function getDefault()
+    {
+        return $this->default;
+    }
 
-	/**
-	 * Set default value for a field
-	 * @param $default mixed
-	 * @return AbstractField
-	 */
-	public function default($default): AbstractField  {
-		$this->default = $default;
-		return $this;
-	}
+    /**
+     * Set default value for a field
+     *
+     * @param $default mixed
+     * @return AbstractField
+     */
+    public function default($default): AbstractField
+    {
+        $this->default = $default;
+        return $this;
+    }
 
     /**
      * Get the original field name
+     *
      * @return null|string
      */
-    public function getName(): ?string {
-		return $this->name;
-	}
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
 
-	/**
-	 * @param string $name
-	 * @return AbstractField
-	 */
-	public function setName(string $name = null): AbstractField {
-		$this->name = $name;
+    /**
+     * @param  string  $name
+     * @return AbstractField
+     */
+    public function setName(string $name = null): AbstractField
+    {
+        $this->name = $name;
         $this->setAttributeName();
-		return $this;
-	}
+        return $this;
+    }
 
     /**
      * Set the instance name for a field (used in a formlet)
-     * @param string $fieldName
+     *
+     * @param  string  $fieldName
      */
-    public function setInstanceName(string $name) {
+    public function setInstanceName(string $name)
+    {
         $this->instanceName = $name;
         $this->setAttributeName();
     }
 
     /**
      * Get the instance name for a field
+     *
      * @return null|string
      */
-    public function getInstanceName(): ?string {
-		return $this->instanceName ?? $this->getName();
-	}
+    public function getInstanceName(): ?string
+    {
+        return $this->instanceName ?? $this->getName();
+    }
 
-	/**
-	 * Error name removes array string from the field name
-	 * @return string
-	 */
-	public function getErrorName(): ?string {
-		$instanceName = $this->getInstanceName();
+    /**
+     * Error name removes array string from the field name
+     *
+     * @return string
+     */
+    public function getErrorName(): ?string
+    {
+        $instanceName = $this->getInstanceName();
 
-		if(is_null($instanceName)){
-		    return null;
+        if (is_null($instanceName)) {
+            return null;
         }
 
-		return Str::endsWith($this->getInstanceName(),'[]') ? substr($instanceName,0,-2) : $instanceName;
-	}
+        return Str::endsWith($this->getInstanceName(), '[]') ? substr($instanceName, 0, -2) : $instanceName;
+    }
 
-	public function getErrors():Collection{
-	    if(!isset($this->errors)){
-	        return collect();
+    public function getErrors(): Collection
+    {
+        if (!isset($this->errors)) {
+            return collect();
         }
         return $this->errors;
     }
 
-    public function setErrors(Collection $errors):AbstractField{
-	    $this->errors = $errors;
-	    return $this;
+    public function setErrors(Collection $errors): AbstractField
+    {
+        $this->errors = $errors;
+        return $this;
     }
 
+    /**
+     * @return string|null
+     */
+    public function getLabel(): ?string
+    {
+        return $this->label;
+    }
 
-	/**
-	 * @return string|null
-	 */
-	public function getLabel(): ?string {
-		return $this->label;
-	}
+    /**
+     * @param  string  $label
+     * @return AbstractField
+     */
+    public function label(string $label): AbstractField
+    {
+        $this->label = $label;
+        return $this;
+    }
 
-	/**
-	 * @param string $label
-	 * @return AbstractField
-	 */
-	public function label(string $label): AbstractField {
-		$this->label = $label;
-		return $this;
-	}
+    /**
+     * @return string|null
+     */
+    public function getView(): ?string
+    {
+        return $this->view;
+    }
 
-	/**
-	 * @return string|null
-	 */
-	public function getView(): ?string {
-		return $this->view;
-	}
-
-	/**
-	 * @param string $view
-	 * @return AbstractField
-	 */
-	public function view(string $view): AbstractField {
-		$this->view = $view;
-		return $this;
-	}
+    /**
+     * @param  string  $view
+     * @return AbstractField
+     */
+    public function view(string $view): AbstractField
+    {
+        $this->view = $view;
+        return $this;
+    }
 
     /**
      * Set the field to be multi field
      *
-     * @param boolean $multiple
+     * @param  boolean  $multiple
      * @return AbstractField
      */
-    public function multiple($multiple = true): AbstractField {
+    public function multiple($multiple = true): AbstractField
+    {
 
         $this->multiple = $multiple;
         $this->setAttributeName();
@@ -288,115 +315,147 @@ abstract class AbstractField {
         return $this;
     }
 
-	/**
-	 * Set the field to be disabled
-	 *
-	 * @param boolean $disabled
-	 * @return AbstractField
-	 */
-	public function disabled($disabled = true): AbstractField {
+    /**
+     * Set the field to be disabled
+     *
+     * @param  boolean  $disabled
+     * @return AbstractField
+     */
+    public function disabled($disabled = true): AbstractField
+    {
 
-		$disabled ? $this->setAttribute('disabled')
-		  : $this->removeAttribute("disabled");
+        $disabled ? $this->setAttribute('disabled')
+          : $this->removeAttribute("disabled");
 
-		return $this;
-	}
+        return $this;
+    }
 
-	/**
-	 * Set the field to be disabled
-	 *
-	 * @param boolean $required
-	 * @return AbstractField
-	 */
-	public function required($required = true): AbstractField {
+    /**
+     * Is this field disabled
+     *
+     * @return bool
+     */
+    public function isDisabled(): bool
+    {
+        return $this->hasAttribute('disabled');
+    }
 
-		$required ? $this->setAttribute('required')
-		  : $this->removeAttribute("required");
+    /**
+     * Set the field to be disabled
+     *
+     * @param  boolean  $required
+     * @return AbstractField
+     */
+    public function required($required = true): AbstractField
+    {
 
-		return $this;
-	}
+        $required ? $this->setAttribute('required')
+          : $this->removeAttribute("required");
 
-	/**
-	 * Set placeholder
-	 *
-	 * @param string $string
-	 * @return AbstractField
-	 */
-	public function placeholder(string $string): AbstractField {
-		$this->setAttribute('placeholder', $string);
-		return $this;
-	}
+        return $this;
+    }
 
-	public function getAttribute(string $attribute) {
-		return $this->attributes->get($attribute);
-	}
+    /**
+     * Set placeholder
+     *
+     * @param  string  $string
+     * @return AbstractField
+     */
+    public function placeholder(string $string): AbstractField
+    {
+        $this->setAttribute('placeholder', $string);
+        return $this;
+    }
 
-	public function setAttribute(string $attribute, $value = null): AbstractField {
-		$this->attributes->put($attribute, $value ?? $attribute);
-		return $this;
-	}
+    public function getAttribute(string $attribute)
+    {
+        return $this->attributes->get($attribute);
+    }
 
-    public function attributes(): Collection {
+    public function setAttribute(string $attribute, $value = null): AbstractField
+    {
+        $this->attributes->put($attribute, $value ?? $attribute);
+        return $this;
+    }
+
+    /**
+     * Has attribute
+     *
+     * @param  string  $name
+     * @return $this|bool
+     */
+    public function hasAttribute(string $name):bool
+    {
+        return $this->attributes->has($name);
+    }
+
+    public function attributes(): Collection
+    {
         return $this->attributes;
     }
 
-	public function setAttributes(array $attributes): AbstractField {
-		$this->attributes = $this->attributes->merge($attributes);
-		return $this;
-	}
-
-
-	public function render():View{
-	    return view($this->getView(),$this->build());
+    public function setAttributes(array $attributes): AbstractField
+    {
+        $this->attributes = $this->attributes->merge($attributes);
+        return $this;
     }
 
-    public function guarded(bool $value = true){
-	    $this->guarded = $value;
-	    return $this;
-	}
+    public function render(): View
+    {
+        return view($this->getView(), $this->build());
+    }
+
+    public function guarded(bool $value = true)
+    {
+        $this->guarded = $value;
+        return $this;
+    }
 
     /**
      * Should this field be populated
+     *
      * @return bool
      */
-    public function isGuarded():bool{
-	    return $this->guarded;
+    public function isGuarded(): bool
+    {
+        return $this->guarded;
     }
 
-    public function build(): Collection {
+    public function build(): Collection
+    {
 
         return collect([
-            'attributes'=> $this->attributes()->sortKeys(),
-            'value'=> $this->getHTMLValue(),
-            'label'=> $this->getLabel(),
-            'errors'=> $this->getErrors()
+          'attributes' => $this->attributes()->sortKeys(),
+          'value' => $this->getHTMLValue(),
+          'label' => $this->getLabel(),
+          'errors' => $this->getErrors()
         ]);
     }
 
+    protected function removeAttribute($key): AbstractField
+    {
+        $this->attributes->forget($key);
+        return $this;
+    }
 
-    protected function removeAttribute($key): AbstractField {
-		$this->attributes->forget($key);
-		return $this;
-	}
-
-	function __call($name, $arguments): AbstractField {
-		$value = count($arguments) == 0 ? $name : $arguments[0];
-		$this->setAttribute(mb_strtolower($name), $value);
-		return $this;
-	}
+    function __call($name, $arguments): AbstractField
+    {
+        $value = count($arguments) == 0 ? $name : $arguments[0];
+        $this->setAttribute(mb_strtolower($name), $value);
+        return $this;
+    }
 
     private function setAttributeName()
     {
         $name = $this->getInstanceName();
 
-        if($this->multiple){
-            $name = $name . "[]";
+        if ($this->multiple) {
+            $name = $name."[]";
         }
-        $this->setAttribute("name",$name);
-        if($this->includeID){
-            $this->setAttribute("id",$name);
+        $this->setAttribute("name", $name);
+        if ($this->includeID) {
+            $this->setAttribute("id", $name);
         }
-
     }
 
 }
