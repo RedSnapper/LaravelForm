@@ -21,7 +21,8 @@
 		"email": "contact@redsnapper.net"
 	}],
 	"require-dev": {
-		"orchestra/testbench": "^5.0"
+		"orchestra/testbench": "^5.0|^6.0",
+		"laravel/legacy-factories": "^1.0@dev"
 	},
 	"extra": {
 		"laravel": {
