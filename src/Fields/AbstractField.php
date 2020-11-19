@@ -442,7 +442,7 @@ abstract class AbstractField
         ]);
     }
 
-    protected function removeAttribute($key): AbstractField
+    public function removeAttribute($key): AbstractField
     {
         $this->attributes->forget($key);
         return $this;

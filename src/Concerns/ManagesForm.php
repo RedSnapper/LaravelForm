@@ -143,10 +143,12 @@ trait ManagesForm
 
         if ($this->honeypot) {
             $hidden->put('honeypot1', (new Checkbox('formlet-terms'))
+              ->removeAttribute('id')
               ->view('form::fields.checkbox-honeypot')
             );
             $hidden->put('honeypot2', (new Input('text', 'formlet-email'))
               ->autocomplete('off')
+              ->removeAttribute('id')
               ->view('form::fields.input-honeypot'));
         }
 

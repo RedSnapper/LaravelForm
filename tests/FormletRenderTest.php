@@ -40,8 +40,8 @@ class FormletRenderTest extends TestCase
           ->assertStatus(200)
           ->assertSee('<form class="form" accept-charset="UTF-8" action="http://localhost/users/1" enctype="multipart/form-data" method="POST" >',
             false)
-          ->assertSee('<input autocomplete="off" id="formlet-email" name="formlet-email" type="text" />', false)
-          ->assertSee('<input id="formlet-terms" name="formlet-terms" type="checkbox" value="1"/>', false)
+          ->assertSee('<input autocomplete="off" name="formlet-email" type="text" />', false)
+          ->assertSee('<input name="formlet-terms" type="checkbox" value="1"/>', false)
           ->assertSee('<input autocomplete="off" name="_method" type="hidden" value="PUT"/>', false)
           ->assertSee('<input autocomplete="off" name="_token" type="hidden" value="'.app('session')->token().'"/>',
             false)
