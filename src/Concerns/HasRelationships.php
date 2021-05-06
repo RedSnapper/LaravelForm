@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use LogicException;
 
@@ -15,6 +16,7 @@ trait HasRelationships
 
     protected $relationsMap = [
       HasOne::class        => "oneToOne",
+      MorphOne::class        => "oneToOne",
       BelongsTo::class     => "oneToOne",
       HasMany::class       => "hasMany",
       BelongsToMany::class => "belongsToMany"
