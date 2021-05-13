@@ -3,7 +3,7 @@
 	"description": "Laravel Form",
 	"minimum-stability": "dev",
 	"require": {
-		"php": "^7.1",
+		"php": "^7.3|^8.0",
 		"illuminate/contracts": "^7.0|^8.0"
 	},
 	"autoload": {
