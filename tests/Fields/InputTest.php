@@ -69,4 +69,11 @@ class InputTest extends AbstractFieldTest
           $rendered);
     }
 
+    /** @test */
+    public function password_fields_by_default_have_autocomplete_set_to_off()
+    {
+        $field = new Input('password', 'password');
+        $this->assertEquals('off', $field->getAttribute('autocomplete'));
+    }
+
 }

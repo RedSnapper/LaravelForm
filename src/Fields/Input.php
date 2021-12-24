@@ -23,6 +23,11 @@ class Input extends AbstractField
             $this->guarded = true;
         }
 
+        if($type === "password"){
+            //Pen test related vulnerable to xss attacks
+            $this->setAttribute('autocomplete','off');
+        }
+
         $this->setName($name);
     }
 
