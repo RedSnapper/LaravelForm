@@ -310,8 +310,7 @@ trait ValidatesForm
      */
     protected function failedValidation(): void
     {
-        throw (new ValidationException(null))
-          ->withMessages($this->allErrors->messages())
+        throw ValidationException::withMessages($this->allErrors->messages())
           ->errorBag($this->getErrorBagName())
           ->redirectTo($this->getRedirectUrl());
     }
