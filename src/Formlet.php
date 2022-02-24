@@ -442,7 +442,11 @@ abstract class Formlet
      */
     protected function transformKey($key)
     {
-        return str_replace(['.', '[]', '[', ']'], ['_', '', '.', ''], $key);
+        if (is_null($key)) {
+           return $key;
+        } else {
+           return str_replace(['.', '[]', '[', ']'], ['_', '', '.', ''], $key);
+        }
     }
 
     /**
