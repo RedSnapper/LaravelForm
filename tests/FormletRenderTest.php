@@ -16,7 +16,7 @@ class FormletRenderTest extends TestCase
         View::addLocation(__DIR__."/Fixtures/views");
     }
 
-    public function getFormViews()
+    public static function getFormViews()
     {
         return [['form'], ['formlet'], ['fields'], ['field']];
     }

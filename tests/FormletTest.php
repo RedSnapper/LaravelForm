@@ -98,7 +98,7 @@ class FormletTest extends TestCase
         $this->assertEquals($token, $field->getValue());
     }
 
-    public function getFormMethods()
+    public static function getFormMethods()
     {
         return [
           ['GET', false],
@@ -543,7 +543,9 @@ class FormletTest extends TestCase
         $form->model($model)->build();
         $fields = $form->fields();
 
-        $this->assertObjectHasAttribute('id', $fields->get('items')->getValue()->first());
+        $this->assertIsObject($fields->get('items')->getValue()->first());
+        $this->assertTrue(property_exists($fields->get('items')->getValue()->first(), 'id'));
+
         $this->assertStringContainsString('<input class="form-check-input" name="items[]" type="checkbox" checked="checked" value="2"/>',
           $this->renderField($fields->get('items')));
     }
