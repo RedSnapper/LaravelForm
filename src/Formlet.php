@@ -14,9 +14,9 @@ use RS\Form\Fields\AbstractField;
 abstract class Formlet
 {
     use ManagesForm,
-      ValidatesForm,
-      ManagesPosts,
-      HasRelationships;
+        ValidatesForm,
+        ManagesPosts,
+        HasRelationships;
 
     /**
      * The formlet prefix
@@ -140,7 +140,7 @@ abstract class Formlet
         return $this;
     }
 
-    public function setPrefix(?string $value =null):self
+    public function setPrefix(?string $value = null): self
     {
         $this->prefix = $value;
         return $this;
@@ -181,11 +181,11 @@ abstract class Formlet
         $this->populate(false);
 
         return collect([
-          'form' => collect([
-            'hidden' => $this->getHiddenFields(),
-            'attributes' => $this->attributes->sortKeys()
-          ]),
-          'formlet' => $this
+            'form' => collect([
+                'hidden' => $this->getHiddenFields(),
+                'attributes' => $this->attributes->sortKeys()
+            ]),
+            'formlet' => $this
         ]);
     }
 
@@ -193,7 +193,7 @@ abstract class Formlet
      * Populates all the fields
      * Populates the field from the request
      *
-     * @param  bool  $isPost Is the populate from a post
+     * @param  bool  $isPost  Is the populate from a post
      */
     protected function populate(bool $isPost = true): void
     {
@@ -203,11 +203,22 @@ abstract class Formlet
 
         $this->setFieldNames();
 
+        $this->setErrors();
+
         $this->setInputs($isPost);
 
         $this->populateFields();
 
         $this->populateErrors();
+    }
+
+    protected function setErrors(): void
+    {
+        $this->allErrors = optional($this->session->get('errors'))->getBag($this->getErrorBagName()) ?? new MessageBag();
+
+        $this->iterateFormlets(function (Formlet $formlet) {
+            $formlet->setErrors();
+        });
     }
 
     /**
@@ -217,23 +228,21 @@ abstract class Formlet
      */
     protected function setInputs(bool $isPost)
     {
-        $this->allErrors = optional($this->session->get('errors'))->getBag($this->getErrorBagName()) ?? new MessageBag();
-
         $this->setInput($isPost);
 
-        $this->iterateFormlets(function (Formlet $formlet) use($isPost) {
+        $this->iterateFormlets(function (Formlet $formlet) use ($isPost) {
             $formlet->setInputs($isPost);
         });
     }
 
     /**
      * Set the input for this formlet from the request
-     * @param bool $isPost
+     * @param  bool  $isPost
      */
     protected function setInput(bool $isPost)
     {
         $this->input->add($this->mapRequest());
-        if($isPost){
+        if ($isPost) {
             $this->prepareForValidation();
         }
     }
@@ -347,8 +356,8 @@ abstract class Formlet
             $name = $this->instanceName."[".$name."]";
         }
 
-        if(!is_null($this->prefix)){
-            $name = $this->prefix . ":" . $name;
+        if (!is_null($this->prefix)) {
+            $name = $this->prefix.":".$name;
         }
 
         $field->setInstanceName($name);
@@ -455,9 +464,9 @@ abstract class Formlet
     protected function transformKey($key)
     {
         if (is_null($key)) {
-           return $key;
+            return $key;
         } else {
-           return str_replace(['.', '[]', '[', ']'], ['_', '', '.', ''], $key);
+            return str_replace(['.', '[]', '[', ']'], ['_', '', '.', ''], $key);
         }
     }
 
@@ -644,7 +653,7 @@ abstract class Formlet
         if (!is_null($this->prefix)) {
             $request = collect($request)->mapWithKeys(function ($value, $key) {
                 return [
-                  $this->stripPrefix($key) => $value
+                    $this->stripPrefix($key) => $value
                 ];
             })->all();
         }
@@ -664,7 +673,7 @@ abstract class Formlet
         }
 
         // Get the key for this formlet instance
-        $key = $this->transformKey(($this->prefix ? "{$this->prefix}:" : "") . $this->instanceName);
+        $key = $this->transformKey(($this->prefix ? "{$this->prefix}:" : "").$this->instanceName);
 
         return data_get($this->request->all($key), $key) ?? [];
     }
