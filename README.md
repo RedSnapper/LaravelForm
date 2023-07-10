@@ -55,6 +55,28 @@ class UserForm extends Formlet{
 }
 
 ```
+### Add a prefix to your formlet
+
+This is useful when you have more than one form on a page which might be sharing the same field names. In order for errors and fields to be populated correctly we can give our form a prefix.
+
+```php
+<?php
+
+class TestForm extends Formlet{
+    public function __construct(){
+        $this->setPrefix('test');
+    }
+}
+
+```
+
+All fields and child formlet fields will now be prefixed with the provided prefix. Also, errors will now also be added to a separate error bag of the same name.
+
+```html
+<input name="test:name"/>
+<input name="test:email"/>
+```
+When testing, be sure to add the prefixes to your posted values.
 
 ### Add fields to formlet
 
