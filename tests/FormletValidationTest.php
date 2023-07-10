@@ -38,11 +38,21 @@ class FormletValidationTest extends TestCase
         ]);
     }
 
-    /** @test */
-    public function it_passes_validation()
+    public static function prefix():array{
+        return [
+            ['custom'],
+            [null]
+        ];
+    }
+
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function it_passes_validation($prefix)
     {
-        $this->request->merge($this->validPost());
-        $form = $this->form();
+        $this->request->merge($this->validPost($prefix));
+        $form = $this->form()->setPrefix($prefix);
 
         $form->validate(false);
 
@@ -50,12 +60,15 @@ class FormletValidationTest extends TestCase
         $this->assertCount(0, $form->errors());
     }
 
-    /** @test */
-    public function it_fails_validation()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function it_fails_validation($prefix)
     {
         $this->request->files = new FileBag();
 
-        $form = $this->form();
+        $form = $this->form()->setPrefix($prefix);
 
         $form->validate(false);
 
@@ -81,46 +94,58 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["The file field is required."], $errors->get('file'));
     }
 
-    /** @test */
-    public function throws_a_validation_exception_when_validation_fails()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function throws_a_validation_exception_when_validation_fails($prefix)
     {
         $this->withoutExceptionHandling();
         $this->expectException(ValidationException::class);
-        $this->form()->validate();
+        $this->form()->setPrefix($prefix)->validate();
     }
 
-    /** @test */
-    public function it_can_automatically_redirect_after_failing_validation()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function it_can_automatically_redirect_after_failing_validation($prefix)
     {
 
-        Route::post('/test', function () {
-            $form = $this->form();
+        Route::post('/test', function () use($prefix) {
+            $form = $this->form()->setPrefix($prefix);
             $form->validate();
         });
 
         $this->from('/test')
           ->post('/test', [])
           ->assertRedirect('/test')
-          ->assertSessionHasErrors(['name']);
+          ->assertInvalid(['name'],$prefix ?? 'default');
     }
 
-    /** @test */
-    public function it_does_not_automatically_redirect_after_passing_validation()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function it_does_not_automatically_redirect_after_passing_validation($prefix)
     {
 
-        Route::post('/test', function () {
-            $form = $this->form();
+        Route::post('/test', function () use($prefix) {
+            $form = $this->form()->setPrefix($prefix);
             $form->validate();
         });
-        $this->post('/test', $this->validPost(true))
+        $this->post('/test', $this->validPost($prefix,true))
           ->assertStatus(200)
-          ->assertSessionMissing('errors');
+          ->assertValid(null,$prefix ?? 'default');
     }
 
-    /** @test */
-    public function can_add_custom_messages_to_validation()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function can_add_custom_messages_to_validation($prefix)
     {
-        $form = $this->form();
+        $form = $this->form()->setPrefix($prefix);
 
         $form->validate(false);
         $errors = $form->allErrors();
@@ -128,8 +153,11 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["An Email Address is needed."], $errors->get('email'));
     }
 
-    /** @test */
-    public function can_retrieve_errors_from_session()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function can_retrieve_errors_from_session($prefix)
     {
         $viewBag = new ViewErrorBag();
         $errorBag = new MessageBag([
@@ -137,27 +165,30 @@ class FormletValidationTest extends TestCase
           'child.0.country' => ['Country error']
         ]);
 
-        $viewBag->put('default', $errorBag);
+        $viewBag->put($prefix ?? 'default', $errorBag);
 
         $this->session([
           'errors' => $viewBag
         ]);
 
-        $form = $this->form();
+        $form = $this->form()->setPrefix($prefix);
         $form->build();
 
         $errors = $form->allErrors();
+
         $fields = $form->fields();
         $childFormlet = $form->formlet('child');
 
         $this->assertEquals(["Session error"], $errors->get('name'));
         $this->assertEquals(["Session error"], $fields->get('name')->getErrors()->toArray());
 
+        $this->assertEquals(["Session error"], $form->error('name'));
+        $this->assertEquals(["Country error"], $childFormlet->error('country'));
+
         $this->assertEquals(["Country error"], $errors->get('child.0.country'));
         $this->assertEquals(["Country error"], $childFormlet->field('country')->getErrors()->toArray());
 
-        $this->assertEquals(["Session error"], $form->error('name'));
-        $this->assertEquals(["Country error"], $childFormlet->error('country'));
+
     }
 
     /** @test */
@@ -319,20 +350,21 @@ class FormletValidationTest extends TestCase
         return $this->app->makeWith($class, ['closure' => $closure]);
     }
 
-    protected function validPost($includeFile = false)
+    protected function validPost($prefix,$includeFile = false)
     {
+        $key = $prefix ? "$prefix:" : "";
 
         $data = [
-          'name' => 'John',
-          'email' => 'john@example.com',
-          'child' => [
+          "${key}name" => 'John',
+          "${key}email" => 'john@example.com',
+          "${key}child" => [
             ['country' => 'England']
           ]
         ];
 
         if ($includeFile) {
-            $data['file'] = $this->file;
-            $data['child'][0]['file'] = $this->file;
+            $data["${key}file"] = $this->file;
+            $data["${key}child"][0]['file'] = $this->file;
         }
 
         return $data;

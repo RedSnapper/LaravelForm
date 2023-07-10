@@ -227,6 +227,7 @@ trait ValidatesForm
      */
     protected function getValidatorInstance()
     {
+
         $validator = $this->getValidationFactory()->make(
           $this->input->all(),
           $this->rules(),
@@ -282,6 +283,7 @@ trait ValidatesForm
     {
 
         $formletKey = $this->transformKey($this->instanceName);
+
         $rules = $this->getValidatorInstance()->getRules();
 
         $mappedRules = collect($rules)->keys()->mapWithKeys(function ($rule) use ($formletKey) {

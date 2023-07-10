@@ -99,7 +99,7 @@ abstract class Formlet
         $this->attributes->put('action', $this->url->current());
         $this->fields = new FieldCollection();
         $this->formlets = collect();
-        $this->allErrors = optional($this->session->get('errors'))->getBag($this->getErrorBagName()) ?? new MessageBag();
+        $this->allErrors = new MessageBag();
         $this->errors = new MessageBag();
         $this->input = new FormletInput();
     }
@@ -137,6 +137,12 @@ abstract class Formlet
     public function setUrlGenerator(UrlGenerator $url): Formlet
     {
         $this->url = $url;
+        return $this;
+    }
+
+    public function setPrefix(?string $value =null):self
+    {
+        $this->prefix = $value;
         return $this;
     }
 
@@ -211,6 +217,8 @@ abstract class Formlet
      */
     protected function setInputs(bool $isPost)
     {
+        $this->allErrors = optional($this->session->get('errors'))->getBag($this->getErrorBagName()) ?? new MessageBag();
+
         $this->setInput($isPost);
 
         $this->iterateFormlets(function (Formlet $formlet) use($isPost) {
@@ -562,6 +570,7 @@ abstract class Formlet
             $formlet->parent = $this->getModel();
 
             $formlet->name($relation);
+            $formlet->setPrefix($this->prefix);
 
             if (!$this->formlets->has($relation)) {
                 $this->formlets->put($relation, collect());
@@ -651,7 +660,7 @@ abstract class Formlet
         }
 
         // Get the key for this formlet instance
-        $key = $this->transformKey($this->instanceName);
+        $key = $this->transformKey(($this->prefix ? "{$this->prefix}:" : "") . $this->instanceName);
 
         return data_get($this->request->all($key), $key) ?? [];
     }
