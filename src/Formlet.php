@@ -341,10 +341,14 @@ abstract class Formlet
      */
     protected function setFieldName(AbstractField $field)
     {
-        $name = is_null($this->prefix) ? $field->getName() : "{$this->prefix}:{$field->getName()}";
+        $name = $field->getName();
 
         if (!is_null($this->instanceName)) {
             $name = $this->instanceName."[".$name."]";
+        }
+
+        if(!is_null($this->prefix)){
+            $name = $this->prefix . ":" . $name;
         }
 
         $field->setInstanceName($name);

@@ -8,9 +8,14 @@ use RS\Form\Formlet;
 class TestUserForm extends Formlet
 {
 
+
+    public function __construct()
+    {
+        $this->setPrefix('prefix');
+    }
+
     public function prepare(): void
     {
-        $this->prefix="prefix";
         $this->add(new Input('email','email'));
     }
 

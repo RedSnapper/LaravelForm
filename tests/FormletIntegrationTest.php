@@ -188,7 +188,7 @@ class FormletIntegrationTest extends TestCase
         $this->post('/profiles', [
           'name'   => 'John',
           'active' => "1",
-          'user'   => [['prefix:email' => 'john@example.com']]
+          'user'   => [['email' => 'john@example.com']]
         ])->assertStatus(200);
         $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
         $this->assertDatabaseHas('profiles', ['user_id' => 1, 'name' => 'John', 'active' => true]);
@@ -213,7 +213,7 @@ class FormletIntegrationTest extends TestCase
 
         $this->put('/profiles/1', [
           'name' => 'James',
-          'user' => [['prefix:email'   => 'james@example.com',]]
+          'user' => [['email'   => 'james@example.com',]]
         ])->assertStatus(200);
 
         tap($profile->fresh(), function (TestProfile $profile) {

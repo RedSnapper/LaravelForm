@@ -191,17 +191,20 @@ class FormletValidationTest extends TestCase
 
     }
 
-    /** @test */
-    public function can_populate_formlets_with_session_errors()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function can_populate_formlets_with_session_errors($prefix)
     {
 
-        Route::post('/user', function () {
-            $form = $this->form();
+        Route::post('/user', function () use($prefix) {
+            $form = $this->form()->setPrefix($prefix);
             $form->validate();
         });
 
-        Route::get('/user', function () {
-            $form = $this->form();
+        Route::get('/user', function () use($prefix) {
+            $form = $this->form()->setPrefix($prefix);
             return $form->build();
         });
 
@@ -215,14 +218,17 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["The country field is required."], $formlet->formlet('child')->error('country'));
     }
 
-    /** @test */
-    public function can_set_a_redirect_route_on_validation_failure()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function can_set_a_redirect_route_on_validation_failure($prefix)
     {
 
-        Route::post('/test', function () {
+        Route::post('/test', function () use($prefix) {
             $form = $this->form(function (Formlet $form) {
                 $form->redirectRoute = "redirect";
-            });
+            })->setPrefix($prefix);
             $form->validate();
         });
 
@@ -232,90 +238,27 @@ class FormletValidationTest extends TestCase
         $this->from('/test')
           ->post('/test', ['name' => ''])
           ->assertRedirect('/redirect')
-          ->assertSessionHasErrors(['name']);
+          ->assertInvalid(['name'],$prefix ?? 'default');
     }
 
-    /** @test */
-    public function form_with_prefix_passes_validation()
-    {
-        $this->request->merge($this->validPrefixPost());
-        $form = $this->prefixForm();
-
-        $form->validate(false);
-
-        $this->assertTrue($form->isValid());
-        $this->assertCount(0, $form->errors());
-    }
-
-    /** @test */
-    public function prefix_form_fails_validation()
-    {
-        $form = $this->prefixForm();
-
-        $form->validate(false);
-
-        $this->assertFalse($form->isAllValid());
-
-        $errors = $form->allErrors();
-
-        $this->assertCount(1, $errors);
-        $this->assertEquals(["Countries are needed."], $errors->get('country'));
-    }
-
-    /** @test */
-    public function it_can_automatically_redirect_after_failing_validation_prefix_form()
-    {
-
-        Route::post('/test', function () {
-            $form = $this->prefixForm();
-            $form->validate();
-        });
-
-        $this->from('/test')
-          ->post('/test', [])
-          ->assertRedirect('/test')
-          ->assertSessionHasErrors(['country'], null, 'prefix');
-    }
-
-    /** @test */
-    public function can_retrieve_errors_from_session_using_a_different_error_bag()
-    {
-        $viewBag = new ViewErrorBag();
-        $errorBag = new MessageBag([
-          'country' => ['Session error'],
-        ]);
-
-        $viewBag->put('prefix', $errorBag);
-
-        $this->session([
-          'errors' => $viewBag
-        ]);
-
-        $form = $this->prefixForm();
-        $form->build();
-
-        $errors = $form->allErrors();
-        $fields = $form->fields();
-
-        $this->assertEquals(["Session error"], $errors->get('country'));
-        $this->assertEquals(["Session error"], $fields->get('country')->getErrors()->toArray());
-    }
-
-    /** @test */
-    public function can_configure_the_validator_instance_for_this_formlet()
+    /**
+     * @dataProvider prefix
+     * @test
+     */
+    public function can_configure_the_validator_instance_for_this_formlet($prefix)
     {
         // We can use the withValidator method to configure our validator instance
+        $key = $prefix ? "$prefix:" : "";
 
-        $this->request->merge(['prefix:country' => 3]);
-        $form = $this->prefixForm();
+        $this->request->merge([$key . 'child'=>[['country'=>3]]]);
+        $form = $this->form()->setPrefix($prefix);
 
         $form->validate(false);
 
         $this->assertFalse($form->isValid());
         $errors = $form->allErrors();
 
-        $this->assertCount(1, $errors);
-        $this->assertEquals(["The Countries must be a string."], $errors->get('country'));
+        $this->assertEquals(["The country field must be a string."], $errors->get('child.0.country'));
     }
 
     /** @test */
@@ -340,10 +283,6 @@ class FormletValidationTest extends TestCase
         return $this->createFormlet(ValidationFormlet::class, $closure);
     }
 
-    private function prefixForm(\Closure $closure = null): Formlet
-    {
-        return $this->createFormlet(PrefixFormlet::class, $closure);
-    }
 
     private function createFormlet(string $class, \Closure $closure = null): Formlet
     {
@@ -369,12 +308,6 @@ class FormletValidationTest extends TestCase
 
         return $data;
     }
-
-    protected function validPrefixPost()
-    {
-        return ['prefix:country' => 'England'];
-    }
-
 }
 
 class ValidationFormlet extends Formlet
@@ -439,57 +372,12 @@ class ChildValidationFormlet extends Formlet
           'file' => 'required'
         ];
     }
-}
 
-class PrefixFormlet extends Formlet
-{
 
-    /**
-     * PrefixFormlet constructor.
-     */
-    public function __construct()
-    {
-        $this->prefix = "prefix";
-    }
-
-    public function prepare(): void
-    {
-        $this->add(new Input('text', 'country'));
-    }
-
-    public function rules(): array
-    {
-        return [
-          'country' => 'required'
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-          'country.required' => ':attribute are needed.',
-          'country.string' => 'The :attribute must be a string.',
-        ];
-    }
-
-    public function attributes(): array
-    {
-        return [
-          'country' => 'Countries'
-        ];
-    }
-
-    /**
-     * Configure the validator instance.
-     *
-     * @param  \Illuminate\Validation\Validator  $validator
-     * @return void
-     */
     public function withValidator($validator)
     {
         $validator->addRules(['country' => 'string']);
     }
-
 }
 
 class HooksFormlet extends Formlet
