@@ -30,6 +30,7 @@ class FormServiceProvider extends ServiceProvider
 		  __DIR__.'/resources/views' => resource_path('views/vendor/form'),
 		],'form');
 
+        $this->addBladeDirectives();
     }
 
     public function register(){
@@ -39,13 +40,11 @@ class FormServiceProvider extends ServiceProvider
 			$formlet->setRequest($app['request']);
             $formlet->initialize();
 		});
-
-        $this->addBladeDirectives();
 	}
 
     protected function addBladeDirectives(): void
     {
-        $this->app->afterResolving('blade.compiler', function (BladeCompiler $bladeCompiler) {
+        $this->callAfterResolving('blade.compiler', function (BladeCompiler $bladeCompiler) {
 
             $bladeCompiler->aliasComponent('form::components.form','form');
 
