@@ -2,9 +2,11 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
+
 trait RendersErrors
 {
-    /** @test */
+    #[Test]
     public function can_render_errors()
     {
         $field = $this->getTestField('bim');

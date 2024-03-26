@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
 use RS\Form\Fields\Radio;
 
 class RadioTest extends AbstractFieldTest
@@ -13,7 +14,7 @@ class RadioTest extends AbstractFieldTest
         return new Radio($name, ['foo' => 'bar']);
     }
 
-    /** @test */
+    #[Test]
     public function can_render_radio()
     {
         $field = new Radio('bim', [
@@ -32,7 +33,7 @@ class RadioTest extends AbstractFieldTest
           $this->renderField($field));
     }
 
-    /** @test */
+    #[Test]
     public function a_field_can_have_a_placeholder()
     {
         $field = new Radio('text');
@@ -43,7 +44,7 @@ class RadioTest extends AbstractFieldTest
         $this->assertEquals('bim', $option->label);
     }
 
-    /** @test */
+    #[Test]
     public function can_render_radio_attributes()
     {
         $field = new Radio('bim', [
@@ -65,7 +66,7 @@ class RadioTest extends AbstractFieldTest
           $this->renderField($field));
     }
 
-    /** @test */
+    #[Test]
     public function can_render_label()
     {
         $field = new Radio('foo');

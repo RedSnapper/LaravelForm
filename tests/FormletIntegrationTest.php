@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Route;
 use RS\Form\Formlet;
@@ -29,7 +30,7 @@ class FormletIntegrationTest extends TestCase
         $this->withFactories(realpath(__DIR__ . '/Fixtures/database/factories'));
     }
 
-    /** @test */
+    #[Test]
     public function a_formlet_may_have_an_existing_model()
     {
         $formlet = $this->formlet();
@@ -43,7 +44,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertTrue($formlet->modelExists());
     }
 
-    /** @test */
+    #[Test]
     public function test_store_method()
     {
         $this->withoutExceptionHandling();
@@ -57,7 +58,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
     }
 
-    /** @test */
+    #[Test]
     public function test_update_method()
     {
 
@@ -76,7 +77,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertDatabaseHas('users', ['id' => 1, 'email' => 'james@example.com']);
     }
 
-    /** @test */
+    #[Test]
     public function test_many_to_many_associations_store()
     {
         $this->withoutExceptionHandling();
@@ -97,7 +98,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertDatabaseMissing('role_user', ['user_id' => 1, 'role_id' => $editorRole->id]);
     }
 
-    /** @test */
+    #[Test]
     public function formlet_has_one_relation()
     {
 
@@ -115,7 +116,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertFalse($profileFormlet->fields()->get('active')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function formlet_has_one_relation_store_method()
     {
         $this->withoutExceptionHandling();
@@ -131,7 +132,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertDatabaseHas('profiles', ['user_id' => 1, 'name' => 'John', 'active' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function formlet_has_one_relation_update_method()
     {
         $this->withoutExceptionHandling();
@@ -155,7 +156,7 @@ class FormletIntegrationTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function formlet_belongs_to_relation()
     {
 
@@ -177,7 +178,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertFalse($fields->get('active')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function formlet_belongs_to_relation_store_method()
     {
         $this->withoutExceptionHandling();
@@ -194,7 +195,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertDatabaseHas('profiles', ['user_id' => 1, 'name' => 'John', 'active' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function formlet_belongs_to_relation_update_method()
     {
         $this->withoutExceptionHandling();
@@ -222,7 +223,7 @@ class FormletIntegrationTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function has_many_relation()
     {
 
@@ -238,7 +239,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertEquals($postB->name, $formlet->formlets('posts')->get(1)->field('name')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function has_many_create_method()
     {
 
@@ -263,7 +264,7 @@ class FormletIntegrationTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function has_many_relation_update_method()
     {
 
@@ -293,7 +294,7 @@ class FormletIntegrationTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function has_many_relation_restriction()
     {
         $user = TestUser::create(['email' => 'john@example.com']);
@@ -311,7 +312,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertCount(1, $formlet->formlets('posts'));
     }
 
-    /** @test */
+    #[Test]
     public function has_many_relation_restriction_using_array_syntax_on_relation()
     {
         $user = TestUser::create(['email' => 'john@example.com']);
@@ -329,7 +330,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertCount(1, $formlet->formlets('posts'));
     }
 
-    /** @test */
+    #[Test]
     public function many_to_many_relation()
     {
 
@@ -360,7 +361,7 @@ class FormletIntegrationTest extends TestCase
     }
 
 
-    /** @test */
+    #[Test]
     public function many_to_many_where_subscriber_field_exists_also_on_the_pivot_table()
     {
         $user = TestUser::create(['email' => 'john@example.com']);
@@ -378,7 +379,7 @@ class FormletIntegrationTest extends TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function many_to_many_relation_store()
     {
         $this->withoutExceptionHandling();
@@ -406,7 +407,7 @@ class FormletIntegrationTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function many_to_many_relation_update()
     {
         $user = TestUser::create(['email' => 'john@example.com']);
@@ -437,7 +438,7 @@ class FormletIntegrationTest extends TestCase
         });
     }
 
-    /** @test */
+    #[Test]
     public function many_to_many_restriction()
     {
 
@@ -455,7 +456,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertCount(1, $formlet->formlets('permissions'));
     }
 
-    /** @test */
+    #[Test]
     public function retrieve_subscription_data()
     {
 

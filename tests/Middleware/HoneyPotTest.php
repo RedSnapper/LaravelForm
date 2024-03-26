@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests\Middleware;
 
+use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Support\Facades\Route;
 use RS\Form\Middleware\HoneyPot;
 use RS\Form\Tests\TestCase;
@@ -25,7 +26,7 @@ class HoneyPotTest extends TestCase
         })->middleware(HoneyPot::class);
     }
 
-    /** @test */
+    #[Test]
     public function middleware_can_pass_if_honeypot_not_filled_in()
     {
         $this->post('/honey',['formlet-email'=>'','formlet-terms'=>false])->assertStatus(200);
@@ -33,7 +34,7 @@ class HoneyPotTest extends TestCase
         $this->get('/honey',['formlet-email'=>'foo','formlet-terms'=>true])->assertStatus(200);
     }
 
-    /** @test */
+    #[Test]
     public function redirects_back_if_honeypot_fails()
     {
         $this->from('/home')->post('/honey',['formlet-email'=>'foo','formlet-terms'=>true])->assertStatus(302);

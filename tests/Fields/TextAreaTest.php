@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
 use RS\Form\Fields\TextArea;
 
 class TextAreaTest extends AbstractFieldTest
@@ -13,7 +14,7 @@ class TextAreaTest extends AbstractFieldTest
         return new TextArea($name);
     }
 
-    /** @test */
+    #[Test]
     public function a_textarea_will_have_a_name_set()
     {
         $field = $this->getTestField("bim");
@@ -21,7 +22,7 @@ class TextAreaTest extends AbstractFieldTest
         $this->assertEquals('bim', $field->getInstanceName());
     }
 
-    /** @test */
+    #[Test]
     public function can_set_rows_for_a_textarea()
     {
         $field = $this->getTestField();
@@ -30,7 +31,7 @@ class TextAreaTest extends AbstractFieldTest
         $this->assertEquals(10, $field->getAttribute('rows'));
     }
 
-    /** @test */
+    #[Test]
     public function can_set_cols_for_a_textarea()
     {
         $field = $this->getTestField();
@@ -39,7 +40,7 @@ class TextAreaTest extends AbstractFieldTest
         $this->assertEquals(10, $field->getAttribute('cols'));
     }
 
-    /** @test */
+    #[Test]
     public function can_render_a_textarea()
     {
         $field = new TextArea('bim');

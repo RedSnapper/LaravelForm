@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Support\Collection;
 use RS\Form\Fields\Choice;
 
@@ -13,7 +14,7 @@ class ChoiceTest extends AbstractFieldTest
         return new Choice($name);
     }
 
-    /** @test */
+    #[Test]
     public function a_field_can_have_a_placeholder()
     {
         $field = new Choice('text');
@@ -24,7 +25,7 @@ class ChoiceTest extends AbstractFieldTest
         $this->assertEquals('bim', $option->label);
     }
 
-    /** @test */
+    #[Test]
     public function a_choice_field_will_have_a_name_set()
     {
         $field = new Choice('bim');
@@ -32,7 +33,7 @@ class ChoiceTest extends AbstractFieldTest
         $this->assertEquals('bim', $field->getInstanceName());
     }
 
-    /** @test */
+    #[Test]
     public function a_choice_can_have_options_and_opt_groups()
     {
         $field = new Choice('bim', [
@@ -60,7 +61,7 @@ class ChoiceTest extends AbstractFieldTest
         $this->assertEquals('wibble', $optGroupOptions->first()->label);
     }
 
-    /** @test */
+    #[Test]
     public function a_choice_can_have_disabled_options()
     {
         $field = new Choice('name', [
@@ -91,7 +92,7 @@ class ChoiceTest extends AbstractFieldTest
 
     }
 
-    /** @test */
+    #[Test]
     public function choice_can_define_optgroups_using_minimal_syntax()
     {
         $field = new Choice('bim', [
@@ -115,7 +116,7 @@ class ChoiceTest extends AbstractFieldTest
         $this->assertEquals('wibble', $optGroupOptions->first()->label);
     }
 
-    /** @test */
+    #[Test]
     public function choice_can_define_optgroups_using_explicit_syntax()
     {
         $field = new Choice('bim', [
@@ -147,7 +148,7 @@ class ChoiceTest extends AbstractFieldTest
 
     }
 
-    /** @test */
+    #[Test]
     public function a_choice_option_can_be_selected()
     {
         $field = new Choice('bim', [

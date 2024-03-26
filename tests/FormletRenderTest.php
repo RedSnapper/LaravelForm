@@ -4,6 +4,8 @@ namespace RS\Form\Tests;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use RS\Form\Fields\Input;
 use RS\Form\Formlet;
 
@@ -21,10 +23,8 @@ class FormletRenderTest extends TestCase
         return [['form'], ['formlet'], ['fields'], ['field']];
     }
 
-    /**
-     * @test
-     * @dataProvider getFormViews
-     */
+	#[Test]
+	#[DataProvider('getFormViews')]
     public function render_form_using_component($view)
     {
         $this->withoutExceptionHandling();

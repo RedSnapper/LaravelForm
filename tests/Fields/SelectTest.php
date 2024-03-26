@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
 use RS\Form\Fields\Select;
 
 class SelectTest extends AbstractFieldTest
@@ -13,7 +14,7 @@ class SelectTest extends AbstractFieldTest
         return new Select($name);
     }
 
-    /** @test */
+    #[Test]
     public function can_be_a_multi_select()
     {
         $field = $this->getTestField();
@@ -24,7 +25,7 @@ class SelectTest extends AbstractFieldTest
         $this->assertNull($field->getAttribute('multiple'));
     }
 
-    /** @test */
+    #[Test]
     public function a_field_can_have_a_placeholder()
     {
         $field = new Select('text');
@@ -35,7 +36,7 @@ class SelectTest extends AbstractFieldTest
         $this->assertEquals('bim', $option->label);
     }
 
-    /** @test */
+    #[Test]
     public function can_render_select()
     {
         $field = new Select('bim', [
@@ -52,7 +53,7 @@ class SelectTest extends AbstractFieldTest
           $this->renderField($field));
     }
 
-    /** @test */
+    #[Test]
     public function can_render_a_multi_select()
     {
         $field = new Select('bim', [
@@ -73,7 +74,7 @@ class SelectTest extends AbstractFieldTest
           $this->renderField($field));
     }
 
-    /** @test */
+    #[Test]
     public function can_render_option_attributes()
     {
         $field = new Select('bim', [
@@ -88,7 +89,7 @@ class SelectTest extends AbstractFieldTest
           $this->renderField($field));
     }
 
-    /** @test */
+    #[Test]
     public function can_render_optgroups()
     {
         $field = new Select('bim', [

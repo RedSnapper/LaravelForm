@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests;
 
+use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Route;
@@ -40,7 +41,7 @@ class FormletPostTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function can_retrieve_posted_values()
     {
 
@@ -84,7 +85,7 @@ class FormletPostTest extends TestCase
         ], $form->allPostData()->toArray());
     }
 
-    /** @test */
+    #[Test]
     public function can_retrieve_posted_values_for_a_prefixed_form()
     {
 
@@ -106,7 +107,7 @@ class FormletPostTest extends TestCase
         ], $form->allPostData()->toArray());
     }
 
-    /** @test */
+    #[Test]
     public function can_store_with_a_valid_post()
     {
         $form = $this->formlet(function ($form) {
@@ -116,7 +117,7 @@ class FormletPostTest extends TestCase
         $this->assertEquals(['name' => 'foo'], $form->store());
     }
 
-    /** @test */
+    #[Test]
     public function store_throws_an_error_on_invalid_post()
     {
 
@@ -135,7 +136,7 @@ class FormletPostTest extends TestCase
           ->assertSessionHasErrors(['name']);
     }
 
-    /** @test */
+    #[Test]
     public function can_update_with_a_valid_post()
     {
         $form = $this->formlet(function ($form) {
@@ -145,7 +146,7 @@ class FormletPostTest extends TestCase
         $this->assertEquals(['name' => 'foo'], $form->update());
     }
 
-    /** @test */
+    #[Test]
     public function update_throws_an_error_on_invalid_post()
     {
 
@@ -164,7 +165,7 @@ class FormletPostTest extends TestCase
           ->assertSessionHasErrors(['name']);
     }
 
-    /** @test */
+    #[Test]
     public function disabled_input_values_dont_appear_in_post_values()
     {
 
