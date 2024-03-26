@@ -2,6 +2,8 @@
 
 namespace RS\Form\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -45,10 +47,8 @@ class FormletValidationTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function it_passes_validation($prefix)
     {
         $this->request->merge($this->validPost($prefix));
@@ -60,10 +60,8 @@ class FormletValidationTest extends TestCase
         $this->assertCount(0, $form->errors());
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function it_fails_validation($prefix)
     {
         $this->request->files = new FileBag();
@@ -94,10 +92,8 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["The file field is required."], $errors->get('file'));
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function throws_a_validation_exception_when_validation_fails($prefix)
     {
         $this->withoutExceptionHandling();
@@ -105,10 +101,8 @@ class FormletValidationTest extends TestCase
         $this->form()->setPrefix($prefix)->validate();
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function it_can_automatically_redirect_after_failing_validation($prefix)
     {
 
@@ -123,10 +117,8 @@ class FormletValidationTest extends TestCase
           ->assertInvalid(['name'],$prefix ?? 'default');
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function it_does_not_automatically_redirect_after_passing_validation($prefix)
     {
 
@@ -139,10 +131,8 @@ class FormletValidationTest extends TestCase
           ->assertValid(null,$prefix ?? 'default');
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function can_add_custom_messages_to_validation($prefix)
     {
         $form = $this->form()->setPrefix($prefix);
@@ -153,10 +143,8 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["An Email Address is needed."], $errors->get('email'));
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function can_retrieve_errors_from_session($prefix)
     {
         $viewBag = new ViewErrorBag();
@@ -192,10 +180,8 @@ class FormletValidationTest extends TestCase
 
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function can_populate_formlets_with_session_errors($prefix)
     {
 
@@ -219,10 +205,8 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["The country field is required."], $formlet->formlet('child')->error('country'));
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function can_set_a_redirect_route_on_validation_failure($prefix)
     {
 
@@ -242,10 +226,8 @@ class FormletValidationTest extends TestCase
           ->assertInvalid(['name'],$prefix ?? 'default');
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+    #[Test]
+	#[DataProvider('prefix')]
     public function can_configure_the_validator_instance_for_this_formlet($prefix)
     {
         // We can use the withValidator method to configure our validator instance
@@ -262,7 +244,7 @@ class FormletValidationTest extends TestCase
         $this->assertEquals(["The country field must be a string."], $errors->get('child.0.country'));
     }
 
-    /** @test */
+    #[Test]
     public function test_prepareForValidation_runs_before_validation()
     {
         $form = $this->createFormlet(HooksFormlet::class);
@@ -271,7 +253,7 @@ class FormletValidationTest extends TestCase
         $this->assertEquals('John', $form->field('name')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function test_prepareForValidation_does_not_run_when_building_the_form()
     {
         $form = $this->createFormlet(HooksFormlet::class);
@@ -295,16 +277,16 @@ class FormletValidationTest extends TestCase
         $key = $prefix ? "$prefix:" : "";
 
         $data = [
-          "${key}name" => 'John',
-          "${key}email" => 'john@example.com',
-          "${key}child" => [
+          "{$key}name" => 'John',
+          "{$key}email" => 'john@example.com',
+          "{$key}child" => [
             ['country' => 'England']
           ]
         ];
 
         if ($includeFile) {
-            $data["${key}file"] = $this->file;
-            $data["${key}child"][0]['file'] = $this->file;
+            $data["{$key}file"] = $this->file;
+            $data["{$key}child"][0]['file'] = $this->file;
         }
 
         return $data;

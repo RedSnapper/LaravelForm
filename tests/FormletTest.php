@@ -2,6 +2,8 @@
 
 namespace RS\Form\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -44,7 +46,7 @@ class FormletTest extends TestCase
         ];
     }
 
-    /** @test */
+    #[Test]
     public function the_form_has_default_attributes()
     {
         $form = $this->formlet();
@@ -53,7 +55,7 @@ class FormletTest extends TestCase
         $this->assertEquals('POST', $form->getAttribute('method'));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_set_a_form_method()
     {
         $form = $this->formlet();
@@ -66,7 +68,7 @@ class FormletTest extends TestCase
         $this->assertEquals('GET', $form->getAttribute('method'));
     }
 
-    /** @test */
+    #[Test]
     public function it_can_set_a_route()
     {
         Route::get('/tests', function () {
@@ -92,7 +94,7 @@ class FormletTest extends TestCase
         $form->route('fake');
     }
 
-    /** @test */
+    #[Test]
     public function a_csrf_field_is_added_to_the_form()
     {
         $form = $this->formlet();
@@ -117,10 +119,8 @@ class FormletTest extends TestCase
         ];
     }
 
-    /**
-     * @test
-     * @dataProvider getFormMethods
-     */
+	#[Test]
+	#[DataProvider('getFormMethods')]
     public function a_method_field_is_added_to_the_form_if_required($method, $required)
     {
         $form = $this->formlet();
@@ -138,7 +138,7 @@ class FormletTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function adds_a_honeypot_field_to_the_field_if_required()
     {
         $form = $this->formlet();
@@ -151,7 +151,7 @@ class FormletTest extends TestCase
         $this->assertEquals('formlet-email', $field2->getName());
     }
 
-    /** @test */
+    #[Test]
     public function does_not_add_a_honeypot_field_if_not_required()
     {
         $form = $this->formlet();
@@ -162,7 +162,7 @@ class FormletTest extends TestCase
         $this->assertNull($data->get('form')->get('hidden')->get('honeypot2'));
     }
 
-    /** @test */
+    #[Test]
     public function can_add_fields_to_a_form()
     {
 
@@ -188,10 +188,8 @@ class FormletTest extends TestCase
         $this->assertEquals('foo', $form->field('foo')->getInstanceName());
     }
 
-    /**
-     * @dataProvider prefix
-     * @test
-     */
+	#[Test]
+	#[DataProvider('prefix')]
     public function can_add_a_formlet_to_a_form($prefix)
     {
         $key = $prefix ? $prefix.":" : "";
@@ -230,7 +228,7 @@ class FormletTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function a_formlet_can_set_a_prefix()
     {
         $form = $this->formlet(function (Formlet $form) {
@@ -244,7 +242,7 @@ class FormletTest extends TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function can_retrieve_parent_model_from_child_formlet()
     {
         $form = $this->formlet(function (Formlet $form) {
@@ -258,7 +256,7 @@ class FormletTest extends TestCase
         $this->assertEquals("Foo", $form->formlet('child')->getParent()->name);
     }
 
-    /** @test */
+    #[Test]
     public function can_get_formlets_as_properties_of_the_formlet()
     {
         $form = $this->formlet(function (Formlet $form) {
@@ -274,7 +272,7 @@ class FormletTest extends TestCase
         $this->assertInstanceOf(GrandChildFormlet::class, $form->formlet('child')->grandchild->first());
     }
 
-    /** @test */
+    #[Test]
     public function fields_can_be_filled_by_the_request()
     {
 
@@ -305,7 +303,7 @@ class FormletTest extends TestCase
         $this->assertEquals([1, 2], $fields->get('cb')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function should_populate_from_session()
     {
         // Takes precedence over request value
@@ -323,7 +321,7 @@ class FormletTest extends TestCase
         $this->assertEquals('bar', $form->field('name.with.dots')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function should_populate_from_session_with_prefix()
     {
         // Takes precedence over request value
@@ -344,7 +342,7 @@ class FormletTest extends TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function form_is_populated_from_a_model()
     {
         $form = $this->formlet(function ($form) {
@@ -356,7 +354,7 @@ class FormletTest extends TestCase
         $this->assertEquals('attribute', $fields->get('relation[key]')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function field_is_not_populated_from_model_if_value_has_already_been_set()
     {
         $form = $this->formlet(function ($form) {
@@ -368,7 +366,7 @@ class FormletTest extends TestCase
         $this->assertEquals('bar', $fields->get('field')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function form_is_populated_from_session_before_model()
     {
 
@@ -385,7 +383,7 @@ class FormletTest extends TestCase
         $this->assertEquals('bim', $fields->get('foo')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function form_is_populated_from_session_even_if_value_is_set()
     {
 
@@ -402,7 +400,7 @@ class FormletTest extends TestCase
         $this->assertEquals('bim', $fields->get('foo')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function a_false_value_in_the_model_should_be_reflected_by_the_field_value()
     {
         $form = $this->formlet(function ($form) {
@@ -414,7 +412,7 @@ class FormletTest extends TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function a_false_value_in_the_session_should_be_reflected_by_the_field_value()
     {
         $this->request->merge([
@@ -430,7 +428,7 @@ class FormletTest extends TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function form_can_repopulate_from_arrays_and_objects()
     {
         $form = $this->formlet(function ($form) {
@@ -451,7 +449,7 @@ class FormletTest extends TestCase
         $this->assertEquals('b', $fields->get('letters[1]')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function can_repopulate_select()
     {
         $this->setOldInput([
@@ -475,7 +473,7 @@ class FormletTest extends TestCase
         $this->assertEquals('S', $fields->get('size[key]')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function can_repopulate_checkbox()
     {
         $this->setOldInput(
@@ -494,7 +492,7 @@ class FormletTest extends TestCase
         $this->assertEquals('yes', $fields->get('check[key]')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function can_repopulate_checkbox_group()
     {
         $this->setOldInput([
@@ -516,7 +514,7 @@ class FormletTest extends TestCase
         $this->assertEquals([1, 3], $fields->get('multicheck')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function can_repopulate_a_radio()
     {
         $this->setOldInput([
@@ -538,7 +536,7 @@ class FormletTest extends TestCase
         $this->assertEquals([1, 3], $fields->get('radio')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function can_repopulate_checkbox_group_with_model_relation()
     {
         $mockModel2 = new StdClass();
@@ -566,7 +564,7 @@ class FormletTest extends TestCase
             $this->renderField($fields->get('items')));
     }
 
-    /** @test */
+    #[Test]
     public function can_populate_child_formlets()
     {
         $this->setOldInput([
@@ -584,7 +582,7 @@ class FormletTest extends TestCase
         $this->assertEquals('bar', $fields->get('name')->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function throws_a_logic_exception_when_adding_a_relation_method_that_does_not_exist()
     {
         $form = $this->formlet(function (Formlet $form) {
@@ -604,7 +602,7 @@ class FormletTest extends TestCase
         $this->fail("Successfully added a relation even though it did not exist");
     }
 
-    /** @test */
+    #[Test]
     public function throws_a_logic_exception_when_adding_a_relation_which_does_not_return_a_relation()
     {
         $form = $this->formlet(function (Formlet $form) {

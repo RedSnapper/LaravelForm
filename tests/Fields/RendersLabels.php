@@ -2,9 +2,11 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
+
 trait RendersLabels
 {
-    /** @test */
+    #[Test]
     public function can_render_a_label_for_a_field()
     {
         $field = $this->getTestField('bim');
@@ -13,7 +15,7 @@ trait RendersLabels
         $this->assertStringContainsString('<label for="bim">My Label</label>',$rendered);
     }
 
-    /** @test */
+    #[Test]
     public function will_not_render_a_label_if_one_is_not_set()
     {
         $field = $this->getTestField('bim');

@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
 use RS\Form\Fields\Input;
 
 class InputTest extends AbstractFieldTest
@@ -13,7 +14,7 @@ class InputTest extends AbstractFieldTest
         return new Input('text', $name);
     }
 
-    /** @test */
+    #[Test]
     public function an_input_will_have_a_name_set()
     {
         $field = new Input('text', 'bim');
@@ -21,14 +22,14 @@ class InputTest extends AbstractFieldTest
         $this->assertEquals('bim', $field->getInstanceName());
     }
 
-    /** @test */
+    #[Test]
     public function an_input_will_have_a_type_attribute_set()
     {
         $field = new Input('text', 'bim');
         $this->assertEquals('text', $field->getAttribute('type'));
     }
 
-    /** @test */
+    #[Test]
     public function do_not_populate_input_of_type_password_or_file()
     {
         $field = new Input('password', 'foo');
@@ -42,7 +43,7 @@ class InputTest extends AbstractFieldTest
         $this->assertEquals("bar", $field->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function can_render_attributes()
     {
         $field = new Input('text', 'bim');
@@ -50,7 +51,7 @@ class InputTest extends AbstractFieldTest
         $this->assertStringContainsString('<input class="form-control" id="bim" name="bim" type="text" />', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function can_render_a_value()
     {
         $field = new Input('text', 'bim');
@@ -59,7 +60,7 @@ class InputTest extends AbstractFieldTest
         $this->assertStringContainsString('<input class="form-control" id="bim" name="bim" type="text" value="baz"/>', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function file_input_type_multiple_method_adds_multiple_attribute()
     {
         $field = new Input('file', 'bim');
@@ -69,7 +70,7 @@ class InputTest extends AbstractFieldTest
           $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function password_fields_by_default_have_autocomplete_set_to_off()
     {
         $field = new Input('password', 'password');

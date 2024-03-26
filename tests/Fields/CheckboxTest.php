@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
 use RS\Form\Fields\Checkbox;
 
 class CheckboxTest extends AbstractFieldTest
@@ -13,7 +14,7 @@ class CheckboxTest extends AbstractFieldTest
         return new Checkbox($name);
     }
 
-    /** @test */
+    #[Test]
     public function the_unchecked_value_is_returned_when_no_value_is_set()
     {
         $field = new Checkbox('foo', 'bim', 'baz');
@@ -34,7 +35,7 @@ class CheckboxTest extends AbstractFieldTest
 
     }
 
-    /** @test */
+    #[Test]
     public function the_default_value_is_returned_when_no_value_is_set()
     {
         $field = new Checkbox('foo', 'bim', 'baz');
@@ -50,7 +51,7 @@ class CheckboxTest extends AbstractFieldTest
 
     }
 
-    /** @test */
+    #[Test]
     public function a_field_can_be_guarded()
     {
         $field = new Checkbox('foo', 'bim', 'baz');
@@ -60,7 +61,7 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertEquals('bim', $field->getHTMLValue());
     }
 
-    /** @test */
+    #[Test]
     public function a_checkbox_will_have_a_name_set()
     {
         $field = new Checkbox('foo');
@@ -68,14 +69,14 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertEquals('foo', $field->getInstanceName());
     }
 
-    /** @test */
+    #[Test]
     public function an_input_will_have_a_type_attribute_set()
     {
         $field = new Checkbox('bim');
         $this->assertEquals('checkbox', $field->getAttribute('type'));
     }
 
-    /** @test */
+    #[Test]
     public function a_checkbox_will_have_default_checked_values_set()
     {
         $field = new Checkbox('foo');
@@ -83,7 +84,7 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertFalse($field->getUnCheckedValue());
     }
 
-    /** @test */
+    #[Test]
     public function a_checkbox_can_set_checked_values()
     {
         $field = new Checkbox('foo', 'bar', 'bim');
@@ -91,7 +92,7 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertEquals('bim', $field->getUnCheckedValue());
     }
 
-    /** @test */
+    #[Test]
     public function can_render()
     {
         $field = new Checkbox('bim', true);
@@ -115,7 +116,7 @@ class CheckboxTest extends AbstractFieldTest
         $this->assertStringContainsString('<input class="form-check-input" id="bim" name="bim" type="checkbox" value="1"/>', $rendered);
     }
 
-    /** @test */
+    #[Test]
     public function can_render_a_label()
     {
         $field = new Checkbox('bim', true);

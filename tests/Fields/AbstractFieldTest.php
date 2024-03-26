@@ -2,6 +2,7 @@
 
 namespace RS\Form\Tests\Fields;
 
+use PHPUnit\Framework\Attributes\Test;
 use RS\Form\Fields\AbstractField;
 use RS\Form\Tests\TestCase;
 
@@ -13,7 +14,7 @@ class AbstractFieldTest extends TestCase
         return new TestField($name);
     }
 
-    /** @test */
+    #[Test]
     public function a_field_has_a__name()
     {
         $field = $this->getTestField("foo");
@@ -23,7 +24,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("bar", $field->getName());
     }
 
-    /** @test */
+    #[Test]
     public function can_set_an_instance_name_for_a_field()
     {
         $field = $this->getTestField("foo");
@@ -34,7 +35,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("bar", $field->getAttribute('name'));
     }
 
-    /** @test */
+    #[Test]
     public function can_be_set_to_be_a_multi_field()
     {
         $field = $this->getTestField("foo");
@@ -43,7 +44,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("foo", $field->getName());
     }
 
-    /** @test */
+    #[Test]
     public function will_set_an_id_value_for_a_field()
     {
         $field = $this->getTestField("foo");
@@ -52,7 +53,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("bar", $field->getAttribute('id'));
     }
 
-    /** @test */
+    #[Test]
     public function can_set_a_label_for_a_field()
     {
         $field = $this->getTestField();
@@ -63,7 +64,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("bar", $field->getLabel());
     }
 
-    /** @test */
+    #[Test]
     public function can_set_a_view_for_a_field()
     {
         $field = $this->getTestField();
@@ -74,7 +75,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("bar", $field->getView());
     }
 
-    /** @test */
+    #[Test]
     public function can_set_a_default_value()
     {
         $field = $this->getTestField();
@@ -85,7 +86,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("bar", $field->getDefault());
     }
 
-    /** @test */
+    #[Test]
     public function the_default_value_is_returned_when_no_value_is_set()
     {
         $field = $this->getTestField();
@@ -105,7 +106,7 @@ class AbstractFieldTest extends TestCase
     }
 
 
-    /** @test */
+    #[Test]
     public function a_field_can_have_an_error_name()
     {
         $field = $this->getTestField();
@@ -117,7 +118,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("bim", $field->getErrorName());
     }
 
-    /** @test */
+    #[Test]
     public function a_field_can_be_disabled()
     {
         $field = $this->getTestField();
@@ -136,7 +137,7 @@ class AbstractFieldTest extends TestCase
 
 
 
-    /** @test */
+    #[Test]
     public function a_field_can_be_required()
     {
         $field = $this->getTestField();
@@ -147,7 +148,7 @@ class AbstractFieldTest extends TestCase
         $this->assertNull($field->getAttribute('required'));
     }
 
-    /** @test */
+    #[Test]
     public function a_field_can_have_a_placeholder()
     {
         $field = $this->getTestField();
@@ -156,7 +157,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals('foo', $field->getAttribute('placeholder'));
     }
 
-    /** @test */
+    #[Test]
     public function a_field_can_be_guarded()
     {
         $field = $this->getTestField();
@@ -176,7 +177,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals("foo", $field->getValue());
     }
 
-    /** @test */
+    #[Test]
     public function a_field_will_by_default_set_the_attribute_name_as_the_value()
     {
         $field = $this->getTestField();
@@ -186,7 +187,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals('bar', $field->getAttribute('foo'));
     }
 
-    /** @test */
+    #[Test]
     public function can_set_errors_for_a_field()
     {
         $field = $this->getTestField();
@@ -198,7 +199,7 @@ class AbstractFieldTest extends TestCase
 
     }
 
-    /** @test */
+    #[Test]
     public function can_set_multiple_attributes_at_once()
     {
         $field = $this->getTestField();
@@ -211,7 +212,7 @@ class AbstractFieldTest extends TestCase
         $this->assertEquals('bar', $field->getAttribute('bar'));
     }
 
-    /** @test */
+    #[Test]
     public function can_dynamically_add_attributes_to_a_field()
     {
         $field = $this->getTestField();
