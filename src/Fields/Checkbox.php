@@ -59,6 +59,11 @@ class Checkbox extends AbstractField
         return true;
     }
 
+    /**
+     * The value an absent key represents: the unchecked value.
+     *
+     * @return mixed
+     */
     public function getAbsentValue()
     {
         return $this->unchecked;

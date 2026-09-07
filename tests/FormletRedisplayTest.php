@@ -206,6 +206,51 @@ class FormletRedisplayTest extends TestCase
     }
 
     #[Test]
+    public function absent_disabled_checkbox_and_multi_value_fields_still_fall_back_to_the_model()
+    {
+        // A disabled control never posts, whatever its type. Its absence is not the user
+        // unticking or emptying it, so the model value must survive.
+        $this->submitted(['name' => 'typed']);
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add(new Input('text', 'name'));
+            $form->add((new Checkbox('active'))->disabled());
+            $form->add((new CheckboxGroup('items', [1 => 'One', 2 => 'Two']))->disabled());
+            $form->add((new Select('tags', [1 => 'One', 2 => 'Two']))->multiple()->disabled());
+        });
+        $form->model($this->model([
+            'name' => 'stored',
+            'active' => true,
+            'items' => $this->related(1),
+            'tags' => $this->related(2),
+        ]))->build();
+
+        $this->assertTrue($form->field('active')->isChecked());
+        $this->assertTrue($form->field('items')->getValue()->contains('id', 1));
+        $this->assertTrue($form->field('tags')->getValue()->contains('id', 2));
+    }
+
+    #[Test]
+    public function stale_old_input_does_not_override_the_current_post()
+    {
+        // Flashed input from an earlier failure can still be in the session when the next
+        // POST arrives. The submission path is for the redirect-back GET only; on a POST the
+        // current request must win, as it always has.
+        $this->submitted(['name' => null]);
+        $this->app['request']->setMethod('POST');
+        $this->app['request']->merge(['name' => 'posted', 'active' => '1']);
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add(new Input('text', 'name'));
+            $form->add(new Checkbox('active'));
+        });
+        $form->validate(false);
+
+        $this->assertEquals('posted', $form->field('name')->getValue());
+        $this->assertTrue($form->field('active')->isChecked());
+    }
+
+    #[Test]
     public function an_absent_single_value_field_keeps_a_value_prepared_by_the_developer()
     {
         $this->submitted(['name' => 'typed']);

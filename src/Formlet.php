@@ -412,30 +412,26 @@ abstract class Formlet
      */
     protected function populateField(AbstractField $field): void
     {
-        if ($this->submitted && $this->populateFieldFromSubmission($field)) {
-            $this->populateFieldErrors($field);
-            return;
-        }
+        $populated = $this->submitted && $this->populateFieldFromSubmission($field);
 
-        $value = $this->getValueAttribute($field);
+        if (!$populated) {
+            $value = $this->getValueAttribute($field);
 
-        if (!is_null($value)) {
-            $field->setValue($value);
+            if (!is_null($value)) {
+                $field->setValue($value);
+            }
         }
 
         $this->populateFieldErrors($field);
     }
 
     /**
-     * Was this form the one that was posted?
-     *
-     * A validation failure redirects back with the request flashed as old input. The
-     * _formlet marker in that input names the posted form, so only that form treats the
-     * old input as authoritative; any other formlet on the page keeps its normal resolution.
+     * Is this a redirect-back GET whose flashed old input was posted by this form?
      */
     protected function wasSubmitted(): bool
     {
-        return $this->session->getOldInput('_formlet') === $this->getErrorBagName();
+        return $this->request->isMethod('GET')
+          && $this->session->getOldInput('_formlet') === $this->getErrorBagName();
     }
 
     /**
@@ -447,24 +443,28 @@ abstract class Formlet
      *   will not fall back to the model or the default.
      * - Key absent and the field knows what its absence means (an unchecked checkbox, a
      *   fully deselected multi-value field): that value.
-     * - Key absent otherwise (disabled, unrendered, or file inputs): no signal; returns false
-     *   so the normal resolution applies.
+     * - Key absent otherwise (unrendered or file inputs), or the field is disabled and so
+     *   could not have been posted: no signal; returns false so the normal resolution applies.
      *
      * @return bool whether the field was populated from the submission
      */
     protected function populateFieldFromSubmission(AbstractField $field): bool
     {
-        $key = $this->transformKey($field->getInstanceName());
+        $name = $field->getInstanceName();
 
-        if (Arr::has($this->session->getOldInput(), $key)) {
-            $value = $this->session->getOldInput($key);
+        if (Arr::has($this->session->getOldInput(), $this->transformKey($name))) {
+            $value = $this->old($name);
 
-            is_null($value) ? $field->clearValue() : $field->setValue($value);
+            if (is_null($value)) {
+                $field->clearValue();
+            } else {
+                $field->setValue($value);
+            }
 
             return true;
         }
 
-        if ($field->populatesWhenAbsent()) {
+        if (!$field->isDisabled() && $field->populatesWhenAbsent()) {
             $field->setValue($field->getAbsentValue());
 
             return true;

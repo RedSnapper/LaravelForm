@@ -234,11 +234,11 @@ When validation fails the request is flashed to the session and the form redispl
 
 Before 8.0, a field missing from old input fell through to the model. That silently reverted anything the user had emptied, because an emptied field is exactly what arrives missing: a cleared text input is posted as `''` and flashed as `null` by `ConvertEmptyStringsToNull`, and an unticked checkbox or a fully emptied multi-select posts no key at all.
 
-From 8.0 every form carries a hidden `_formlet` input naming the form (its prefix, or `default`). When that marker in old input matches a formlet, the flashed input is treated as the whole truth for that form:
+From 8.0 every form carries a hidden `_formlet` input naming the form (its prefix, or `default`). On the redirect-back `GET`, when that marker in old input matches a formlet, the flashed input is treated as the whole truth for that form:
 
 - **Key present**, even with a `null` value: the submitted value is used as-is. A `null` clears the field, so neither the model nor the default reasserts the old value.
 - **Key absent** and the field knows what absence means: a `Checkbox` becomes its unchecked value, and any `multiple()` field (`CheckboxGroup`, a multiple `Select`) becomes `[]`.
-- **Key absent** otherwise: no signal. A disabled input, a file input, or a field the view did not render never posts a key, so these fall back to the normal resolution above.
+- **Key absent** otherwise, or the field is disabled: no signal. A disabled control, a file input, or a field the view did not render never posts a key, so these fall back to the normal resolution above.
 
 Any other formlet on the page, and any old input flashed by a form that is not a formlet, is unaffected. Two **unprefixed** forms on one page both identify as `default`, so give them prefixes if they can fail validation independently.
 
