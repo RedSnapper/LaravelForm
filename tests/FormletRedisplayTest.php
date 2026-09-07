@@ -11,7 +11,11 @@ use RS\Form\Fields\Radio;
 use RS\Form\Fields\Select;
 use RS\Form\Fields\TextArea;
 use RS\Form\Formlet;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+use Illuminate\Support\Facades\Route;
 use RS\Form\Tests\Fixtures\Formlets\ChildFormlet;
+use RS\Form\Tests\Fixtures\Formlets\ArticleFormlet;
 use RS\Form\Tests\Fixtures\Formlets\TestFormlet;
 use RS\Form\Tests\Fixtures\Models\FormBuilderModelStub;
 
@@ -29,6 +33,14 @@ use RS\Form\Tests\Fixtures\Models\FormBuilderModelStub;
 class FormletRedisplayTest extends TestCase
 {
     use InteractsWithSession;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // As in a real application kernel: a cleared text input posts '' and is flashed as null.
+        $this->app->make(Kernel::class)->pushMiddleware(ConvertEmptyStringsToNull::class);
+    }
 
     // ----------------------------------------------------------------------------------
     // Key present in old input (even with a null value): the submitted value wins
@@ -351,6 +363,123 @@ class FormletRedisplayTest extends TestCase
     }
 
     // ----------------------------------------------------------------------------------
+    // Round trips: a real submission that fails validation and redirects back
+    // ----------------------------------------------------------------------------------
+
+    #[Test]
+    public function values_the_user_emptied_survive_a_validation_failure_on_an_edit_form()
+    {
+        $this->articleRoutes($this->model([
+            'title' => 'Stored title',
+            'subtitle' => 'Stored subtitle',
+            'colour' => 'blue',
+            'active' => true,
+            'tags' => $this->related(1, 2),
+            'items' => $this->related(1, 2),
+        ]));
+
+        // The user clears every field, unticks everything and blanks the required title.
+        // Unticked checkboxes and emptied multi-selects post no key at all.
+        $formlet = $this->from('/articles/1/edit')
+          ->followingRedirects()
+          ->put('/articles/1', $this->browserPost([
+              'title' => '',
+              'subtitle' => '',
+              'colour' => '',
+          ]))
+          ->getOriginalContent()->get('formlet');
+
+        $this->assertEquals(['The title field is required.'], $formlet->error('title'));
+        $this->assertNull($formlet->field('subtitle')->getValue(), 'cleared text stays cleared');
+        $this->assertNull($formlet->field('colour')->getValue(), 'cleared select stays cleared');
+        $this->assertFalse($formlet->field('active')->isChecked(), 'unticked checkbox stays unticked');
+        $this->assertSame([], $formlet->field('tags')->getValue(), 'emptied multi-select stays empty');
+        $this->assertSame([], $formlet->field('items')->getValue(), 'unticked checkbox group stays empty');
+    }
+
+    #[Test]
+    public function values_the_user_entered_survive_a_validation_failure_on_an_edit_form()
+    {
+        $this->articleRoutes($this->model([
+            'title' => 'Stored title',
+            'subtitle' => null,
+            'colour' => 'blue',
+            'active' => false,
+            'tags' => $this->related(1),
+            'items' => $this->related(1),
+        ]));
+
+        $formlet = $this->from('/articles/1/edit')
+          ->followingRedirects()
+          ->put('/articles/1', $this->browserPost([
+              'title' => '',
+              'subtitle' => 'Typed subtitle',
+              'colour' => 'red',
+              'active' => '1',
+              'tags' => [2],
+              'items' => [2, 3],
+          ]))
+          ->getOriginalContent()->get('formlet');
+
+        $this->assertEquals('Typed subtitle', $formlet->field('subtitle')->getValue());
+        $this->assertEquals('red', $formlet->field('colour')->getValue());
+        $this->assertTrue($formlet->field('active')->isChecked(), 'ticked on a model that has it off stays ticked');
+        $this->assertEquals([2], $formlet->field('tags')->getValue());
+        $this->assertEquals([2, 3], $formlet->field('items')->getValue());
+    }
+
+    #[Test]
+    public function values_the_user_emptied_survive_a_validation_failure_on_a_create_form()
+    {
+        $this->articleRoutes();
+
+        $formlet = $this->from('/articles/create')
+          ->followingRedirects()
+          ->post('/articles', $this->browserPost(['title' => '', 'subtitle' => '', 'colour' => '']))
+          ->getOriginalContent()->get('formlet');
+
+        $this->assertNull($formlet->field('subtitle')->getValue(), 'default does not reassert itself');
+        $this->assertNull($formlet->field('colour')->getValue());
+        $this->assertFalse($formlet->field('active')->isChecked(), 'default(true) does not re-tick it');
+    }
+
+    #[Test]
+    public function a_second_form_on_the_page_keeps_its_values_when_the_first_fails()
+    {
+        $this->articleRoutes($this->model([
+            'title' => 'Stored title',
+            'subtitle' => 'Stored subtitle',
+            'colour' => 'blue',
+            'active' => true,
+            'tags' => $this->related(1),
+            'items' => $this->related(1),
+        ]), 'article');
+
+        // A separate, unrelated formlet on the same page that was not the one posted.
+        Route::get('/articles/1/edit', function () {
+            return collect([
+                'formlet' => $this->app->make(ArticleFormlet::class)->setPrefix('article')->model($this->pageModel)->build()->get('formlet'),
+                'other' => $this->formlet(function (Formlet $form) {
+                    $form->setPrefix('other');
+                    $form->add(new Input('text', 'name'));
+                    $form->add((new Checkbox('active'))->default(true));
+                })->model($this->model(['name' => 'other stored', 'active' => true]))->build()->get('formlet'),
+            ]);
+        });
+
+        $page = $this->from('/articles/1/edit')
+          ->followingRedirects()
+          ->put('/articles/1', $this->browserPost(['article:title' => '', 'article:subtitle' => ''], 'article'))
+          ->getOriginalContent();
+
+        $this->assertNull($page->get('formlet')->field('subtitle')->getValue(), 'the posted form is cleared');
+        $this->assertFalse($page->get('formlet')->field('active')->isChecked());
+
+        $this->assertEquals('other stored', $page->get('other')->field('name')->getValue(), 'the other form is untouched');
+        $this->assertTrue($page->get('other')->field('active')->isChecked());
+    }
+
+    // ----------------------------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------------------------
 
@@ -361,6 +490,34 @@ class FormletRedisplayTest extends TestCase
     protected function submitted(array $input, string $formlet = 'default'): void
     {
         $this->session(['_old_input' => ['_formlet' => $formlet] + $input]);
+    }
+
+    protected $pageModel;
+
+    /**
+     * Resource-style routes for the ArticleFormlet: create/store, edit/update. A failed
+     * validation redirects back to the page it came from, as in an application.
+     */
+    private function articleRoutes(?FormBuilderModelStub $model = null, ?string $prefix = null): void
+    {
+        $this->pageModel = $model;
+
+        $make = fn () => $this->app->make(ArticleFormlet::class)->setPrefix($prefix);
+
+        Route::get('/articles/create', fn () => $make()->build());
+        Route::post('/articles', fn () => $make()->validate());
+
+        Route::get('/articles/1/edit', fn () => $make()->model($this->pageModel)->build());
+        Route::put('/articles/1', fn () => $make()->model($this->pageModel)->validate());
+    }
+
+    /**
+     * What the browser would post for a formlet-rendered form: the fields plus the hidden
+     * _formlet marker. Unticked checkboxes and empty multi-selects are simply not present.
+     */
+    private function browserPost(array $fields, string $formlet = 'default'): array
+    {
+        return ['_formlet' => $formlet] + $fields;
     }
 
     private function formlet(?\Closure $closure = null): TestFormlet
