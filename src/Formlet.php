@@ -6,6 +6,7 @@ use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use RS\Form\Concerns\{HasRelationships, ManagesForm, ManagesPosts, ValidatesForm};
@@ -91,6 +92,14 @@ abstract class Formlet
      * @var bool
      */
     protected $prepared = false;
+
+    /**
+     * Was this formlet the one that was posted, as identified by the _formlet marker in
+     * the flashed old input? Computed on the root formlet and inherited by its children.
+     *
+     * @var bool|null
+     */
+    protected ?bool $submitted = null;
 
     public function initialize()
     {
@@ -382,6 +391,7 @@ abstract class Formlet
      */
     protected function populateFields(): void
     {
+        $this->submitted ??= $this->wasSubmitted();
 
         $this->fields()->each(function (AbstractField $field) {
             $this->populateField($field);
@@ -390,6 +400,7 @@ abstract class Formlet
         $this->prepared = true;
 
         $this->iterateFormlets(function (Formlet $formlet) {
+            $formlet->submitted = $this->submitted;
             $formlet->populateFields();
         });
     }
@@ -401,6 +412,10 @@ abstract class Formlet
      */
     protected function populateField(AbstractField $field): void
     {
+        if ($this->submitted && $this->populateFieldFromSubmission($field)) {
+            $this->populateFieldErrors($field);
+            return;
+        }
 
         $value = $this->getValueAttribute($field);
 
@@ -409,6 +424,53 @@ abstract class Formlet
         }
 
         $this->populateFieldErrors($field);
+    }
+
+    /**
+     * Was this form the one that was posted?
+     *
+     * A validation failure redirects back with the request flashed as old input. The
+     * _formlet marker in that input names the posted form, so only that form treats the
+     * old input as authoritative; any other formlet on the page keeps its normal resolution.
+     */
+    protected function wasSubmitted(): bool
+    {
+        return $this->session->getOldInput('_formlet') === $this->getErrorBagName();
+    }
+
+    /**
+     * Populate a field from the submitted (flashed) input, which is the whole truth for the
+     * form that was posted.
+     *
+     * - Key present (even with a null value): the user's value, verbatim. A null means the
+     *   user cleared the field (ConvertEmptyStringsToNull), so it is explicitly cleared and
+     *   will not fall back to the model or the default.
+     * - Key absent and the field knows what its absence means (an unchecked checkbox, a
+     *   fully deselected multi-value field): that value.
+     * - Key absent otherwise (disabled, unrendered, or file inputs): no signal; returns false
+     *   so the normal resolution applies.
+     *
+     * @return bool whether the field was populated from the submission
+     */
+    protected function populateFieldFromSubmission(AbstractField $field): bool
+    {
+        $key = $this->transformKey($field->getInstanceName());
+
+        if (Arr::has($this->session->getOldInput(), $key)) {
+            $value = $this->session->getOldInput($key);
+
+            is_null($value) ? $field->clearValue() : $field->setValue($value);
+
+            return true;
+        }
+
+        if ($field->populatesWhenAbsent()) {
+            $field->setValue($field->getAbsentValue());
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

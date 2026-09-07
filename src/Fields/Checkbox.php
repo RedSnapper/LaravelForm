@@ -51,6 +51,19 @@ class Checkbox extends AbstractField
         return $this->checked;
     }
 
+    /**
+     * An unchecked checkbox posts no key at all, so absence means unchecked.
+     */
+    public function populatesWhenAbsent(): bool
+    {
+        return true;
+    }
+
+    public function getAbsentValue()
+    {
+        return $this->unchecked;
+    }
+
     /*
      * Is this checkbox checked
      * @return bool
