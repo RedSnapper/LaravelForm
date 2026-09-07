@@ -250,18 +250,6 @@ If you have published the `form::components.form` view, keep the loop over `$for
 
 `isDirty()` means a value has been written to the field by anyone, developer or user; it is what stops the model overwriting a value set in `prepare()`. It does not mean the user changed the field.
 
-## Upgrading to 8.0
+## Changelog
 
-Behaviour changes on a validation-failure redisplay, for the form that was posted:
-
-- A text input, textarea or select the user cleared stays cleared instead of reverting to the model value or the default.
-- A checkbox the user unticked stays unticked, and a `CheckboxGroup` or multiple `Select` the user fully emptied stays empty, instead of reverting to the model.
-
-New markup and API:
-
-- Every form renders a hidden `_formlet` input. Published `form::components.form` views must keep rendering `$form['hidden']`. In tests, include `_formlet` in posted data (`default`, or the form's prefix) when asserting on a redisplay.
-- `AbstractField::clearValue()` and `isCleared()`; `populatesWhenAbsent()` and `getAbsentValue()` for a custom field type to say what its absence from a submission means.
-
-Unchanged: `setValue()`, `default()`, `isDirty()`, and resolution on a plain `GET` with no old input.
-
-If your application worked around the old behaviour, for example by overriding `populateField()` to copy old input verbatim whenever the session has any, remove the workaround: it will otherwise blank fields that were disabled or not rendered, and it ignores which form was posted.
+See [CHANGELOG.md](CHANGELOG.md) for release notes and upgrade guidance.
