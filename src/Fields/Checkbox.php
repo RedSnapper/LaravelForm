@@ -57,9 +57,13 @@ class Checkbox extends AbstractField
      */
     public function isChecked(): bool
     {
+        if ($this->isCleared()) {
+            return false;
+        }
+
         $value = is_null($this->value) ? $this->default : $this->value;
 
-        if(is_null($value)){
+        if (is_null($value)) {
             return false;
         }
 

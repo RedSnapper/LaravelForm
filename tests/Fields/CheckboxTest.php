@@ -51,6 +51,63 @@ class CheckboxTest extends AbstractFieldTest
 
     }
 
+    // Overrides the inherited generic test: a checkbox's getValue() is always checked/unchecked
+    // and getHTMLValue() is always the checked value, so the assertions are expressed via isChecked().
+    #[Test]
+    public function setting_a_null_value_still_falls_back_to_the_default()
+    {
+        $field = new Checkbox('foo', 'bim', 'baz');
+        $field->default('bim');
+
+        $field->setValue(null);
+
+        $this->assertTrue($field->isDirty());
+        $this->assertTrue($field->isChecked());
+    }
+
+    // Overrides the inherited generic test for the same reason.
+    #[Test]
+    public function a_cleared_value_is_not_replaced_by_the_default()
+    {
+        $field = new Checkbox('foo', 'bim', 'baz');
+        $field->default('bim');
+        $this->assertTrue($field->isChecked());
+
+        $field->clearValue();
+
+        $this->assertTrue($field->isDirty());
+        $this->assertFalse($field->isChecked());
+        $this->assertEquals('baz', $field->getValue());
+        $this->assertStringNotContainsString('checked=', $this->renderField($field));
+    }
+
+    // Overrides the inherited generic test for the same reason.
+    #[Test]
+    public function a_cleared_value_ignores_a_default_set_afterwards()
+    {
+        $field = new Checkbox('foo', 'bim', 'baz');
+
+        $field->clearValue();
+        $field->default('bim');
+
+        $this->assertFalse($field->isChecked());
+    }
+
+    // Overrides the inherited generic test for the same reason.
+    #[Test]
+    public function setting_a_value_after_clearing_restores_normal_behaviour()
+    {
+        $field = new Checkbox('foo', 'bim', 'baz');
+        $field->default('bim');
+        $field->clearValue();
+
+        $field->setValue('bim');
+        $this->assertTrue($field->isChecked());
+
+        $field->setValue(null);
+        $this->assertTrue($field->isChecked(), 'setValue(null) after a clear reverts to default semantics');
+    }
+
     #[Test]
     public function a_field_can_be_guarded()
     {
