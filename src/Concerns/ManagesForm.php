@@ -129,7 +129,8 @@ trait ManagesForm
     protected function getHiddenFields(): Collection
     {
         $hidden = collect([
-          'token' => $this->token()
+          'token' => $this->token(),
+          'formlet' => $this->formletMarker(),
         ]);
 
         $method = $this->getMethod();
@@ -163,6 +164,19 @@ trait ManagesForm
     protected function token(): AbstractField
     {
         return (new Hidden('_token'))->setValue($this->session->token());
+    }
+
+    /**
+     * Marker identifying which formlet was posted.
+     *
+     * Carries the error bag name (the prefix, or "default") so that on a validation
+     * redisplay a formlet can tell whether the flashed old input belongs to it.
+     *
+     * @return AbstractField
+     */
+    protected function formletMarker(): AbstractField
+    {
+        return (new Hidden('_formlet'))->setValue($this->getErrorBagName());
     }
 
 }

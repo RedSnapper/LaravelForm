@@ -43,6 +43,7 @@ class FormletRenderTest extends TestCase
           ->assertSee('<input autocomplete="off" name="formlet-email" type="text" />', false)
           ->assertSee('<input name="formlet-terms" type="checkbox" value="1"/>', false)
           ->assertSee('<input autocomplete="off" name="_method" type="hidden" value="PUT"/>', false)
+          ->assertSee('<input autocomplete="off" name="_formlet" type="hidden" value="default"/>', false)
           ->assertSee('<input autocomplete="off" name="_token" type="hidden" value="'.app('session')->token().'"/>',
             false)
           ->assertSee('<input class="form-control" id="name" name="name" type="text" />', false)

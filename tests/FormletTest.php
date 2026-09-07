@@ -108,6 +108,33 @@ class FormletTest extends TestCase
         $this->assertEquals($token, $field->getValue());
     }
 
+    #[Test]
+    public function a_formlet_marker_field_is_added_to_the_form()
+    {
+        // Identifies which form was posted so that, on a validation redisplay, only the
+        // submitting form treats old input as authoritative.
+        $form = $this->formlet();
+        $data = $form->build();
+
+        $field = $data->get('form')->get('hidden')->get('formlet');
+        $this->assertInstanceOf(Hidden::class, $field);
+        $this->assertEquals('_formlet', $field->getName());
+        $this->assertEquals('default', $field->getValue());
+    }
+
+    #[Test]
+    public function the_formlet_marker_field_carries_the_prefix()
+    {
+        // Mirrors the error bag: prefixed forms are identified by their prefix.
+        $form = $this->formlet();
+        $form->setPrefix('foo');
+        $data = $form->build();
+
+        $field = $data->get('form')->get('hidden')->get('formlet');
+        $this->assertEquals('_formlet', $field->getName());
+        $this->assertEquals('foo', $field->getValue());
+    }
+
     public static function getFormMethods()
     {
         return [
