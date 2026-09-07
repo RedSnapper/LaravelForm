@@ -15,6 +15,10 @@ use RS\Form\Fields\Input;
 use RS\Form\Fields\Radio;
 use RS\Form\Fields\Select;
 use RS\Form\Formlet;
+use RS\Form\Tests\Fixtures\Formlets\ChildFormlet;
+use RS\Form\Tests\Fixtures\Formlets\GrandChildFormlet;
+use RS\Form\Tests\Fixtures\Formlets\TestFormlet;
+use RS\Form\Tests\Fixtures\Models\FormBuilderModelStub;
 use stdClass;
 
 class FormletTest extends TestCase
@@ -677,80 +681,3 @@ class FormletTest extends TestCase
 
 }
 
-class TestFormlet extends Formlet
-{
-
-    protected $closure;
-
-    public function __construct(\Closure $closure = null)
-    {
-        $this->closure = $closure;
-    }
-
-    public function prepare(): void
-    {
-        $closure = $this->closure;
-        if (!is_null($closure)) {
-            $closure($this);
-        }
-    }
-
-    public function persist()
-    {
-        return $this->allPostData()->toArray();
-    }
-
-}
-
-class ChildFormlet extends Formlet
-{
-
-    public function prepare(): void
-    {
-        $this->add(new Input('text', 'name'));
-        $this->addFormlet('grandchild', GrandChildFormlet::class);
-    }
-
-}
-
-class GrandChildFormlet extends Formlet
-{
-
-    public function prepare(): void
-    {
-        $this->add(new Input('text', 'name'));
-    }
-
-}
-
-class FormBuilderModelStub
-{
-    protected $data;
-
-    public $exists = true;
-
-    public function __construct(array $data = [])
-    {
-        foreach ($data as $key => $val) {
-            if (is_array($val)) {
-                $val = new self($val);
-            }
-            $this->data[$key] = $val;
-        }
-    }
-
-    public function __get($key)
-    {
-        return $this->data[$key];
-    }
-
-    public function __isset($key)
-    {
-        return isset($this->data[$key]);
-    }
-
-    public function relation()
-    {
-        return null;
-    }
-}
