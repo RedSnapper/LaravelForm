@@ -259,6 +259,98 @@ class FormletRedisplayTest extends TestCase
     }
 
     // ----------------------------------------------------------------------------------
+    // Isolation: only the form that was posted treats old input as authoritative
+    // ----------------------------------------------------------------------------------
+
+    #[Test]
+    public function another_form_on_the_page_is_not_blanked_by_this_forms_validation_failure()
+    {
+        // Form "a" was posted with everything cleared and failed validation. Form "b" shares
+        // the page; nothing of its own is in old input and it must keep its model values.
+        $this->submitted(['a:name' => null], 'a');
+
+        $other = $this->formlet(function (Formlet $form) {
+            $form->setPrefix('b');
+            $form->add(new Input('text', 'name'));
+            $form->add(new Checkbox('active'));
+            $form->add(new CheckboxGroup('items', [1 => 'One', 2 => 'Two']));
+        });
+        $other->model($this->model(['name' => 'stored', 'active' => true, 'items' => $this->related(1)]))->build();
+
+        $this->assertEquals('stored', $other->field('name')->getValue());
+        $this->assertTrue($other->field('active')->isChecked());
+        $this->assertTrue($other->field('items')->getValue()->contains('id', 1));
+    }
+
+    #[Test]
+    public function an_unprefixed_form_ignores_old_input_posted_by_a_prefixed_form()
+    {
+        $this->submitted(['name' => null], 'other');
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add(new Input('text', 'name'));
+            $form->add((new Checkbox('active'))->default(true));
+        });
+        $form->model($this->model(['name' => 'stored', 'active' => true]))->build();
+
+        $this->assertEquals('stored', $form->field('name')->getValue());
+        $this->assertTrue($form->field('active')->isChecked());
+    }
+
+    // ----------------------------------------------------------------------------------
+    // Legacy fallback: without the marker, resolution is unchanged
+    // ----------------------------------------------------------------------------------
+
+    #[Test]
+    public function old_input_from_a_form_that_is_not_a_formlet_is_ignored()
+    {
+        // A hand-written form on the same page failed validation and redirected back. Its
+        // flashed input carries no _formlet marker, so this formlet must not read it as
+        // "I was posted with everything cleared". (Checking hasOldInput() alone would.)
+        $this->session(['_old_input' => ['name' => null]]);
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add(new Input('text', 'name'));
+            $form->add((new Checkbox('active'))->default(true));
+        });
+        $form->model($this->model(['name' => 'stored', 'active' => true]))->build();
+
+        $this->assertEquals('stored', $form->field('name')->getValue());
+        $this->assertFalse($form->field('name')->isCleared());
+        $this->assertTrue($form->field('active')->isChecked());
+    }
+
+    #[Test]
+    public function a_plain_edit_page_with_no_old_input_populates_from_the_model()
+    {
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add((new Input('text', 'name'))->default('a default'));
+            $form->add(new Checkbox('active'));
+            $form->add((new Select('tags', [1 => 'One', 2 => 'Two']))->multiple());
+        });
+        $form->model($this->model(['name' => 'stored', 'active' => true, 'tags' => $this->related(2)]))->build();
+
+        $this->assertEquals('stored', $form->field('name')->getValue());
+        $this->assertTrue($form->field('active')->isChecked());
+        $this->assertTrue($form->field('tags')->getValue()->contains('id', 2));
+    }
+
+    #[Test]
+    public function a_plain_create_page_with_no_old_input_uses_defaults()
+    {
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add((new Input('text', 'name'))->default('a default'));
+            $form->add((new Checkbox('active'))->default(true));
+            $form->add((new CheckboxGroup('items', [1 => 'One', 2 => 'Two']))->default([2]));
+        });
+        $form->build();
+
+        $this->assertEquals('a default', $form->field('name')->getValue());
+        $this->assertTrue($form->field('active')->isChecked());
+        $this->assertEquals([2], $form->field('items')->getValue());
+    }
+
+    // ----------------------------------------------------------------------------------
     // Helpers
     // ----------------------------------------------------------------------------------
 
