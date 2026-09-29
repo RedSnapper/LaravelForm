@@ -300,7 +300,7 @@ class FormletRedisplayTest extends TestCase
     }
 
     #[Test]
-    public function child_formlets_inherit_the_submitted_state_from_the_root()
+    public function child_formlets_of_the_posted_form_treat_old_input_as_authoritative()
     {
         $this->submitted(['child' => [['name' => null]]]);
 
@@ -309,6 +309,39 @@ class FormletRedisplayTest extends TestCase
             $form->addFormlet('child', ChildFormlet::class);
         });
         $form->build();
+
+        $child = $form->formlet('child');
+        $this->assertNull($child->field('name')->getValue(), 'cleared child text field stays cleared');
+        $this->assertFalse($child->field('active')->isChecked(), 'unticked child checkbox stays unticked');
+    }
+
+    #[Test]
+    public function grandchild_formlets_of_the_posted_form_treat_old_input_as_authoritative()
+    {
+        $this->submitted(['child' => [['name' => 'kept', 'grandchild' => [['name' => null]]]]]);
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add(new Input('text', 'name'));
+            $form->addFormlet('child', ChildFormlet::class);
+        });
+        $form->model($this->model(['child' => $this->relatedNamed('stored')]))->build();
+
+        $grandchild = $form->formlet('child')->formlet('grandchild');
+        $this->assertTrue($grandchild->field('name')->isCleared());
+        $this->assertNull($grandchild->field('name')->getValue());
+    }
+
+    #[Test]
+    public function child_formlets_of_a_prefixed_form_treat_old_input_as_authoritative()
+    {
+        $this->submitted(['pre:child' => [['name' => null]]], 'pre');
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->setPrefix('pre');
+            $form->add(new Input('text', 'name'));
+            $form->addFormlet('child', ChildFormlet::class);
+        });
+        $form->model($this->model(['name' => 'stored', 'child' => $this->relatedNamed('stored')]))->build();
 
         $child = $form->formlet('child');
         $this->assertNull($child->field('name')->getValue(), 'cleared child text field stays cleared');
@@ -581,5 +614,15 @@ class FormletRedisplayTest extends TestCase
     private function related(int ...$ids)
     {
         return collect($ids)->map(fn (int $id) => (object) ['id' => $id]);
+    }
+
+    /**
+     * A single related model whose own relations hold one model with the same name, so a
+     * child and grandchild formlet each have a stored value that a revert would restore.
+     */
+    private function relatedNamed(string $name)
+    {
+        return collect([(object) ['id' => 1, 'name' => $name, 'active' => true,
+            'grandchild' => collect([(object) ['id' => 1, 'name' => $name]])]]);
     }
 }
