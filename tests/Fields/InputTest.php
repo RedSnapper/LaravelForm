@@ -71,6 +71,23 @@ class InputTest extends AbstractFieldTest
     }
 
     #[Test]
+    public function file_input_type_multiple_can_be_switched_off_again()
+    {
+        $field = (new Input('file', 'bim'))->multiple()->multiple(false);
+        $rendered = $field->render()->render();
+        $this->assertStringContainsString('<input class="form-control" id="bim" name="bim" type="file" />', $rendered);
+    }
+
+    #[Test]
+    public function a_file_input_never_populates_when_absent_from_a_submission()
+    {
+        // Files are never flashed to old input, so an absent key carries no signal.
+        $this->assertFalse((new Input('file', 'bim'))->multiple()->populatesWhenAbsent());
+        $this->assertFalse((new Input('file', 'bim'))->populatesWhenAbsent());
+        $this->assertFalse((new Input('text', 'bim'))->populatesWhenAbsent());
+    }
+
+    #[Test]
     public function password_fields_by_default_have_autocomplete_set_to_off()
     {
         $field = new Input('password', 'password');

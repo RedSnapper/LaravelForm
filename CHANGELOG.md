@@ -21,6 +21,11 @@ Other forms on the page, and old input flashed by forms that are not formlets, a
 - `AbstractField::clearValue()` and `isCleared()`: empty a field so that its default does not apply, as distinct from `setValue(null)`.
 - `AbstractField::populatesWhenAbsent()` and `getAbsentValue()`: a custom field type can say what its absence from a submission means. Defaults to `[]` for `multiple()` fields; `Checkbox` returns its unchecked value.
 
+### Fixed
+
+- `Select::multiple(false)` and `Input::multiple(false)` on a file input now switch the field back to single-value. Previously the argument was dropped and the field stayed multiple.
+- A multiple file input keeps its model value on a validation-failure redisplay. Files are never flashed to old input, so its absence carries no signal.
+
 ### Upgrading
 
 - If you have published the `form::components.form` view, keep the loop over `$form['hidden']`; the marker is rendered there.

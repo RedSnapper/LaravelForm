@@ -43,7 +43,21 @@ class Input extends AbstractField
             $multiple ? $this->setAttribute('multiple')
               : $this->removeAttribute("multiple");
         }
-        return parent::multiple();
+        return parent::multiple($multiple);
+    }
+
+    /**
+     * Files are never flashed to old input, so an absent file key carries no signal
+     * even when the input is multiple.
+     *
+     * @return bool
+     */
+    public function populatesWhenAbsent(): bool
+    {
+        if ($this->getAttribute("type") == "file") {
+            return false;
+        }
+        return parent::populatesWhenAbsent();
     }
 
 }

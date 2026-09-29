@@ -231,6 +231,23 @@ class FormletRedisplayTest extends TestCase
     }
 
     #[Test]
+    public function an_absent_multiple_file_input_still_falls_back_to_the_model()
+    {
+        // Files are never flashed to old input, so a multiple file input is always absent on
+        // redisplay. Unlike a multi select, that absence does not mean "emptied".
+        $this->submitted(['name' => 'typed']);
+
+        $form = $this->formlet(function (Formlet $form) {
+            $form->add(new Input('text', 'name'));
+            $form->add((new Input('file', 'docs'))->multiple());
+        });
+        $form->model($this->model(['name' => 'stored', 'docs' => $this->related(1, 2)]))->build();
+
+        $this->assertTrue($form->field('docs')->getValue()->contains('id', 1));
+        $this->assertTrue($form->field('docs')->getValue()->contains('id', 2));
+    }
+
+    #[Test]
     public function stale_old_input_does_not_override_the_current_post()
     {
         // Flashed input from an earlier failure can still be in the session when the next
