@@ -18,7 +18,7 @@ class Select extends Choice {
 		$multiple ? $this->setAttribute('multiple')
 		  : $this->removeAttribute("multiple");
 
-		return parent::multiple();
+		return parent::multiple($multiple);
 	}
 
 }

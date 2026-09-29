@@ -15,6 +15,10 @@ use RS\Form\Fields\Input;
 use RS\Form\Fields\Radio;
 use RS\Form\Fields\Select;
 use RS\Form\Formlet;
+use RS\Form\Tests\Fixtures\Formlets\ChildFormlet;
+use RS\Form\Tests\Fixtures\Formlets\GrandChildFormlet;
+use RS\Form\Tests\Fixtures\Formlets\TestFormlet;
+use RS\Form\Tests\Fixtures\Models\FormBuilderModelStub;
 use stdClass;
 
 class FormletTest extends TestCase
@@ -106,6 +110,33 @@ class FormletTest extends TestCase
         $this->assertInstanceOf(Hidden::class, $field);
         $this->assertEquals('_token', $field->getName());
         $this->assertEquals($token, $field->getValue());
+    }
+
+    #[Test]
+    public function a_formlet_marker_field_is_added_to_the_form()
+    {
+        // Identifies which form was posted so that, on a validation redisplay, only the
+        // submitting form treats old input as authoritative.
+        $form = $this->formlet();
+        $data = $form->build();
+
+        $field = $data->get('form')->get('hidden')->get('formlet');
+        $this->assertInstanceOf(Hidden::class, $field);
+        $this->assertEquals('_formlet', $field->getName());
+        $this->assertEquals('default', $field->getValue());
+    }
+
+    #[Test]
+    public function the_formlet_marker_field_carries_the_prefix()
+    {
+        // Mirrors the error bag: prefixed forms are identified by their prefix.
+        $form = $this->formlet();
+        $form->setPrefix('foo');
+        $data = $form->build();
+
+        $field = $data->get('form')->get('hidden')->get('formlet');
+        $this->assertEquals('_formlet', $field->getName());
+        $this->assertEquals('foo', $field->getValue());
     }
 
     public static function getFormMethods()
@@ -650,80 +681,3 @@ class FormletTest extends TestCase
 
 }
 
-class TestFormlet extends Formlet
-{
-
-    protected $closure;
-
-    public function __construct(\Closure $closure = null)
-    {
-        $this->closure = $closure;
-    }
-
-    public function prepare(): void
-    {
-        $closure = $this->closure;
-        if (!is_null($closure)) {
-            $closure($this);
-        }
-    }
-
-    public function persist()
-    {
-        return $this->allPostData()->toArray();
-    }
-
-}
-
-class ChildFormlet extends Formlet
-{
-
-    public function prepare(): void
-    {
-        $this->add(new Input('text', 'name'));
-        $this->addFormlet('grandchild', GrandChildFormlet::class);
-    }
-
-}
-
-class GrandChildFormlet extends Formlet
-{
-
-    public function prepare(): void
-    {
-        $this->add(new Input('text', 'name'));
-    }
-
-}
-
-class FormBuilderModelStub
-{
-    protected $data;
-
-    public $exists = true;
-
-    public function __construct(array $data = [])
-    {
-        foreach ($data as $key => $val) {
-            if (is_array($val)) {
-                $val = new self($val);
-            }
-            $this->data[$key] = $val;
-        }
-    }
-
-    public function __get($key)
-    {
-        return $this->data[$key];
-    }
-
-    public function __isset($key)
-    {
-        return isset($this->data[$key]);
-    }
-
-    public function relation()
-    {
-        return null;
-    }
-}

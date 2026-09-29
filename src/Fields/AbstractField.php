@@ -105,6 +105,14 @@ abstract class AbstractField
     protected $dirty = false;
 
     /**
+     * Has this field been explicitly cleared (e.g. the user submitted it empty)?
+     * A cleared field renders empty even when it has a default.
+     *
+     * @var bool
+     */
+    protected bool $cleared = false;
+
+    /**
      * @param  string  $type
      * @return AbstractField
      */
@@ -131,6 +139,10 @@ abstract class AbstractField
      */
     public function getValue()
     {
+        if ($this->cleared) {
+            return null;
+        }
+
         return is_null($this->value) ? $this->default : $this->value;
     }
 
@@ -157,7 +169,35 @@ abstract class AbstractField
     {
         $this->value = $value;
         $this->dirty = true;
+        $this->cleared = false;
         return $this;
+    }
+
+    /**
+     * Explicitly clear the value.
+     *
+     * Unlike setValue(null), which lets the default apply, a cleared field stays empty.
+     * Use this to record that the value was deliberately emptied (the formlet does so
+     * when a submitted field arrives blank), as opposed to never having been set.
+     *
+     * @return AbstractField
+     */
+    public function clearValue(): AbstractField
+    {
+        $this->value = null;
+        $this->dirty = true;
+        $this->cleared = true;
+        return $this;
+    }
+
+    /**
+     * Has the value been explicitly cleared
+     *
+     * @return bool
+     */
+    public function isCleared(): bool
+    {
+        return $this->cleared;
     }
 
     /**
@@ -168,6 +208,31 @@ abstract class AbstractField
     public function isDirty(): bool
     {
         return $this->dirty;
+    }
+
+    /**
+     * When the form this field belongs to was submitted but the field's key is absent
+     * from the input, does that absence carry a value?
+     *
+     * Multi-value fields post nothing at all when every option is deselected, so absence
+     * means "empty". Single-value fields post nothing only when they were disabled, not
+     * rendered, or are file inputs, so absence carries no signal.
+     *
+     * @return bool
+     */
+    public function populatesWhenAbsent(): bool
+    {
+        return $this->multiple;
+    }
+
+    /**
+     * The value an absent key represents when populatesWhenAbsent() is true.
+     *
+     * @return mixed
+     */
+    public function getAbsentValue()
+    {
+        return [];
     }
 
     /**

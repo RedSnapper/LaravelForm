@@ -105,6 +105,71 @@ class AbstractFieldTest extends TestCase
 
     }
 
+    #[Test]
+    public function setting_a_null_value_still_falls_back_to_the_default()
+    {
+        // Consumers commonly write ->setValue($this->model?->foo) in prepare(); on a create
+        // form that is setValue(null) and the default must still win.
+        $field = $this->getTestField();
+        $field->default('foo');
+
+        $field->setValue(null);
+
+        $this->assertTrue($field->isDirty());
+        $this->assertEquals('foo', $field->getValue());
+        $this->assertEquals('foo', $field->getHTMLValue());
+    }
+
+    #[Test]
+    public function a_cleared_value_is_not_replaced_by_the_default()
+    {
+        // clearValue() records that the value was explicitly emptied (e.g. the user submitted
+        // the field blank), which is a different fact from a developer passing null.
+        $field = $this->getTestField();
+        $field->default('foo');
+
+        $field->clearValue();
+
+        $this->assertTrue($field->isDirty());
+        $this->assertNull($field->getValue());
+        $this->assertNull($field->getHTMLValue());
+    }
+
+    #[Test]
+    public function a_cleared_value_ignores_a_default_set_afterwards()
+    {
+        $field = $this->getTestField();
+
+        $field->clearValue();
+        $field->default('foo');
+
+        $this->assertNull($field->getValue());
+    }
+
+    #[Test]
+    public function setting_a_value_after_clearing_restores_normal_behaviour()
+    {
+        $field = $this->getTestField();
+        $field->default('foo');
+        $field->clearValue();
+
+        $field->setValue('bar');
+        $this->assertEquals('bar', $field->getValue());
+
+        $field->setValue(null);
+        $this->assertEquals('foo', $field->getValue(), 'setValue(null) after a clear reverts to default semantics');
+    }
+
+    #[Test]
+    public function default_does_not_mark_the_field_dirty()
+    {
+        $field = $this->getTestField();
+
+        $this->assertFalse($field->isDirty());
+        $field->default('foo');
+        $this->assertFalse($field->isDirty());
+    }
+
 
     #[Test]
     public function a_field_can_have_an_error_name()

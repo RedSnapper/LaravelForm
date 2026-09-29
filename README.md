@@ -223,3 +223,33 @@ class UserForm extends Formlet{
 
 }
 ```
+### Redisplay after a validation failure
+
+When validation fails the request is flashed to the session and the form redisplays. Each field's value is resolved in this order:
+
+1. Old input (the flashed request)
+2. The current request
+3. The model, if the form has one and the request is a `GET`
+4. The field's `default()`
+
+Before 8.0, a field missing from old input fell through to the model. That silently reverted anything the user had emptied, because an emptied field is exactly what arrives missing: a cleared text input is posted as `''` and flashed as `null` by `ConvertEmptyStringsToNull`, and an unticked checkbox or a fully emptied multi-select posts no key at all.
+
+From 8.0 every form carries a hidden `_formlet` input naming the form (its prefix, or `default`). On the redirect-back `GET`, when that marker in old input matches a formlet, the flashed input is treated as the whole truth for that form:
+
+- **Key present**, even with a `null` value: the submitted value is used as-is. A `null` clears the field, so neither the model nor the default reasserts the old value.
+- **Key absent** and the field knows what absence means: a `Checkbox` becomes its unchecked value, and any `multiple()` field (`CheckboxGroup`, a multiple `Select`) becomes `[]`.
+- **Key absent** otherwise, or the field is disabled: no signal. A disabled control, a file input, or a field the view did not render never posts a key, so these fall back to the normal resolution above.
+
+Any other formlet on the page, and any old input flashed by a form that is not a formlet, is unaffected. Two **unprefixed** forms on one page both identify as `default`, so give them prefixes if they can fail validation independently.
+
+If you have published the `form::components.form` view, keep the loop over `$form['hidden']`; that is where the marker is rendered.
+
+#### Cleared values and defaults
+
+`setValue(null)` leaves the default in force, so the common `->setValue($this->model?->foo)` in `prepare()` still shows the default on a create form. To empty a field regardless of its default, call `clearValue()`; that is what the formlet does for a field the user submitted blank. `isCleared()` reports the state, and a later `setValue()` ends it.
+
+`isDirty()` means a value has been written to the field by anyone, developer or user; it is what stops the model overwriting a value set in `prepare()`. It does not mean the user changed the field.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes and upgrade guidance.

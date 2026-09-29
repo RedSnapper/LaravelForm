@@ -23,6 +23,7 @@ class SelectTest extends AbstractFieldTest
         $this->assertEquals('multiple', $field->getAttribute('multiple'));
         $field->multiple(false);
         $this->assertNull($field->getAttribute('multiple'));
+        $this->assertFalse($field->populatesWhenAbsent(), 'multiple(false) must switch the multiple flag off, not just the attribute');
     }
 
     #[Test]

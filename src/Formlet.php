@@ -6,6 +6,7 @@ use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\MessageBag;
 use RS\Form\Concerns\{HasRelationships, ManagesForm, ManagesPosts, ValidatesForm};
@@ -91,6 +92,14 @@ abstract class Formlet
      * @var bool
      */
     protected $prepared = false;
+
+    /**
+     * Was this formlet the one that was posted, as identified by the _formlet marker in
+     * the flashed old input? Computed on the root formlet and inherited by its children.
+     *
+     * @var bool|null
+     */
+    protected ?bool $submitted = null;
 
     public function initialize()
     {
@@ -382,6 +391,7 @@ abstract class Formlet
      */
     protected function populateFields(): void
     {
+        $this->submitted ??= $this->wasSubmitted();
 
         $this->fields()->each(function (AbstractField $field) {
             $this->populateField($field);
@@ -390,6 +400,7 @@ abstract class Formlet
         $this->prepared = true;
 
         $this->iterateFormlets(function (Formlet $formlet) {
+            $formlet->submitted = $this->submitted;
             $formlet->populateFields();
         });
     }
@@ -401,14 +412,65 @@ abstract class Formlet
      */
     protected function populateField(AbstractField $field): void
     {
+        $populated = $this->submitted && $this->populateFieldFromSubmission($field);
 
-        $value = $this->getValueAttribute($field);
+        if (!$populated) {
+            $value = $this->getValueAttribute($field);
 
-        if (!is_null($value)) {
-            $field->setValue($value);
+            if (!is_null($value)) {
+                $field->setValue($value);
+            }
         }
 
         $this->populateFieldErrors($field);
+    }
+
+    /**
+     * Is this a redirect-back GET whose flashed old input was posted by this form?
+     */
+    protected function wasSubmitted(): bool
+    {
+        return $this->request->isMethod('GET')
+          && $this->session->getOldInput('_formlet') === $this->getErrorBagName();
+    }
+
+    /**
+     * Populate a field from the submitted (flashed) input, which is the whole truth for the
+     * form that was posted.
+     *
+     * - Key present (even with a null value): the user's value, verbatim. A null means the
+     *   user cleared the field (ConvertEmptyStringsToNull), so it is explicitly cleared and
+     *   will not fall back to the model or the default.
+     * - Key absent and the field knows what its absence means (an unchecked checkbox, a
+     *   fully deselected multi-value field): that value.
+     * - Key absent otherwise (unrendered or file inputs), or the field is disabled and so
+     *   could not have been posted: no signal; returns false so the normal resolution applies.
+     *
+     * @return bool whether the field was populated from the submission
+     */
+    protected function populateFieldFromSubmission(AbstractField $field): bool
+    {
+        $name = $field->getInstanceName();
+
+        if (Arr::has($this->session->getOldInput(), $this->transformKey($name))) {
+            $value = $this->old($name);
+
+            if (is_null($value)) {
+                $field->clearValue();
+            } else {
+                $field->setValue($value);
+            }
+
+            return true;
+        }
+
+        if (!$field->isDisabled() && $field->populatesWhenAbsent()) {
+            $field->setValue($field->getAbsentValue());
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
