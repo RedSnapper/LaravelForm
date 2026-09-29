@@ -2,7 +2,7 @@
 
 All notable changes to `rs/form-laravel` are documented here. Versions follow [semantic versioning](https://semver.org/).
 
-## Unreleased (8.0.0)
+## 8.0.0 - 2026-09-29
 
 Resolves GM-126 and GM-127: values the user emptied were reverted when a form redisplayed after a validation failure.
 
