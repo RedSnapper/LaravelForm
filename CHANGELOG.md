@@ -2,6 +2,16 @@
 
 All notable changes to `rs/form-laravel` are documented here. Versions follow [semantic versioning](https://semver.org/).
 
+## 8.0.1 - 2026-10-07
+
+Resolves GM-128: the package logged deprecation notices on PHP 8.4 and 8.5. No behaviour changes; PHP 8.1 is still supported.
+
+### Fixed
+
+- Parameters that default to `null` now declare an explicit nullable type (`?string`, `?\Closure`), so the package loads without "implicitly marking parameter as nullable" notices on PHP 8.4 and 8.5.
+- `HasRelationships::hasMany()` no longer gives `$closure` a default. The default was never usable because the required `$count` follows it, and on PHP 8.0+ it triggered its own deprecation once made nullable. `relation()` still defaults `$closure` to `null`.
+- CI now tests on PHP 8.1 to 8.5, lints `src/` for deprecations, and fails the test run on any deprecation.
+
 ## 8.0.0 - 2026-09-29
 
 Resolves GM-126 and GM-127: values the user emptied were reverted when a form redisplayed after a validation failure.
