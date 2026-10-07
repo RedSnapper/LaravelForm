@@ -479,7 +479,7 @@ class FormletIntegrationTest extends TestCase
         $this->assertEquals([1 => ['color' => "Red"]], $form->subscriptionData('permissions'));
     }
 
-    private function formlet(\Closure $closure = null): Formlet
+    private function formlet(?\Closure $closure = null): Formlet
     {
         return $this->app->makeWith(IntegrationFormlet::class, ['closure' => $closure]);
     }
@@ -491,7 +491,7 @@ class IntegrationFormlet extends Formlet
 
     protected $closure;
 
-    public function __construct(\Closure $closure = null)
+    public function __construct(?\Closure $closure = null)
     {
         $this->closure = $closure;
     }

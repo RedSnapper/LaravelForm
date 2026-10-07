@@ -50,7 +50,7 @@ trait HasRelationships
      * @param string       $formlet
      * @param int          $count
      */
-    public function relation($relation, string $formlet, \Closure $closure = null, int $count = 1)
+    public function relation($relation, string $formlet, ?\Closure $closure = null, int $count = 1)
     {
 
         if (!isset($this->model)) {
@@ -103,7 +103,7 @@ trait HasRelationships
      * @param string        $class
      * @param \Closure|null $closure
      */
-    protected function oneToOne(Relation $relation, string $relationKey, string $class, \Closure $closure = null)
+    protected function oneToOne(Relation $relation, string $relationKey, string $class, ?\Closure $closure = null)
     {
 
         if ($this->modelExists()) {
@@ -128,7 +128,7 @@ trait HasRelationships
       HasMany $relation,
       string $relationKey,
       string $class,
-      \Closure $closure = null,
+      ?\Closure $closure,
       int $count
     ) {
 
@@ -157,7 +157,7 @@ trait HasRelationships
       BelongsToMany $relation,
       string $relationKey,
       string $class,
-      \Closure $closure = null
+      ?\Closure $closure = null
     ) {
         // Get subscribed models
         $subscribed = $this->modelExists() ? $relation->getResults() : false;

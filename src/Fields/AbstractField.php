@@ -268,10 +268,10 @@ abstract class AbstractField
     }
 
     /**
-     * @param  string  $name
+     * @param  string|null  $name
      * @return AbstractField
      */
-    public function setName(string $name = null): AbstractField
+    public function setName(?string $name = null): AbstractField
     {
         $this->name = $name;
         $this->setAttributeName();

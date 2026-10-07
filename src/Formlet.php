@@ -680,7 +680,7 @@ abstract class Formlet
      * @param  string|null  $name
      * @return Collection
      */
-    public function formlets(string $name = null): Collection
+    public function formlets(?string $name = null): Collection
     {
 
         if (is_null($name)) {

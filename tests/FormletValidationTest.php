@@ -261,13 +261,13 @@ class FormletValidationTest extends TestCase
         $this->assertNull($form->field('name')->getValue());
     }
 
-    private function form(\Closure $closure = null): Formlet
+    private function form(?\Closure $closure = null): Formlet
     {
         return $this->createFormlet(ValidationFormlet::class, $closure);
     }
 
 
-    private function createFormlet(string $class, \Closure $closure = null): Formlet
+    private function createFormlet(string $class, ?\Closure $closure = null): Formlet
     {
         return $this->app->makeWith($class, ['closure' => $closure]);
     }
@@ -300,7 +300,7 @@ class ValidationFormlet extends Formlet
 
     protected $closure;
 
-    public function __construct(\Closure $closure = null)
+    public function __construct(?\Closure $closure = null)
     {
         if (!is_null($closure)) {
             $closure($this);

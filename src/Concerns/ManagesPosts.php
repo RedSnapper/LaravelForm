@@ -27,7 +27,7 @@ trait ManagesPosts
      * @param  string|null  $name
      * @return mixed
      */
-    public function postData(string $name = null)
+    public function postData(?string $name = null)
     {
 
         $this->populate();

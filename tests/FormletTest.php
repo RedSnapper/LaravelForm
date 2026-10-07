@@ -653,7 +653,7 @@ class FormletTest extends TestCase
         $this->fail("Successfully added a relation the model did not return a relation");
     }
 
-    private function formlet(\Closure $closure = null): TestFormlet
+    private function formlet(?\Closure $closure = null): TestFormlet
     {
         return $this->app->makeWith(TestFormlet::class, ['closure' => $closure]);
     }
