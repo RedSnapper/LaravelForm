@@ -15,11 +15,11 @@ jobs:
 
     strategy:
       matrix:
-        php: [8.1, 8.2, 8.3]
+        php: [8.1, 8.2, 8.3, 8.4, 8.5]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -28,7 +28,12 @@ jobs:
           extensions: mbstring, sqlite3, pdo_sqlite, json, tokenizer, xml, curl, zip
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --no-suggest
+        run: composer install --prefer-dist --no-progress
+
+      - name: Lint for deprecations
+        run: |
+          out=$(find src -name '*.php' -print0 | xargs -0 -n1 php -d error_reporting=E_ALL -d display_errors=1 -l 2>&1 | grep -v 'No syntax errors' || true)
+          if [ -n "$out" ]; then echo "$out"; exit 1; fi
 
       - name: Run tests
         run: vendor/bin/phpunit

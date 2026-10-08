@@ -194,7 +194,7 @@ class FormletPostTest extends TestCase
 
     }
 
-    private function formlet(\Closure $closure = null): Formlet
+    private function formlet(?\Closure $closure = null): Formlet
     {
         return $this->app->makeWith(PostFormlet::class, ['closure' => $closure]);
     }
@@ -206,7 +206,7 @@ class PostFormlet extends Formlet
 
     protected $closure;
 
-    public function __construct(\Closure $closure = null)
+    public function __construct(?\Closure $closure = null)
     {
         $this->closure = $closure;
     }
