@@ -2,9 +2,13 @@
 
 All notable changes to `rs/form-laravel` are documented here. Versions follow [semantic versioning](https://semver.org/).
 
-## 8.0.2 - 2026-10-29
+## 8.1.0 - 2026-10-29
 
-Resolves GM-125: calling `disabled()` on a checkbox group or radio did not disable its options.
+Resolves GM-125: calling `disabled()` on a checkbox group or radio did not disable its options. This release also raises the minimum PHP version to 8.3.
+
+### Changed
+
+- Requires PHP 8.3 or later. CI now tests on PHP 8.3 to 8.5. The test dependencies no longer install on PHP 8.1 (every tagged Laravel 10 release is blocked by security advisories), and PHP 8.1 and 8.2 are no longer supported. Projects on PHP 8.1 or 8.2 keep resolving to 8.0.1.
 
 ### Fixed
 
