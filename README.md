@@ -124,6 +124,19 @@ class UserForm extends Formlet{
 
 Notice we also added a validation rule. The rules can be defined as per the laravel documentation.
 
+#### Disabling checkbox groups and radios
+
+A `CheckboxGroup` or `Radio` renders one input per option. Calling `disabled()` on the field disables every option input. To disable only some options, give those options the `disabled` attribute instead. An option cannot re-enable itself in a disabled group. Other field-level attributes, such as `required`, are not passed to the options.
+
+```php
+(new CheckboxGroup('roles', $roles))->disabled();
+
+new CheckboxGroup('roles', [
+    ['value' => 1, 'label' => 'Admin', 'attributes' => ['disabled']],
+    ['value' => 2, 'label' => 'Editor'],
+]);
+```
+
 ### View the form
 
 We can instantiate the form in a controller and pass the form data to a view.

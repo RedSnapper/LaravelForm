@@ -2,6 +2,14 @@
 
 All notable changes to `rs/form-laravel` are documented here. Versions follow [semantic versioning](https://semver.org/).
 
+## Unreleased (8.0.2)
+
+Resolves GM-125: calling `disabled()` on a checkbox group or radio did not disable its options.
+
+### Fixed
+
+- `disabled()` on a `CheckboxGroup` or `Radio` now renders `disabled` on every option input. Previously the attribute was set on the field but never rendered, so the group stayed interactive in the browser, although its values were already ignored on post. Other field-level attributes are still not passed to the options.
+
 ## 8.0.1 - 2026-10-07
 
 Resolves GM-128: the package logged deprecation notices on PHP 8.4 and 8.5. No behaviour changes; PHP 8.1 is still supported.
