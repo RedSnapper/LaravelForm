@@ -2,7 +2,7 @@
 
 All notable changes to `rs/form-laravel` are documented here. Versions follow [semantic versioning](https://semver.org/).
 
-## Unreleased (8.0.2)
+## 8.0.2 - 2026-10-29
 
 Resolves GM-125: calling `disabled()` on a checkbox group or radio did not disable its options.
 
