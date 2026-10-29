@@ -91,6 +91,57 @@ class CheckboxGroupTest extends AbstractFieldTest
     }
 
     #[Test]
+    public function a_disabled_checkbox_group_disables_every_checkbox()
+    {
+        $field = new CheckboxGroup('bim', [
+            'foo' => 'bar',
+            'bim' => 'baz',
+        ]);
+        $field->setValue(['bim'])->disabled();
+
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" disabled="disabled" value="foo"/>',
+            $this->renderField($field));
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" disabled="disabled" checked="checked" value="bim"/>',
+            $this->renderField($field));
+    }
+
+    #[Test]
+    public function field_attributes_other_than_disabled_are_not_passed_to_checkboxes()
+    {
+        $field = new CheckboxGroup('bim', ['foo' => 'bar']);
+        $field->required()->setAttribute('data-foo', 'bar');
+
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" value="foo"/>',
+            $this->renderField($field));
+    }
+
+    #[Test]
+    public function a_re_enabled_checkbox_group_renders_enabled_checkboxes()
+    {
+        $field = new CheckboxGroup('bim', ['foo' => 'bar']);
+        $field->disabled()->disabled(false);
+
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" value="foo"/>',
+            $this->renderField($field));
+    }
+
+    #[Test]
+    public function a_disabled_checkbox_group_keeps_each_checkboxs_own_attributes()
+    {
+        $field = new CheckboxGroup('bim', [
+            [
+                'label' => "bar",
+                'value' => "foo",
+                'attributes' => ['disabled', ['data-foo' => 'bar']],
+            ]
+        ]);
+        $field->disabled();
+
+        $this->assertStringContainsString('<input class="form-check-input" name="bim[]" type="checkbox" disabled="disabled" data-foo="bar" value="foo"/>',
+            $this->renderField($field));
+    }
+
+    #[Test]
     public function can_render_label()
     {
         $field = new CheckboxGroup('foo');

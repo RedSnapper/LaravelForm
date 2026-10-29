@@ -72,6 +72,15 @@ class Choice extends AbstractField
         return [];
     }
 
+    /**
+     * Option attributes that carry the field's disabled state, for
+     * fields rendered as one input per option (checkbox groups, radios)
+     */
+    protected function getDisabledOptionAttributes(): array
+    {
+        return $this->isDisabled() ? ['disabled' => 'disabled'] : [];
+    }
+
     protected function setOptions($list): Collection
     {
 

@@ -67,6 +67,31 @@ class RadioTest extends AbstractFieldTest
     }
 
     #[Test]
+    public function a_disabled_radio_disables_every_option()
+    {
+        $field = new Radio('bim', [
+          'foo' => 'bar',
+          'bim' => 'baz',
+        ]);
+        $field->setValue('bim')->disabled();
+
+        $this->assertStringContainsString('<input class="form-check-input" name="bim" type="radio" disabled="disabled" value="foo"/>',
+          $this->renderField($field));
+        $this->assertStringContainsString('<input class="form-check-input" name="bim" type="radio" disabled="disabled" checked="checked" value="bim"/>',
+          $this->renderField($field));
+    }
+
+    #[Test]
+    public function field_attributes_other_than_disabled_are_not_passed_to_radios()
+    {
+        $field = new Radio('bim', ['foo' => 'bar']);
+        $field->required()->setAttribute('data-foo', 'bar');
+
+        $this->assertStringContainsString('<input class="form-check-input" name="bim" type="radio" value="foo"/>',
+          $this->renderField($field));
+    }
+
+    #[Test]
     public function can_render_label()
     {
         $field = new Radio('foo');

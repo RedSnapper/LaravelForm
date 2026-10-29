@@ -91,6 +91,18 @@ class SelectTest extends AbstractFieldTest
     }
 
     #[Test]
+    public function a_disabled_select_does_not_disable_its_options()
+    {
+        $field = new Select('bim', ['foo' => 'bar']);
+        $field->disabled();
+
+        $this->assertStringContainsString('<select class="form-control" disabled="disabled" id="bim" name="bim">',
+          $this->renderField($field));
+        $this->assertStringContainsString('<option value="foo" >bar</option>',
+          $this->renderField($field));
+    }
+
+    #[Test]
     public function can_render_optgroups()
     {
         $field = new Select('bim', [
