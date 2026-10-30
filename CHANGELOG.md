@@ -2,7 +2,7 @@
 
 All notable changes to `rs/form-laravel` are documented here. Versions follow [semantic versioning](https://semver.org/).
 
-## 8.1.0 - 2026-10-29
+## 8.1.0 - 2026-10-30
 
 Resolves GM-125: calling `disabled()` on a checkbox group or radio did not disable its options. This release also raises the minimum PHP version to 8.3.
 
