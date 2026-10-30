@@ -16,7 +16,7 @@ class CheckboxGroup extends Choice
         return [
           'name' => $this->getAttribute('name'),
           'type' => 'checkbox'
-        ];
+        ] + $this->getDisabledOptionAttributes();
     }
 
 }

@@ -2,6 +2,18 @@
 
 All notable changes to `rs/form-laravel` are documented here. Versions follow [semantic versioning](https://semver.org/).
 
+## 8.1.0 - 2026-10-30
+
+Resolves GM-125: calling `disabled()` on a checkbox group or radio did not disable its options. This release also raises the minimum PHP version to 8.3.
+
+### Changed
+
+- Requires PHP 8.3 or later. CI now tests on PHP 8.3 to 8.5. The test dependencies no longer install on PHP 8.1 (every tagged Laravel 10 release is blocked by security advisories), and PHP 8.1 and 8.2 are no longer supported. Projects on PHP 8.1 or 8.2 keep resolving to 8.0.1.
+
+### Fixed
+
+- `disabled()` on a `CheckboxGroup` or `Radio` now renders `disabled` on every option input. Previously the attribute was set on the field but never rendered, so the group stayed interactive in the browser, although its values were already ignored on post. Other field-level attributes are still not passed to the options.
+
 ## 8.0.1 - 2026-10-07
 
 Resolves GM-128: the package logged deprecation notices on PHP 8.4 and 8.5. No behaviour changes; PHP 8.1 is still supported.

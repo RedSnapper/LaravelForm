@@ -13,7 +13,7 @@ class Radio extends Choice
         return [
             'name'=> $this->getInstanceName(),
             'type'=> 'radio'
-        ];
+        ] + $this->getDisabledOptionAttributes();
     }
 
 }
